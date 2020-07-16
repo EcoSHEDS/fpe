@@ -1,8 +1,6 @@
 SHEDS Flow Photo Explorer API
 =============================
 
-[https://github.com/robmclarty/knex-express-project-sample](https://github.com/robmclarty/knex-express-project-sample)
-
 # Configuration
 
 Use `.env` files with support for environment (`.env.development`, `.env.production`) and local (`.env.local`) via [`dotenv-flow`](npmjs.com/package/dotenv-flow). Local `.env` files are not tracked in the repo.
@@ -88,4 +86,5 @@ NODE_ENV=development fpe-api stations list
 
 # References:
 
+- [robmclarty/knex-express-project-sample](https://github.com/robmclarty/knex-express-project-sample): Express + Knex template
 - [Fodark/express-knex-objection](https://github.com/Fodark/express-knex-objection/blob/master/api/users.js): Express + Knex + Objection template
