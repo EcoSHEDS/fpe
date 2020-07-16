@@ -62,7 +62,7 @@ const postDatasets = async (req, res, next) => {
 }
 
 const attachDataset = async (req, res, next) => {
-  const row = await Dataset.query().findById(req.params.datasetId)
+  const row = await Dataset.query().findById(req.params.datasetId).withGraphFetched('series.observations')
   if (!row) throw createError(404, `Dataset (id = ${req.params.datasetId}) not found`)
   res.locals.dataset = row
   return next()
@@ -108,7 +108,7 @@ const postImagesets = async (req, res, next) => {
 }
 
 const attachImageset = async (req, res, next) => {
-  const row = await Imageset.query().findById(req.params.imagesetId)
+  const row = await Imageset.query().findById(req.params.imagesetId).withGraphFetched('images')
   if (!row) throw createError(404, `Imageset (id = ${req.params.imagesetId}) not found`)
   res.locals.imageset = row
   return next()

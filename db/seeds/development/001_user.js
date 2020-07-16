@@ -1,5 +1,5 @@
 
-exports.seed = knex => knex('variables').del()
+exports.seed = knex => knex('users').del()
   .then(() => knex('users').insert([
     {
       email: 'jeff@walkerenvres.com',

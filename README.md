@@ -57,6 +57,35 @@ Run development server via `nodemon`.
 yarn dev
 ```
 
+# CLI
+
+The `cli.js` file defines a CLI for managing the database.
+
+To make it globally available:
+
+```sh
+yarn link
+```
+
+Be sure to set the `NODE_ENV` environmental variable.
+
+```sh
+export NODE_ENV=development
+```
+
+Now access the CLI through the `fpe-api` program.
+
+```sh
+fpe-api help
+fpe-api stations list
+```
+
+Or for brief usage, set the `NODE_ENV` inline:
+
+```sh
+NODE_ENV=development fpe-api stations list
+```
+
 # References:
 
 - [Fodark/express-knex-objection](https://github.com/Fodark/express-knex-objection/blob/master/api/users.js): Express + Knex + Objection template

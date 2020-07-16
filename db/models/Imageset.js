@@ -8,6 +8,7 @@ class Imageset extends Base {
   static get relationMappings () {
     const Station = require('./Station')
     const Camera = require('./Camera')
+    const Image = require('./Image')
     return {
       station: {
         relation: Base.BelongsToOneRelation,
@@ -23,6 +24,14 @@ class Imageset extends Base {
         join: {
           from: 'imagesets.camera_id',
           to: 'cameras.id'
+        }
+      },
+      images: {
+        relation: Base.HasManyRelation,
+        modelClass: Image,
+        join: {
+          from: 'imagesets.id',
+          to: 'images.imageset_id'
         }
       }
     }
