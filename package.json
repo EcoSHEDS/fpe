@@ -8,6 +8,7 @@
     "dev": "NODE_ENV=development nodemon --watch server --watch db/models ./server/start.js"
   },
   "dependencies": {
+    "aws-sdk": "^2.714.0",
     "body-parser": "^1.19.0",
     "commander": "^5.1.0",
     "debug": "~2.6.9",

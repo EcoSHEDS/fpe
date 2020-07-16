@@ -4,7 +4,7 @@ const { NotFoundError } = require('./lib/errors')
 
 exports.listStations = async function (options) {
   console.log(`
-List new stations
+List stations
   user id: ${options.user || '<ANY>'}
   `)
   let query = Station.query().orderBy('id')
@@ -24,7 +24,7 @@ List new stations
 
 exports.createStation = async function (options) {
   console.log(`
-Create new station
+Create station
   user id: ${options.user}
      name: ${options.stationName}
  latitude: ${options.latitude}
@@ -49,7 +49,7 @@ longitude: ${options.longitude}
 
 exports.deleteStation = async function (id) {
   console.log(`
-Deleting station
+Delete station
   id: ${id}
   `)
 

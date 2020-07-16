@@ -72,7 +72,7 @@ List datasets
 
 exports.createDataset = async function (filename, options) {
   console.log(`
-Create new dataset
+Create dataset
         filename: ${filename}
       station id: ${options.station}
 timestamp column: ${options.timestamp}
@@ -123,7 +123,7 @@ variable column(s): ${options.variable}
 
 exports.deleteDataset = async function (id) {
   console.log(`
-Deleting dataset
+Delete dataset
   id: ${id}
   `)
 

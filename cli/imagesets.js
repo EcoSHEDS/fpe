@@ -1,8 +1,11 @@
 const fs = require('fs')
+const path = require('path')
 
 const { Station, Camera, Imageset } = require('../db/models')
 const { fw } = require('./lib/utils')
 const { NotFoundError } = require('./lib/errors')
+
+const { s3 } = require('../aws')
 
 exports.listImagesets = async function (options) {
   console.log(`
@@ -26,23 +29,43 @@ List imagesets
 }
 
 function listFolder (folder) {
-  const files = fs.readdirSync(folder)
+  const files = fs.readdirSync(folder).map(f => path.resolve(folder, f))
   return files
 }
 
-function processImages (files) {
-  return files.map(f => ({
-    filename: f,
-    url: `http://example.org/${f}`,
-    timestamp: '2020-07-16T12:00Z',
-    metadata: {},
-    status: 'DONE'
-  }))
+function processImage (file, dryRun) {
+  return uploadImage(file, dryRun)
+    .then(result => ({
+      filename: path.basename(file),
+      url: result.Location,
+      timestamp: '2020-07-16T12:00Z',
+      metadata: {},
+      status: 'CREATED'
+    }))
+}
+
+function uploadImage (file, dryRun) {
+  if (dryRun) return Promise.resolve({ Location: `http://example.org/${path.basename(file)}` })
+  const stream = fs.createReadStream(file)
+  return s3.upload({
+    Bucket: process.env.FPE_S3_BUCKET,
+    Key: path.basename(file),
+    Body: stream
+  }).promise()
+}
+
+async function processImages (files, dryRun) {
+  const images = []
+  for (let i = 0; i < files.length; i++) {
+    const image = await processImage(files[i], dryRun)
+    images.push(image)
+  }
+  return images
 }
 
 exports.createImageset = async function (folder, options) {
   console.log(`
-Creat new imageset
+Create imageset
     folder: ${folder}
 station id: ${options.station}
  camera id: ${options.camera}
@@ -72,7 +95,7 @@ station id: ${options.station}
   console.log('configuration validated')
 
   // transform
-  const images = await processImages(files, config)
+  const images = await processImages(files, options.dryRun)
   console.log(`images generated (n images=${images.length.toLocaleString()})`)
 
   // create imageset object
@@ -96,7 +119,7 @@ station id: ${options.station}
 
 exports.deleteImageset = async function (id) {
   console.log(`
-Deleting imageset
+Delete imageset
   id: ${id}
   `)
 
