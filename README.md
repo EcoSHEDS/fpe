@@ -1,7 +1,7 @@
 SHEDS Flow Photo Explorer API
 =============================
 
-# Configuration
+## Configuration
 
 Use `.env` files with support for environment (`.env.development`, `.env.production`) and local (`.env.local`) via [`dotenv-flow`](npmjs.com/package/dotenv-flow). Local `.env` files are not tracked in the repo.
 
@@ -19,11 +19,11 @@ FPE_DB_USER=
 FPE_DB_PASSWORD=
 ```
 
-# Database
+## Database
 
 The database schema is managed using [`knex` migrations and seeds]() .
 
-## Migrations
+### Migrations
 
 Database migrations (`db/migrations`) keep the schema synchronized across environments.
 
@@ -36,7 +36,7 @@ knex migrate:down
 knex migrate:make name_in_snake_case
 ```
 
-## Seeds
+### Seeds
 
 Database seeds (`db/seeds/development`) populate the database with initial data (currently only used for development).
 
@@ -47,7 +47,7 @@ knex seed:run # run all
 knex seed:run --sepecific my_seed.js # only one file
 ```
 
-# API
+## API
 
 Run development server via `nodemon`.
 
@@ -55,7 +55,7 @@ Run development server via `nodemon`.
 yarn dev
 ```
 
-# CLI
+## CLI
 
 The `cli.js` file defines a CLI for managing the database.
 
@@ -84,7 +84,7 @@ Or for brief usage, set the `NODE_ENV` inline:
 NODE_ENV=development fpe-api stations list
 ```
 
-# References:
+## References
 
 - [robmclarty/knex-express-project-sample](https://github.com/robmclarty/knex-express-project-sample): Express + Knex template
 - [Fodark/express-knex-objection](https://github.com/Fodark/express-knex-objection/blob/master/api/users.js): Express + Knex + Objection template
