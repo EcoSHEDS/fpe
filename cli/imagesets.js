@@ -57,6 +57,7 @@ function uploadImage (file, dryRun) {
 async function processImages (files, dryRun) {
   const images = []
   for (let i = 0; i < files.length; i++) {
+    console.log(`processing image ${path.basename(files[i])} (${i + 1}/${files.length})`)
     const image = await processImage(files[i], dryRun)
     images.push(image)
   }
@@ -96,7 +97,7 @@ station id: ${options.station}
 
   // transform
   const images = await processImages(files, options.dryRun)
-  console.log(`images generated (n images=${images.length.toLocaleString()})`)
+  console.log(`images processed (n images=${images.length.toLocaleString()})`)
 
   // create imageset object
   const props = {

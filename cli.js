@@ -3,6 +3,7 @@
 const { program } = require('commander')
 
 const { listUsers } = require('./cli/users')
+const { listCameras, createCamera, deleteCamera } = require('./cli/cameras')
 const { listStations, createStation, deleteStation } = require('./cli/stations')
 const { listDatasets, createDataset, deleteDataset } = require('./cli/datasets')
 const { listImagesets, createImageset, deleteImageset } = require('./cli/imagesets')
@@ -15,6 +16,28 @@ users
   .command('list')
   .description('List users')
   .action(listUsers)
+
+const cameras = program.command('cameras').description('Manage cameras')
+
+cameras
+  .command('list')
+  .option('-u, --user <id>', 'Only list cameras for this user ID')
+  .description('List cameras')
+  .action(listCameras)
+
+cameras
+  .command('create')
+  .requiredOption('-u, --user <id>', 'User ID that will own this camera')
+  .requiredOption('-n, --cameraName <text>', 'Camera name')
+  .requiredOption('-m, --make <text>', 'Make/model')
+  .requiredOption('-s, --serial <text>', 'Serial number')
+  .description('Create a new camera')
+  .action(createCamera)
+
+cameras
+  .command('delete <id>')
+  .description('Delete a dataset')
+  .action(deleteCamera)
 
 const stations = program.command('stations').description('Manage stations')
 
