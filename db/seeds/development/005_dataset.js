@@ -6,7 +6,7 @@ exports.seed = knex => knex('datasets').del()
       station_id: station.id,
       url: 'http://example.org/dataset.csv',
       filename: 'dataset.csv',
-      config: '{}',
+      config: '{"columns":{"timestamp":"timestamp","variables":[{"column":"value","variable":"FLOW_CFS"}]}}',
       status: 'DONE'
     }).returning('*')
   )
