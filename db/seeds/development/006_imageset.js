@@ -1,3 +1,4 @@
+const { v4: uuidv4 } = require('uuid')
 
 exports.seed = knex => knex('imagesets').del()
   .then(() => Promise.all([
@@ -10,7 +11,8 @@ exports.seed = knex => knex('imagesets').del()
       camera_id: camera.id,
       n_images: 5,
       config: '{}',
-      status: 'DONE'
+      status: 'DONE',
+      uuid: uuidv4()
     }).returning('*')
   )
   .then(([imageset]) => knex('images')

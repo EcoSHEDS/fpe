@@ -1,3 +1,4 @@
+const { v4: uuidv4 } = require('uuid')
 
 exports.seed = knex => knex('datasets').del()
   .then(() => knex.table('stations').first().where({ name: 'Station 001' }))
@@ -7,7 +8,8 @@ exports.seed = knex => knex('datasets').del()
       url: 'http://example.org/dataset.csv',
       filename: 'dataset.csv',
       config: '{"columns":{"timestamp":"timestamp","variables":[{"column":"value","variable":"FLOW_CFS"}]}}',
-      status: 'DONE'
+      status: 'DONE',
+      uuid: uuidv4()
     }).returning('*')
   )
   .then(([dataset]) => knex('series')

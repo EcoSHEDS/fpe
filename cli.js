@@ -74,6 +74,7 @@ datasets
   .requiredOption('-s, --station <id>', 'Station ID associated with this dataset')
   .requiredOption('-t, --timestamp <column>', 'Timestamp columns name')
   .requiredOption('-v, --variable <column=variable.id>', 'Variable column mapping ("column name"="variable id")', collect, [])
+  .option('-d, --dry-run', 'Dry run (nothing saved to database)', false)
   .description('Create a new dataset')
   .action(createDataset)
 

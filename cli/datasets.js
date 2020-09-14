@@ -1,10 +1,13 @@
 const Papa = require('papaparse')
 const fs = require('fs')
 const path = require('path')
+const { v4: uuidv4 } = require('uuid')
 
 const { Station, Dataset } = require('../db/models')
 const { DatasetConfigurationError, NotFoundError } = require('./lib/errors')
 const { fw } = require('./lib/utils')
+
+const { s3 } = require('../aws')
 
 function parseDatasetFile (filename) {
   return new Promise((resolve, reject) => {
@@ -49,6 +52,16 @@ function validateConfig (parsed, config) {
   return true
 }
 
+function uploadDataset (file, { dryRun, uuid }) {
+  if (dryRun) return Promise.resolve({ Location: `http://example.org/${path.basename(file)}` })
+  const stream = fs.createReadStream(file)
+  return s3.upload({
+    Bucket: process.env.FPE_S3_BUCKET,
+    Key: `datasets/${uuid}/${path.basename(file)}`,
+    Body: stream
+  }).promise()
+}
+
 exports.listDatasets = async function (options) {
   console.log(`
 List datasets
@@ -79,6 +92,9 @@ timestamp column: ${options.timestamp}
 variable column(s): ${options.variable}
   `)
 
+  // generate uuid
+  const uuid = uuidv4()
+
   // create config
   const config = {
     columns: {
@@ -108,11 +124,17 @@ variable column(s): ${options.variable}
   const series = await generateSeries(parsed.data, config)
   console.log(`series generated (n series=${series.length.toLocaleString()})`)
 
+  // upload to s3
+  const uploaded = await uploadDataset(filename, { dryRun: options.dryRun, uuid })
+  console.log('dataset uploaded')
+
   // create dataset object
   const props = {
     filename: path.basename(filename),
+    url: uploaded.Location,
     config,
     status: 'DONE',
+    uuid,
     series
   }
 

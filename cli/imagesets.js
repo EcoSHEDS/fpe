@@ -1,5 +1,6 @@
 const fs = require('fs')
 const path = require('path')
+const { v4: uuidv4 } = require('uuid')
 
 const { Station, Camera, Imageset } = require('../db/models')
 const { fw } = require('./lib/utils')
@@ -33,8 +34,8 @@ function listFolder (folder) {
   return files
 }
 
-function processImage (file, dryRun) {
-  return uploadImage(file, dryRun)
+function processImage (file, options) {
+  return uploadImage(file, options)
     .then(result => ({
       filename: path.basename(file),
       url: result.Location,
@@ -44,21 +45,21 @@ function processImage (file, dryRun) {
     }))
 }
 
-function uploadImage (file, dryRun) {
+function uploadImage (file, { dryRun, uuid }) {
   if (dryRun) return Promise.resolve({ Location: `http://example.org/${path.basename(file)}` })
   const stream = fs.createReadStream(file)
   return s3.upload({
     Bucket: process.env.FPE_S3_BUCKET,
-    Key: path.basename(file),
+    Key: `images/${uuid}/${path.basename(file)}`,
     Body: stream
   }).promise()
 }
 
-async function processImages (files, dryRun) {
+async function processImages (files, options) {
   const images = []
   for (let i = 0; i < files.length; i++) {
     console.log(`processing image ${path.basename(files[i])} (${i + 1}/${files.length})`)
-    const image = await processImage(files[i], dryRun)
+    const image = await processImage(files[i], options)
     images.push(image)
   }
   return images
@@ -71,6 +72,9 @@ Create imageset
 station id: ${options.station}
  camera id: ${options.camera}
   `)
+
+  // generate uuid
+  const uuid = uuidv4()
 
   // create config
   const config = {}
@@ -96,12 +100,13 @@ station id: ${options.station}
   console.log('configuration validated')
 
   // transform
-  const images = await processImages(files, options.dryRun)
+  const images = await processImages(files, { dryRun: options.dryRun, uuid })
   console.log(`images processed (n images=${images.length.toLocaleString()})`)
 
   // create imageset object
   const props = {
     camera_id: camera.id,
+    uuid,
     config,
     n_images: images.length,
     status: 'DONE',

@@ -22,7 +22,8 @@
     "objection": "^2.2.1",
     "pad": "^3.2.0",
     "papaparse": "^5.2.0",
-    "pg": "^8.3.0"
+    "pg": "^8.3.0",
+    "uuid": "^8.3.0"
   },
   "devDependencies": {
     "eslint": "^7.4.0",
