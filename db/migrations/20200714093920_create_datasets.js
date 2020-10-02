@@ -4,7 +4,7 @@ exports.up = knex => knex.schema.createTable('datasets', t => {
   t.increments('id').primary().unsigned()
   t.integer('station_id').references('stations.id').unsigned().index().onDelete('CASCADE')
   t.text('url')
-  t.text('filename')
+  t.json('s3')
   t.json('config')
   t.enu('status', statusTypes, { useNative: true, enumName: 'status_type' })
   t.text('error_message')

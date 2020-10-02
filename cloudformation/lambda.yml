@@ -1,0 +1,106 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Lambda function to process datasets for FPE
+Parameters:
+  bucketName:
+    Type: String
+    Default: walkerenvres-fpe-storage
+  functionName:
+    Type: String
+    Default: fpe-lambda
+  roleName:
+    Type: String
+    Default: fpe-lambda-role
+  policyName:
+    Type: String
+    Default: fpe-lambda-policy
+Resources:
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: LambdaExecutionRole
+    Properties:
+      FunctionName:
+        Ref: functionName
+      Tags:
+      - Key: project
+        Value: fpe
+      - Key: env
+        Value: dev
+      Handler: index.handler
+      Environment:
+        Variables:
+          REGION:
+            Ref: AWS::Region
+          S3_BUCKET:
+            Ref: bucketName
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Runtime: nodejs12.x
+      Timeout: '25'
+      Code:
+        S3Bucket: walkerenvres-fpe-lambda
+        S3Key: 0e81b95006c12bdda767c1e0d96333cc
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName:
+        Ref: roleName
+      Tags:
+      - Key: project
+        Value: fpe
+      - Key: env
+        Value: dev
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+  LambdaExecutionPolicy:
+    Type: AWS::IAM::Policy
+    DependsOn: LambdaExecutionRole
+    Properties:
+      PolicyName:
+        Ref: policyName
+      Roles:
+      - Ref: LambdaExecutionRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - logs:CreateLogGroup
+          - logs:CreateLogStream
+          - logs:PutLogEvents
+          Resource:
+            Fn::Sub:
+            - arn:aws:logs:${region}:${account}:log-group:/aws/lambda/${lambda}:log-stream:*
+            - region:
+                Ref: AWS::Region
+              account:
+                Ref: AWS::AccountId
+              lambda:
+                Ref: LambdaFunction
+        - Effect: Allow
+          Action:
+          - s3:GetObject
+          - s3:PutObject
+          - s3:DeleteObject
+          Resource:
+            Fn::Sub: arn:aws:s3:::${bucketName}/*
+Outputs:
+  Region:
+    Value:
+      Ref: AWS::Region
+  FunctionName:
+    Value:
+      Ref: LambdaFunction
+  FunctionArn:
+    Value:
+      Fn::GetAtt:
+      - LambdaFunction
+      - Arn

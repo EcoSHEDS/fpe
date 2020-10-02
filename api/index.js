@@ -1,5 +1,6 @@
 const express = require('express')
 const bodyParser = require('body-parser')
+const cors = require('cors')
 const logger = require('morgan')
 const asyncHandler = require('express-async-handler')
 
@@ -9,6 +10,7 @@ const app = express()
 
 app.use(logger('dev'))
 app.use(bodyParser.json())
+app.use(cors())
 
 app.use(asyncHandler(attachUser))
 

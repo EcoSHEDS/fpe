@@ -1,0 +1,111 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Lambda function to process datasets for FPE
+Parameters:
+  functionName:
+    Type: String
+    Default: fpe-lambda-dataset
+  databaseTable:
+    Type: String
+    Default: fpe
+  storageBucket:
+    Type: String
+    Default: walkerenvres-fpe-storage
+  roleName:
+    Type: String
+    Default: fpe-lambda-dataset-role
+  policyName:
+    Type: String
+    Default: fpe-lambda-dataset-policy
+Resources:
+  lambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: lambda-vpc
+      GroupDescription: Allow lambda access to vpc
+      VpcId: vpc-17376d71
+  LambdaFunction:
+    Type: "AWS::Lambda::Function"
+    DependsOn: LambdaExecutionRole
+    Properties:
+      FunctionName: !Ref functionName
+      Tags:
+        - Key: project
+          Value: fpe
+        - Key: env
+          Value: dev
+      Handler: index.handler
+      Environment:
+        Variables:
+          REGION: !Ref "AWS::Region"
+          TABLE_NAME: !Ref databaseTable
+          S3_BUCKET: !Ref storageBucket
+          FPE_DB_HOST: sheds-fpe.cysjjzu7kurm.us-east-1.rds.amazonaws.com
+          FPE_DB_PORT: 5432
+          FPE_DB_DATABASE: fpe
+          FPE_DB_USER: jeff
+          FPE_DB_PASSWORD: sheds-fpe
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs12.x
+      Timeout: "25"
+      Code: ../lambda/dataset
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref lambdaSecurityGroup
+        SubnetIds:
+          - subnet-142a4328
+          - subnet-142a4328
+          - subnet-4dd02005
+          - subnet-4dd02005
+          - subnet-638ff706
+  LambdaExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: !Ref roleName
+      Tags:
+        - Key: project
+          Value: fpe
+        - Key: env
+          Value: dev
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      # PermissionsBoundary: !Sub arn:aws:iam::${AWS::AccountId}:policy/csr-Developer-Permissions-Boundary
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+  LambdaExecutionPolicy:
+    Type: "AWS::IAM::Policy"
+    DependsOn: LambdaExecutionRole
+    Properties:
+      PolicyName: !Ref policyName
+      Roles: [!Ref LambdaExecutionRole]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "logs:CreateLogGroup"
+              - "logs:CreateLogStream"
+              - "logs:PutLogEvents"
+            Resource: !Sub
+              - >-
+                arn:aws:logs:${region}:${account}:log-group:/aws/lambda/${lambda}:log-stream:*
+              - region: !Ref "AWS::Region"
+                account: !Ref "AWS::AccountId"
+                lambda: !Ref LambdaFunction
+          - Effect: Allow
+            Action:
+              - "s3:GetObject"
+            Resource: !Sub 'arn:aws:s3:::${storageBucket}/*'
+Outputs:
+  Region:
+    Value: !Ref "AWS::Region"
+  FunctionName:
+    Value: !Ref LambdaFunction
+  FunctionArn:
+    Value: !GetAtt LambdaFunction.Arn

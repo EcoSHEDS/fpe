@@ -1,5 +1,7 @@
 const createError = require('http-errors')
+const { v4: uuidv4 } = require('uuid')
 
+const { s3, createPresignedPostPromise } = require('../../aws')
 const { Station, Dataset, Imageset, Camera } = require('../../db/models')
 
 const getStations = async (req, res, next) => {
@@ -49,15 +51,28 @@ const getDatasets = async (req, res, next) => {
 }
 
 const postDatasets = async (req, res, next) => {
-  await Station.query().insert(req.body).returning('*')
+  // await Station.query().insert(req.body).returning('*')
+
   const props = {
     ...req.body,
-    status: 'CREATED'
+    status: 'CREATED',
+    uuid: uuidv4()
   }
-  const row = await Station.relatedQuery('datasets')
+
+  const presignedUrl = await createPresignedPostPromise({
+    Bucket: process.env.FPE_S3_BUCKET,
+    Fields: {
+      key: `datasets/${props.uuid}/${req.body.filename}`
+    }
+  })
+
+  const rows = await Station.relatedQuery('datasets')
     .for(res.locals.station.id)
     .insert([props])
     .returning('*')
+
+  const row = rows[0]
+  row.presignedUrl = presignedUrl
   return res.status(201).json(row)
 }
 
@@ -78,10 +93,19 @@ const putDataset = async (req, res, next) => {
 }
 
 const deleteDataset = async (req, res, next) => {
+  // delete database entry
   const nrow = await Dataset.query().deleteById(res.locals.dataset.id)
   if (nrow === 0) {
     throw createError(500, `Failed to delete dataset (id = ${res.locals.dataset.id})`)
   }
+
+  // delete file on s3
+  const params = {
+    Bucket: process.env.FPE_S3_BUCKET,
+    Key: `datasets/${res.locals.dataset.uuid}/${res.locals.dataset.filename}`
+  }
+  await s3.deleteObject(params).promise()
+
   return res.status(204).json()
 }
 

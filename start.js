@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var app = require('./')
+var app = require('./api')
 var debug = require('debug')('fpe-api:server')
 var http = require('http')
 

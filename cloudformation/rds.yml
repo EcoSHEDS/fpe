@@ -1,0 +1,62 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'RDS PostgreSQL Instance'
+Parameters:
+  VpcId:
+    Type: String
+    Default: 'vpc-17376d71'
+  Subnets:
+    Type: CommaDelimitedList
+    Default: 'subnet-142a4328,subnet-142a4328,subnet-4dd02005,subnet-4dd02005,subnet-638ff706'
+Resources:
+  DatabaseSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnets available for the RDS DB Instance
+      SubnetIds: !Ref Subnets
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow access from the Web Server
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: '5432'
+        ToPort: '5432'
+        CidrIp: 10.0.0.0/16
+      - IpProtocol: tcp
+        FromPort: '5432'
+        ToPort: '5432'
+        CidrIp: 75.68.245.53/32
+  Database:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: 20
+      AutoMinorVersionUpgrade: true
+      VPCSecurityGroups:
+        - !Ref SecurityGroup
+      DBName: 'cfnfpe'
+      DBInstanceClass: 'db.t2.micro'
+      DBInstanceIdentifier: 'sheds-fpe'
+      DBSubnetGroupName: !Ref DatabaseSubnetGroup
+      Engine: 'postgres'
+      EngineVersion: 12.3
+      MasterUsername: 'jeff'
+      MasterUserPassword: 'sheds-fpe'
+      MultiAZ: false
+      PubliclyAccessible: true
+      Port: 5432
+      StorageType: gp2
+Outputs:
+  DBAddress:
+    Description: Database endpoint address
+    Value:
+      Fn::GetAtt:
+      - Database
+      - Endpoint.Address
+  DBPort:
+    Description: Database endpoint port
+    Value:
+      Fn::GetAtt:
+      - Database
+      - Endpoint.Port
