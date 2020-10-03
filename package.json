@@ -4,7 +4,7 @@
   "private": true,
   "bin": "./cli.js",
   "scripts": {
-    "dev": "NODE_ENV=development nodemon --watch app --watch db/models ./start.js"
+    "dev": "NODE_ENV=development nodemon --watch api --watch db/models ./start.js"
   },
   "dependencies": {
     "aws-sdk": "^2.714.0",

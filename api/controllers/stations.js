@@ -1,7 +1,7 @@
 const createError = require('http-errors')
 const { v4: uuidv4 } = require('uuid')
 
-const { s3, createPresignedPostPromise } = require('../../aws')
+const { s3, lambda, createPresignedPostPromise } = require('../../aws')
 const { Station, Dataset, Imageset, Camera } = require('../../db/models')
 
 const getStations = async (req, res, next) => {
@@ -54,7 +54,7 @@ const postDatasets = async (req, res, next) => {
   // await Station.query().insert(req.body).returning('*')
 
   const props = {
-    ...req.body,
+    config: req.body.config,
     status: 'CREATED',
     uuid: uuidv4()
   }
@@ -65,6 +65,10 @@ const postDatasets = async (req, res, next) => {
       key: `datasets/${props.uuid}/${req.body.filename}`
     }
   })
+  props.s3 = {
+    Bucket: presignedUrl.fields.bucket,
+    Key: presignedUrl.fields.key
+  }
 
   const rows = await Station.relatedQuery('datasets')
     .for(res.locals.station.id)
@@ -77,13 +81,14 @@ const postDatasets = async (req, res, next) => {
 }
 
 const attachDataset = async (req, res, next) => {
-  const row = await Dataset.query().findById(req.params.datasetId).withGraphFetched('series.observations')
+  const row = await Dataset.query().findById(req.params.datasetId)
   if (!row) throw createError(404, `Dataset (id = ${req.params.datasetId}) not found`)
   res.locals.dataset = row
   return next()
 }
 
 const getDataset = async (req, res, next) => {
+  res.locals.dataset.series = await res.locals.dataset.$relatedQuery('series').withGraphFetched('observations')
   return res.status(200).json(res.locals.dataset)
 }
 
@@ -107,6 +112,16 @@ const deleteDataset = async (req, res, next) => {
   await s3.deleteObject(params).promise()
 
   return res.status(204).json()
+}
+
+const processDataset = async (req, res, next) => {
+  const response = await lambda.invoke({
+    FunctionName: 'fpe-lambda-dataset',
+    InvocationType: 'Event',
+    Payload: JSON.stringify({ id: res.locals.dataset.id, client: 'api' })
+  }).promise()
+
+  return res.status(200).json(response)
 }
 
 const getImagesets = async (req, res, next) => {
@@ -171,6 +186,7 @@ module.exports = {
   getDataset,
   putDataset,
   deleteDataset,
+  processDataset,
 
   getImagesets,
   postImagesets,

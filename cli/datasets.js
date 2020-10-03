@@ -83,7 +83,10 @@ variable column(s): ${options.variable}
 
   // create dataset object
   const props = {
-    s3: uploaded,
+    s3: {
+      Bucket: uploaded.Bucket,
+      Key: uploaded.Key
+    },
     url: uploaded.Location,
     config,
     status: 'CREATED',
@@ -96,8 +99,10 @@ variable column(s): ${options.variable}
 
   // trigger processor
   console.log('processing dataset')
-  const payload = { id: dataset.id }
-  const results = await lambda.invoke({ FunctionName: 'fpe-lambda-dataset', Payload: JSON.stringify(payload) }).promise()
+  const results = await lambda.invoke({
+    FunctionName: 'fpe-lambda-dataset',
+    Payload: JSON.stringify({ id: dataset.id, client: 'cli' })
+  }).promise()
 
   // console.log(results)
   if (results.FunctionError) {

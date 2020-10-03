@@ -17,6 +17,7 @@ const {
   getDataset,
   putDataset,
   deleteDataset,
+  processDataset,
 
   getImagesets,
   postImagesets,
@@ -51,6 +52,10 @@ router.route('/:stationId/datasets/:datasetId')
   .get(asyncHandler(getDataset))
   .put(isOwner, asyncHandler(putDataset))
   .delete(isOwner, asyncHandler(deleteDataset))
+
+router.route('/:stationId/datasets/:datasetId/process')
+  .all(asyncHandler(attachStation), asyncHandler(attachDataset))
+  .post(isOwner, asyncHandler(processDataset))
 
 router.route('/:stationId/imagesets')
   .all(asyncHandler(attachStation))
