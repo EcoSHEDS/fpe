@@ -30,7 +30,6 @@ const {
 
   attachImage,
   postImage,
-  processImage,
 
   isOwner
 } = require('../controllers/stations')
@@ -80,9 +79,5 @@ router.route('/:stationId/imagesets/:imagesetId/process')
 router.route('/:stationId/imagesets/:imagesetId/images')
   .all(asyncHandler(attachStation), asyncHandler(attachImageset))
   .post(isOwner, asyncHandler(postImage))
-
-router.route('/:stationId/imagesets/:imagesetId/images/:imageId/process')
-  .all(asyncHandler(attachStation), asyncHandler(attachImage))
-  .post(isOwner, asyncHandler(processImage))
 
 module.exports = router

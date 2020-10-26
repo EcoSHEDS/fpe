@@ -189,13 +189,24 @@ const deleteImageset = async (req, res, next) => {
 
   res.locals.imageset.images.forEach(image => {
     console.log(`Deleting image (id=${image.id})`)
-    const params = {
+    let params = {
       Bucket: image.s3.Bucket,
       Key: image.s3.Key
     }
     s3.deleteObject(params)
       .promise()
       .catch((err) => console.log(err))
+
+    if (image.thumb_s3) {
+      console.log(`Deleting image thumb (id=${image.id})`)
+      params = {
+        Bucket: image.thumb_s3.Bucket,
+        Key: image.thumb_s3.Key
+      }
+      s3.deleteObject(params)
+        .promise()
+        .catch((err) => console.log(err))
+    }
   })
 
   return res.status(204).json()
@@ -204,14 +215,21 @@ const deleteImageset = async (req, res, next) => {
 const processImageset = async (req, res, next) => {
   console.log(`process imageset (id=${res.locals.imageset.id})`)
 
-  res.locals.imageset.images.forEach(image => {
-    lambda.invoke({
-      FunctionName: 'fpe-lambda-image',
-      InvocationType: 'Event',
-      Payload: JSON.stringify({ id: image.id, client: 'api' })
-    }).promise()
-      .catch(e => console.log(e))
-  })
+  // res.locals.imageset.images.forEach(image => {
+  //   lambda.invoke({
+  //     FunctionName: 'fpe-lambda-image',
+  //     InvocationType: 'Event',
+  //     Payload: JSON.stringify({ id: image.id, client: 'api' })
+  //   }).promise()
+  //     .catch(e => console.log(e))
+  // })
+
+  lambda.invoke({
+    FunctionName: 'fpe-lambda-imageset',
+    InvocationType: 'Event',
+    Payload: JSON.stringify({ id: res.locals.imageset.id, client: 'api' })
+  }).promise()
+    .catch(e => console.log(e))
 
   return res.status(200).json()
 }
@@ -226,8 +244,7 @@ const attachImage = async (req, res, next) => {
 
 const postImage = async (req, res, next) => {
   const props = {
-    ...req.body,
-    status: 'CREATED'
+    ...req.body
   }
 
   const rows = await Imageset.relatedQuery('images')
@@ -237,18 +254,6 @@ const postImage = async (req, res, next) => {
 
   const row = rows[0]
   return res.status(201).json(row)
-}
-
-const processImage = async (req, res, next) => {
-  console.log(`process image (id=${res.locals.image.id})`)
-
-  const response = await lambda.invoke({
-    FunctionName: 'fpe-lambda-image',
-    InvocationType: 'Event',
-    Payload: JSON.stringify({ id: res.locals.image.id, client: 'api' })
-  }).promise()
-
-  return res.status(200).json(response)
 }
 
 module.exports = {
@@ -280,7 +285,6 @@ module.exports = {
 
   attachImage,
   postImage,
-  processImage,
 
   isOwner
 }

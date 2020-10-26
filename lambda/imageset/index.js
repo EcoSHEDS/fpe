@@ -2,19 +2,14 @@ const AWS = require('aws-sdk')
 const ExifParser = require('exif-parser')
 const sharp = require('sharp')
 
-const { Image } = require('./db/models')
+const { Imageset } = require('./db/models')
 
 const s3 = new AWS.S3()
 
 // https://docs.aws.amazon.com/lambda/latest/dg/with-s3-example.html
 
-exports.handler = async function (event, context, callback) {
-  // console.log('env: ', JSON.stringify(process.env, null, 2))
-  console.log('event: ', JSON.stringify(event, 2, null))
-
-  console.log(`fetching image record (id=${event.id})`)
-  let image = await Image.query().patch({ status: 'PROCESSING' }).findById(event.id).returning('*')
-  if (!image) throw new Error(`Image record (id=${event.id}) not found`)
+async function handleImage (image) {
+  console.log(`processing image (id=${image.id})`)
 
   // download file
   console.log(`downloading image file (id=${image.id}, Key=${image.s3.Key})`)
@@ -35,13 +30,12 @@ exports.handler = async function (event, context, callback) {
   const thumbKey = image.s3.Key.replace('/images/', '/thumbs/')
   console.log(`thumbKey: ${thumbKey}`)
   const thumbBuffer = await sharp(s3ImageFile.Body).resize(200).toBuffer()
-  const thumbResult = await s3.putObject({
+  await s3.putObject({
     Bucket: image.s3.Bucket,
     Key: thumbKey,
     Body: thumbBuffer,
     ContentType: 'image'
   }).promise()
-  console.log(JSON.stringify(thumbResult, null, 2))
 
   // update record
   console.log(`updating image record (id=${image.id})`)
@@ -53,12 +47,38 @@ exports.handler = async function (event, context, callback) {
     height: result.imageSize.height
   }
   const payload = {
-    status: 'DONE',
     timestamp,
     metadata
   }
 
   image = await image.$query().patch(payload).returning('*')
-
   return image
+}
+
+exports.handler = async function (event, context, callback) {
+  // console.log('env: ', JSON.stringify(process.env, null, 2))
+  console.log('event: ', JSON.stringify(event, 2, null))
+
+  console.log(`fetching imageset record (id=${event.id})`)
+  let imageset = await Imageset.query().patch({ status: 'PROCESSING' }).findById(event.id).returning('*')
+  if (!imageset) throw new Error(`Imageset record (id=${event.id}) not found`)
+
+  const images = await imageset.$relatedQuery('images').orderBy('id')
+  if (images.length === 0) {
+    console.log('no images to process')
+    return imageset
+  }
+  console.log(`processing ${images.length} images`)
+  for (let i = 0; i < images.length; i++) {
+    await handleImage(images[i])
+  }
+  // update record
+  console.log(`updating imageset record (id=${imageset.id})`)
+  const payload = {
+    status: 'DONE'
+  }
+
+  imageset = await imageset.$query().patch(payload).returning('*')
+
+  return imageset
 }
