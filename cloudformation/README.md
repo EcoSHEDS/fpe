@@ -88,5 +88,10 @@ aws lambda invoke --function-name fpe-lambda-dataset --invocation-type Event --p
 
 Add new lambda security group (lambda-vpc) to ingress rules for rds security group
 
-Create VPN endpoint to access s3 (https://aws.amazon.com/blogs/aws/new-vpc-endpoint-for-amazon-s3/)
 
+Lambda needs public internet access to invoke another lambda because AWS api is on the internet
+Create VPC with public and private subnets for lambda (https://aws.amazon.com/premiumsupport/knowledge-center/internet-access-lambda-function/)
+Also see: add NAT to VPC so lambda can invoke other lambda (https://stackoverflow.com/questions/39144688/aws-lambda-invoke-not-calling-another-lambda-function-node-js)
+Create VPC endpoint to access s3 (https://aws.amazon.com/blogs/aws/new-vpc-endpoint-for-amazon-s3/)
+
+RDS must be on public subnets for external access (https://aws.amazon.com/premiumsupport/knowledge-center/rds-connectivity-instance-subnet-vpc/)

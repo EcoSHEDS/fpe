@@ -1,6 +1,6 @@
 const createError = require('http-errors')
 
-const { Camera } = require('../../db/models')
+const { Camera } = require('../db/models')
 
 const getCameras = async (req, res, next) => {
   const rows = await Camera.query().where(req.query)

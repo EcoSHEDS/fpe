@@ -19,13 +19,13 @@ List imagesets
     query = query.where({ station_id: options.station })
   }
   const rows = await query
-
+console.log(rows)
   if (rows.length === 0) {
     console.log('No imagesets found')
   } else {
     console.log('  id | station_id | camera_id | n_images')
     console.log('-----|------------|-----------|---------')
-    rows.forEach(row => console.log(`${fw(row.id, 4)} | ${fw(row.station_id, 10)} | ${fw(row.camera_id, 9)} | ${fw(row.n_images, 8)}`))
+    rows.forEach(row => console.log(`${fw(row.id, 4)} | ${fw(row.station_id, 10)} | ${fw(row.camera_id, 9)} | ${fw(row.n_images || 0, 8)}`))
   }
 }
 

@@ -52,7 +52,8 @@ knex seed:run --sepecific my_seed.js # only one file
 Run development server via `nodemon`.
 
 ```
-yarn dev
+cd api
+npm start
 ```
 
 ## Command Line Interface (CLI)

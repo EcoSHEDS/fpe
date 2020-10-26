@@ -1,9 +1,10 @@
 const createError = require('http-errors')
 const { v4: uuidv4 } = require('uuid')
 
-const { s3, lambda, createPresignedPostPromise } = require('../../aws')
-const { Station, Dataset, Imageset, Camera } = require('../../db/models')
+const { s3, lambda, createPresignedPostPromise } = require('../aws')
+const { Station, Dataset, Imageset, Image, Camera } = require('../db/models')
 
+// STATIONS
 const getStations = async (req, res, next) => {
   const rows = await Station.query().where(req.query)
   return res.status(200).json(rows)
@@ -50,6 +51,7 @@ const getDatasets = async (req, res, next) => {
   return res.status(200).json(rows)
 }
 
+// DATASETS
 const postDatasets = async (req, res, next) => {
   // await Station.query().insert(req.body).returning('*')
 
@@ -106,8 +108,8 @@ const deleteDataset = async (req, res, next) => {
 
   // delete file on s3
   const params = {
-    Bucket: process.env.FPE_S3_BUCKET,
-    Key: `datasets/${res.locals.dataset.uuid}/${res.locals.dataset.filename}`
+    Bucket: res.locals.dataset.s3.Bucket,
+    Key: res.locals.dataset.s3.Key
   }
   await s3.deleteObject(params).promise()
 
@@ -115,6 +117,7 @@ const deleteDataset = async (req, res, next) => {
 }
 
 const processDataset = async (req, res, next) => {
+  console.log(`process dataset (id=${res.locals.dataset.id})`)
   const response = await lambda.invoke({
     FunctionName: 'fpe-lambda-dataset',
     InvocationType: 'Event',
@@ -124,30 +127,46 @@ const processDataset = async (req, res, next) => {
   return res.status(200).json(response)
 }
 
+// IMAGESETS
 const getImagesets = async (req, res, next) => {
   const rows = await Imageset.query().where({ station_id: res.locals.station.id })
   return res.status(200).json(rows)
 }
 
 const postImagesets = async (req, res, next) => {
+  if (!req.body.camera_id) throw createError(400, 'Camera not specified (missing camera_id field)')
   const camera = await Camera.query().findById(req.body.camera_id)
   if (!camera) throw createError(400, `Camera must be assigned to this Imageset (camera_id=${req.body.camera_id})`)
 
   const props = {
     ...req.body,
-    status: 'CREATED'
+    status: 'CREATED',
+    uuid: uuidv4()
   }
 
-  await Station.query().insert(req.body).returning('*')
-  const row = await Station.relatedQuery('imagesets')
+  const presignedUrl = await createPresignedPostPromise({
+    Bucket: process.env.FPE_S3_BUCKET,
+    Conditions: [
+      ['starts-with', '$key', `imagesets/${props.uuid}/images/`]
+    ],
+    Expires: 3600
+  })
+  presignedUrl.fields.key = `imagesets/${props.uuid}/images/`
+
+  const rows = await Station.relatedQuery('imagesets')
     .for(res.locals.station.id)
     .insert([props])
     .returning('*')
+
+  const row = rows[0]
+  row.presignedUrl = presignedUrl
   return res.status(201).json(row)
 }
 
 const attachImageset = async (req, res, next) => {
-  const row = await Imageset.query().findById(req.params.imagesetId).withGraphFetched('images')
+  const row = await Imageset.query().findById(req.params.imagesetId).withGraphFetched('images').modifyGraph('images', builder => {
+    builder.orderBy('filename')
+  })
   if (!row) throw createError(404, `Imageset (id = ${req.params.imagesetId}) not found`)
   res.locals.imageset = row
   return next()
@@ -167,7 +186,69 @@ const deleteImageset = async (req, res, next) => {
   if (nrow === 0) {
     throw createError(500, `Failed to delete imageset (id = ${res.locals.imageset.id})`)
   }
+
+  res.locals.imageset.images.forEach(image => {
+    console.log(`Deleting image (id=${image.id})`)
+    const params = {
+      Bucket: image.s3.Bucket,
+      Key: image.s3.Key
+    }
+    s3.deleteObject(params)
+      .promise()
+      .catch((err) => console.log(err))
+  })
+
   return res.status(204).json()
+}
+
+const processImageset = async (req, res, next) => {
+  console.log(`process imageset (id=${res.locals.imageset.id})`)
+
+  res.locals.imageset.images.forEach(image => {
+    lambda.invoke({
+      FunctionName: 'fpe-lambda-image',
+      InvocationType: 'Event',
+      Payload: JSON.stringify({ id: image.id, client: 'api' })
+    }).promise()
+      .catch(e => console.log(e))
+  })
+
+  return res.status(200).json()
+}
+
+// IMAGES
+const attachImage = async (req, res, next) => {
+  const row = await Image.query().findById(req.params.imageId)
+  if (!row) throw createError(404, `Image (id = ${req.params.imageId}) not found`)
+  res.locals.image = row
+  return next()
+}
+
+const postImage = async (req, res, next) => {
+  const props = {
+    ...req.body,
+    status: 'CREATED'
+  }
+
+  const rows = await Imageset.relatedQuery('images')
+    .for(res.locals.imageset.id)
+    .insert([props])
+    .returning('*')
+
+  const row = rows[0]
+  return res.status(201).json(row)
+}
+
+const processImage = async (req, res, next) => {
+  console.log(`process image (id=${res.locals.image.id})`)
+
+  const response = await lambda.invoke({
+    FunctionName: 'fpe-lambda-image',
+    InvocationType: 'Event',
+    Payload: JSON.stringify({ id: res.locals.image.id, client: 'api' })
+  }).promise()
+
+  return res.status(200).json(response)
 }
 
 module.exports = {
@@ -195,6 +276,11 @@ module.exports = {
   getImageset,
   putImageset,
   deleteImageset,
+  processImageset,
+
+  attachImage,
+  postImage,
+  processImage,
 
   isOwner
 }

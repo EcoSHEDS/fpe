@@ -4,7 +4,7 @@ library(lubridate)
 
 df_dv_nwis <- dataRetrieval::readNWISdv(siteNumbers = "01059000", parameterCd = "00060", startDate = "2019-10-01", endDate = "2020-09-30")
 df_dv <- df_dv_nwis %>% 
-  select(date = Date, flow_cfs = X_00060_00003)
+  select(datetime = Date, flow_cfs = X_00060_00003)
 df_dv %>% 
   write_csv("../androscoggin-day-year.csv")
 

@@ -2,23 +2,23 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: 'RDS PostgreSQL Instance'
 Parameters:
-  VpcId:
+  vpcId:
     Type: String
-    Default: 'vpc-17376d71'
-  Subnets:
+    Default: vpc-0860bf057265a50b6
+  subnetIds:
     Type: CommaDelimitedList
-    Default: 'subnet-142a4328,subnet-142a4328,subnet-4dd02005,subnet-4dd02005,subnet-638ff706'
+    Default: 'subnet-0e6e508390d648b41,subnet-029ab486574de06a3,subnet-0cf035af13267c942'
 Resources:
   DatabaseSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
       DBSubnetGroupDescription: Subnets available for the RDS DB Instance
-      SubnetIds: !Ref Subnets
+      SubnetIds: !Ref subnetIds
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Allow access from the Web Server
-      VpcId: !Ref VpcId
+      GroupDescription: Allow access to RDS
+      VpcId: !Ref vpcId
       SecurityGroupIngress:
       - IpProtocol: tcp
         FromPort: '5432'
@@ -35,7 +35,6 @@ Resources:
       AutoMinorVersionUpgrade: true
       VPCSecurityGroups:
         - !Ref SecurityGroup
-      DBName: 'cfnfpe'
       DBInstanceClass: 'db.t2.micro'
       DBInstanceIdentifier: 'sheds-fpe'
       DBSubnetGroupName: !Ref DatabaseSubnetGroup

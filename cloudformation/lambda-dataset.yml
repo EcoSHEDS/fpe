@@ -4,12 +4,15 @@ Parameters:
   functionName:
     Type: String
     Default: fpe-lambda-dataset
-  databaseTable:
-    Type: String
-    Default: fpe
   storageBucket:
     Type: String
     Default: walkerenvres-fpe-storage
+  securityGroupId:
+    Type: String
+    Default: sg-04c571df12b1778c5
+  subnetIds:
+    Type: CommaDelimitedList
+    Default: subnet-0c14f9d14103e7827
   roleName:
     Type: String
     Default: fpe-lambda-dataset-role
@@ -17,12 +20,6 @@ Parameters:
     Type: String
     Default: fpe-lambda-dataset-policy
 Resources:
-  lambdaSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupName: lambda-vpc
-      GroupDescription: Allow lambda access to vpc
-      VpcId: vpc-17376d71
   LambdaFunction:
     Type: AWS::Lambda::Function
     DependsOn: LambdaExecutionRole
@@ -39,10 +36,6 @@ Resources:
         Variables:
           REGION:
             Ref: AWS::Region
-          TABLE_NAME:
-            Ref: databaseTable
-          S3_BUCKET:
-            Ref: storageBucket
           FPE_DB_HOST: sheds-fpe.cysjjzu7kurm.us-east-1.rds.amazonaws.com
           FPE_DB_PORT: 5432
           FPE_DB_DATABASE: fpe
@@ -53,19 +46,16 @@ Resources:
         - LambdaExecutionRole
         - Arn
       Runtime: nodejs12.x
-      Timeout: '25'
+      Timeout: '60'
+      MemorySize: '256'
       Code:
         S3Bucket: walkerenvres-fpe-lambda
-        S3Key: ba1bf6811cd02e58208e8ee04baaeda6
+        S3Key: 6018adcb8df1786f47ec59dc3a569dfb
       VpcConfig:
         SecurityGroupIds:
-        - Ref: lambdaSecurityGroup
+        - Ref: securityGroupId
         SubnetIds:
-        - subnet-142a4328
-        - subnet-142a4328
-        - subnet-4dd02005
-        - subnet-4dd02005
-        - subnet-638ff706
+          Ref: subnetIds
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:

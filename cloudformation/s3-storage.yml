@@ -20,6 +20,7 @@ Resources:
         CorsRules:
           - AllowedMethods:
               - GET
+              - POST
             AllowedOrigins:
               - "*"
             MaxAge: "3000"

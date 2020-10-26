@@ -1,8 +1,3 @@
-require('dotenv-flow').config({
-  path: process.cwd().endsWith('/api') ? '../' : process.cwd()
-})
-// require('dotenv-flow').config()
-// console.log(process.cwd(), __dirname)
 const config = {
   client: 'postgresql',
   connection: {
