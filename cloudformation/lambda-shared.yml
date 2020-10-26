@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Lambda function to process datasets for FPE
+Parameters:
+  vpcId:
+    Type: String
+    Default: vpc-0860bf057265a50b6
+  securityGroupName:
+    Type: String
+    Default: lambda-vpc
+Resources:
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Ref securityGroupName
+      GroupDescription: Allow lambda access to vpc
+      VpcId: !Ref vpcId
+Outputs:
+  SecurityGroupId:
+    Value:
+      Fn::GetAtt:
+      - SecurityGroup
+      - GroupId

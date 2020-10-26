@@ -1,9 +1,9 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Lambda function to process datasets for FPE
+Description: Lambda function to process images for FPE
 Parameters:
   functionName:
     Type: String
-    Default: fpe-lambda-dataset
+    Default: fpe-lambda-image
   storageBucket:
     Type: String
     Default: walkerenvres-fpe-storage
@@ -15,10 +15,10 @@ Parameters:
     Default: 'subnet-0c14f9d14103e7827,subnet-0f4f0de2167008616,subnet-0450b593d088917a4'
   roleName:
     Type: String
-    Default: fpe-lambda-dataset-role
+    Default: fpe-lambda-image-role
   policyName:
     Type: String
-    Default: fpe-lambda-dataset-policy
+    Default: fpe-lambda-image-policy
   dbHost:
     Type: String
   dbDatabase:
@@ -51,7 +51,7 @@ Resources:
       Runtime: nodejs12.x
       Timeout: "60"
       MemorySize: "256"
-      Code: ../lambda/dataset
+      Code: ../lambda/image
       VpcConfig:
         SecurityGroupIds:
           - !Ref securityGroupId
@@ -101,6 +101,7 @@ Resources:
           - Effect: Allow
             Action:
               - "s3:GetObject"
+              - "s3:PutObject"
             Resource: !Sub 'arn:aws:s3:::${storageBucket}/*'
 Outputs:
   Region:
