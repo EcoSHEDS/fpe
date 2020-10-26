@@ -48,6 +48,11 @@ async function handleImage (image) {
   }
   const payload = {
     timestamp,
+    thumb_s3: {
+      Bucket: image.s3.Bucket,
+      Key: thumbKey
+    },
+    thumb_url: `https://${image.s3.Bucket}.s3.amazonaws.com/${thumbKey}`,
     metadata
   }
 

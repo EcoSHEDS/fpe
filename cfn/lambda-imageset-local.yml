@@ -49,7 +49,7 @@ Resources:
           FPE_DB_PASSWORD: !Ref dbPassword
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs12.x
-      Timeout: "60"
+      Timeout: "900"
       MemorySize: "256"
       Code: ../lambda/imageset
       VpcConfig:
