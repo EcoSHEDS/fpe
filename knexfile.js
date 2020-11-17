@@ -1,8 +1,7 @@
 require('dotenv-flow').config({
   path: process.cwd().endsWith('/api') ? '../' : process.cwd()
 })
-// require('dotenv-flow').config()
-// console.log(process.cwd(), __dirname)
+
 const config = {
   client: 'postgresql',
   connection: {
@@ -14,7 +13,7 @@ const config = {
   },
   migrations: {
     tableName: 'knex_migrations',
-    directory: `${__dirname}/db/migrations`
+    directory: `${__dirname}/api/db/migrations`
   }
 }
 
@@ -22,19 +21,19 @@ module.exports = {
   development: {
     ...config,
     seeds: {
-      directory: `${__dirname}/db/seeds/development`
+      directory: `${__dirname}/api/db/seeds/development`
     }
   },
   staging: {
     ...config,
     seeds: {
-      directory: `${__dirname}/db/seeds/staging`
+      directory: `${__dirname}/api/db/seeds/staging`
     }
   },
   production: {
     ...config,
     seeds: {
-      directory: `${__dirname}/db/seeds/production`
+      directory: `${__dirname}/api/db/seeds/production`
     }
   }
 }

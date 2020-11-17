@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+require('dotenv-flow').config({ path: '../' })
 
 var app = require('./app')
 var debug = require('debug')('fpe-api:server')

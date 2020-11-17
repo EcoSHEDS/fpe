@@ -2,7 +2,7 @@ const AWS = require('aws-sdk')
 const ExifParser = require('exif-parser')
 const sharp = require('sharp')
 
-const { Imageset } = require('./db/models')
+const { Imageset } = require('./db')
 
 const s3 = new AWS.S3()
 

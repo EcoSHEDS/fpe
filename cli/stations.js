@@ -1,4 +1,4 @@
-const { User, Station } = require('../db/models')
+const { User, Station } = require('../api/db/models')
 const { fw } = require('./lib/utils')
 const { NotFoundError } = require('./lib/errors')
 

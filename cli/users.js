@@ -1,4 +1,4 @@
-const { User } = require('../db/models')
+const { User } = require('../api/db/models')
 const { fw } = require('./lib/utils')
 
 exports.listUsers = async function () {

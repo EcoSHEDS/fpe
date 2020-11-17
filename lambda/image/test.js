@@ -3,8 +3,6 @@ require('dotenv-flow').config({
 })
 const lambda = require('./index')
 
-// const { Dataset } = require('./db/models')
-// Dataset.query().then(results => console.log(results))
-lambda.handler({
-  id: 32
+lambda.testHandler({
+  id: 1
 }).then(() => process.exit(0))

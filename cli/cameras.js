@@ -1,4 +1,4 @@
-const { User, Camera } = require('../db/models')
+const { User, Camera } = require('../api/db/models')
 const { fw } = require('./lib/utils')
 const { NotFoundError } = require('./lib/errors')
 

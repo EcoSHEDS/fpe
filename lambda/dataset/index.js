@@ -1,6 +1,6 @@
 const AWS = require('aws-sdk')
 const parse = require('csv-parse')
-const { Dataset } = require('./db/models')
+const { Dataset } = require('./db')
 
 const s3 = new AWS.S3()
 
@@ -65,9 +65,19 @@ function generateSeries (data, { columns }) {
   return series
 }
 
+exports.testHandler = async function (event, context, callback) {
+  console.log('event: ', JSON.stringify(event, null, 2))
+
+  console.log(`fetching dataset record (id=${event.id})`)
+  const dataset = await Dataset.query().patch({ status: 'PROCESSING' }).findById(event.id).returning('*')
+  if (!dataset) throw new Error(`Dataset record (id=${event.id}) not found`)
+
+  console.log(JSON.stringify(dataset, null, 2))
+  return dataset
+}
+
 exports.handler = async function (event, context, callback) {
-  // console.log('env: ', JSON.stringify(process.env, null, 2))
-  console.log('event: ', JSON.stringify(event, 2, null))
+  console.log('event: ', JSON.stringify(event, null, 2))
 
   console.log(`fetching dataset record (id=${event.id})`)
   let dataset = await Dataset.query().patch({ status: 'PROCESSING' }).findById(event.id).returning('*')

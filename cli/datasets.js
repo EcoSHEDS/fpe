@@ -3,11 +3,11 @@ const fs = require('fs')
 const path = require('path')
 const { v4: uuidv4 } = require('uuid')
 
-const { Station, Dataset } = require('../db/models')
+const { Station, Dataset } = require('../api/db/models')
 const { NotFoundError } = require('./lib/errors')
 const { fw } = require('./lib/utils')
 
-const { s3, lambda } = require('../aws')
+const { s3, lambda } = require('../api/aws')
 
 function uploadDatasetToS3 (file, { dryRun, uuid }) {
   if (dryRun) return Promise.resolve({ Location: `http://example.org/${path.basename(file)}` })

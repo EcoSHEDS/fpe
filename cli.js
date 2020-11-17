@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+require('dotenv-flow').config()
+
 const { program } = require('commander')
 
 const { listUsers } = require('./cli/users')

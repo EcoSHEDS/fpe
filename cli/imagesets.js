@@ -2,11 +2,11 @@ const fs = require('fs')
 const path = require('path')
 const { v4: uuidv4 } = require('uuid')
 
-const { Station, Camera, Imageset } = require('../db/models')
+const { Station, Camera, Imageset } = require('../api/db/models')
 const { fw } = require('./lib/utils')
 const { NotFoundError } = require('./lib/errors')
 
-const { s3 } = require('../aws')
+const { s3 } = require('../api/aws')
 
 exports.listImagesets = async function (options) {
   console.log(`
