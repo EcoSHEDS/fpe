@@ -6,7 +6,6 @@ router.get('/', function (req, res, next) {
 })
 
 router.use('/stations', require('./stations'))
-router.use('/cameras', require('./cameras'))
 router.use('/datasets', require('./datasets'))
 
 module.exports = router

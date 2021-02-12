@@ -1,17 +1,14 @@
-const pad = require('pad')
+const columnify = require('columnify')
 
-function fw (str, num) {
-  if (str.toString().length <= num) {
-    return pad(num, str.toString())
-  }
-  return str.toString().slice(0, num - 3) + '...'
-}
-
-function collect (value, previous) {
-  return previous.concat([value])
+function printTable (data, columns, options) {
+  const table = columnify(data, {
+    ...options,
+    columns,
+    columnSplitter: ' | '
+  })
+  console.log(table)
 }
 
 module.exports = {
-  fw,
-  collect
+  printTable
 }

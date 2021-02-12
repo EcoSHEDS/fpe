@@ -1,6 +1,9 @@
 
 exports.seed = knex => knex('stations').del()
-  .then(() => knex.table('users').first().where({ email: 'jeff@walkerenvres.com' }))
+  .then(() => knex.table('users')
+    .first()
+    .where({ email: 'jeff@walkerenvres.com' })
+  )
   .then((user) => knex('stations').insert([
     {
       user_id: user.id,

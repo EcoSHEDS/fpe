@@ -4,6 +4,6 @@ exports.seed = knex => knex('users').del()
     {
       email: 'jeff@walkerenvres.com',
       fullname: 'Jeff Walker',
-      password: 'sheds'
+      password: 'sheds-fpe'
     }
   ]))

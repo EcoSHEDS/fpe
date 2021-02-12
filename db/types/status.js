@@ -1,1 +1,1 @@
-module.exports = ['CREATED', 'QUEUED', 'PROCESSING', 'DONE', 'ERROR']
+module.exports = ['CREATED', 'QUEUED', 'PROCESSING', 'DONE', 'FAILED']

@@ -3,17 +3,12 @@ const path = require('path')
 const { v4: uuidv4 } = require('uuid')
 
 const { Station, Camera, Imageset } = require('../api/db/models')
-const { fw } = require('./lib/utils')
+const { printTable } = require('./lib/utils')
 const { NotFoundError } = require('./lib/errors')
 
 const { s3, batch } = require('../api/aws')
 
 exports.listImagesets = async function (options) {
-  console.log(`
-List imagesets
-  station id: ${options.station || '<ANY>'}
-  `)
-
   let query = Imageset.query().orderBy('id')
   if (options.station) {
     query = query.where({ station_id: options.station })
@@ -23,9 +18,7 @@ List imagesets
   if (rows.length === 0) {
     console.log('No imagesets found')
   } else {
-    console.log('  id | station_id | camera_id | n_images')
-    console.log('-----|------------|-----------|---------')
-    rows.forEach(row => console.log(`${fw(row.id, 4)} | ${fw(row.station_id, 10)} | ${fw(row.camera_id, 9)} | ${fw(row.n_images || 0, 8)}`))
+    printTable(rows, ['id', 'station_id', 'uuid', 'n_images', 'status'])
   }
 }
 
@@ -65,13 +58,6 @@ async function uploadImages (files, options) {
 }
 
 exports.createImageset = async function (folder, options) {
-  console.log(`
-Create imageset
-    folder: ${folder}
-station id: ${options.station}
- camera id: ${options.camera}
-  `)
-
   // generate uuid
   const uuid = uuidv4()
 
@@ -82,12 +68,6 @@ station id: ${options.station}
   const station = await Station.query().findById(options.station)
   if (!station) {
     throw new NotFoundError(`Station (id=${options.station}) does not exist`)
-  }
-
-  // get camera
-  const camera = await Camera.query().findById(options.camera)
-  if (!camera) {
-    throw new NotFoundError(`Camera (id=${options.camera}) does not exist`)
   }
 
   // list files
@@ -104,7 +84,6 @@ station id: ${options.station}
 
   // create imageset object
   const props = {
-    camera_id: camera.id,
     uuid,
     config,
     n_images: images.length,
@@ -117,19 +96,14 @@ station id: ${options.station}
     console.log('created imageset:')
     console.log(JSON.stringify(props, null, 2))
   } else {
-    const imageset = await station.$relatedQuery('imagesets')
+    const row = await station.$relatedQuery('imagesets')
       .insertGraph(props)
       .returning('*')
-    console.log(`imageset saved to db (id=${imageset.id})`)
+    printTable([row], ['id', 'station_id', 'uuid', 'n_images'])
   }
 }
 
 exports.processImageset = async function (id) {
-  console.log(`
-Process imageset
-  id: ${id}
-  `)
-
   const imageset = await Imageset.query().findById(id)
   if (!imageset) {
     console.error(`Error: Imageset not found (id=${id})`)
@@ -161,11 +135,6 @@ function deleteImageFromS3 ({ Bucket, Key }) {
 }
 
 exports.deleteImageset = async function (id) {
-  console.log(`
-Delete imageset
-  id: ${id}
-  `)
-
   const imageset = await Imageset.query().findById(id)
     .withGraphFetched('images')
   if (!imageset) {

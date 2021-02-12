@@ -1,4 +1,3 @@
-exports.Camera = require('./Camera')
 exports.Dataset = require('./Dataset')
 exports.Imageset = require('./Imageset')
 exports.Image = require('./Image')

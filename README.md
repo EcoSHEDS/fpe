@@ -72,17 +72,17 @@ Be sure to set the `NODE_ENV` environmental variable.
 export NODE_ENV=development
 ```
 
-Now access the CLI through the `fpe-api` program.
+Now access the CLI through the `fpe` program.
 
 ```sh
-fpe-api help
-fpe-api stations list
+fpe help
+fpe stations list
 ```
 
 Or for brief usage, set the `NODE_ENV` inline:
 
 ```sh
-NODE_ENV=development fpe-api stations list
+NODE_ENV=development fpe stations list
 ```
 
 ### CLI Quickstart
@@ -90,51 +90,23 @@ NODE_ENV=development fpe-api stations list
 Find the id of the owner.
 
 ```
-$ fpe-api users list
-List users
-
-  id |                    email |                 fullname
------|--------------------------|-------------------------
-  16 |    jeff@walkerenvres.com |              Jeff Walker
-```
-
-Create a camera.
-
-```
-$ fpe-api cameras create -u 16 -n "Camera 002" -m "Some Camera" -s "XYZ123"
-
-Create camera
-  user id: 16
-     name: Camera 002
-     make: Some Camera
-   serial: XYZ123
-Camera (id=14) saved to database
+$ fpe users list
+ID | EMAIL                 | FULLNAME
+1  | jeff@walkerenvres.com | Jeff Walker
 ```
 
 Create a station.
 
 ```
-$ fpe-api stations create -u 16 -n "My Station" -l 42.123 -g -72.394
-
-Create station
-  user id: 16
-     name: My Station
- latitude: 42.123
-longitude: -72.394
-
-Station (id=19) saved to database
+$ fpe stations create -u 1 -n "My Station" -l 42.123 -g -72.394
+ID | USER_ID | NAME       | DESCRIPTION | LATITUDE | LONGITUDE
+2  | 1       | My Station |             | 42.123   | -72.394
 ```
 
-Create an image set for new station and camera, and upload image files from specified folder.
+Create an image set for new station, and upload image files from specified folder.
 
 ```
-$ fpe-api imagesets create cli/test/images -s 19 -c 14
-
-Create imageset
-    folder: cli/test/images
-station id: 19
- camera id: 14
-
+$ fpe imagesets create cli/test/images -s 2
 folder listed (n files=10)
 configuration validated
 processing image PICT0001.JPG (1/10)
@@ -154,14 +126,7 @@ imageset saved to db (id=11)
 Create dataset and upload specified file.
 
 ```
-$ fpe-api datasets create -s 1 -t datetime -v "flow_cfs"="FLOW_CFS" -v "stage_ft"="STAGE_FT" cli/test/dataset.csv
-
-Create dataset
-        filename: cli/test/dataset.csv
-      station id: 19
-timestamp column: datetime
-variable column(s): flow_cfs=FLOW_CFS,stage_ft=STAGE_FT
-
+$ fpe datasets create -s 1 -t datetime -v "flow_cfs"="FLOW_CFS" -v "stage_ft"="STAGE_FT" cli/test/dataset.csv
 dataset parsed (n rows=6)
 configuration validated
 series generated (n series=2)

@@ -4,14 +4,14 @@ require('dotenv-flow').config()
 
 const { program } = require('commander')
 
-const { listUsers } = require('./cli/users')
-const { listCameras, createCamera, deleteCamera } = require('./cli/cameras')
-const { listStations, createStation, deleteStation } = require('./cli/stations')
-const { listDatasets, createDataset, processDataset, deleteDataset } = require('./cli/datasets')
-const { listImagesets, createImageset, processImageset, deleteImageset } = require('./cli/imagesets')
+const { listUsers } = require('./users')
+const { listStations, createStation, deleteStation } = require('./stations')
+const { listDatasets, createDataset, processDataset, deleteDataset } = require('./datasets')
+const { listImagesets, createImageset, processImageset, deleteImageset } = require('./imagesets')
 
-const { collect } = require('./cli/lib/utils')
+const { collect } = require('./lib/utils')
 
+// USERS
 const users = program.command('users').description('Manage users')
 
 users
@@ -19,28 +19,7 @@ users
   .description('List users')
   .action(listUsers)
 
-const cameras = program.command('cameras').description('Manage cameras')
-
-cameras
-  .command('list')
-  .option('-u, --user <id>', 'Only list cameras for this user ID')
-  .description('List cameras')
-  .action(listCameras)
-
-cameras
-  .command('create')
-  .requiredOption('-u, --user <id>', 'User ID that will own this camera')
-  .requiredOption('-n, --cameraName <text>', 'Camera name')
-  .requiredOption('-m, --make <text>', 'Make/model')
-  .requiredOption('-s, --serial <text>', 'Serial number')
-  .description('Create a new camera')
-  .action(createCamera)
-
-cameras
-  .command('delete <id>')
-  .description('Delete a dataset')
-  .action(deleteCamera)
-
+// STATIONS
 const stations = program.command('stations').description('Manage stations')
 
 stations
@@ -63,6 +42,7 @@ stations
   .description('Delete a dataset')
   .action(deleteStation)
 
+// DATASETS
 const datasets = program.command('datasets').description('Manage datasets')
 
 datasets
@@ -90,6 +70,7 @@ datasets
   .description('Delete a dataset')
   .action(deleteDataset)
 
+// IMAGESETS
 const imagesets = program.command('imagesets').description('Manage imagesets')
 
 imagesets
@@ -116,6 +97,7 @@ imagesets
   .description('Delete an imageset')
   .action(deleteImageset)
 
+// RUN
 program.parseAsync(process.argv)
   .then(() => {
     process.exit(0)

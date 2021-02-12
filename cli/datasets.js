@@ -4,7 +4,7 @@ const { v4: uuidv4 } = require('uuid')
 
 const { Station, Dataset } = require('../api/db/models')
 const { NotFoundError } = require('./lib/errors')
-const { fw } = require('./lib/utils')
+const { printTable } = require('./lib/utils')
 
 const { s3, batch } = require('../api/aws')
 
@@ -27,11 +27,6 @@ function deleteFromS3 ({ Bucket, Key }) {
 }
 
 exports.listDatasets = async function (options) {
-  console.log(`
-List datasets
-  station id: ${options.station || '<ANY>'}
-  `)
-
   let query = Dataset.query().orderBy(['id'])
   if (options.station) {
     query = query.where({ station_id: options.station })
@@ -41,21 +36,11 @@ List datasets
   if (rows.length === 0) {
     console.log('No datasets found')
   } else {
-    console.log('  id | station_id |                 filename')
-    console.log('-----|------------|-------------------------')
-    rows.forEach(row => console.log(`${fw(row.id, 4)} | ${fw(row.station_id, 10)} | ${fw(path.basename(row.url), 24)}`))
+    printTable(rows, ['id', 'station_id', 'uuid', 'filename'])
   }
 }
 
 exports.createDataset = async function (filename, options) {
-  console.log(`
-Create dataset
-        filename: ${filename}
-      station id: ${options.station}
-timestamp column: ${options.timestamp}
-variable column(s): ${options.variable}
-  `)
-
   // generate uuid
   const uuid = uuidv4()
 
@@ -77,7 +62,10 @@ variable column(s): ${options.variable}
   }
 
   // upload to s3
-  const uploaded = await uploadDatasetToS3(filename, { dryRun: options.dryRun, uuid })
+  const uploaded = await uploadDatasetToS3(filename, {
+    dryRun: options.dryRun,
+    uuid
+  })
   console.log(`dataset uploaded to s3 (Key=${uploaded.Key})`)
 
   // create dataset object
@@ -93,16 +81,12 @@ variable column(s): ${options.variable}
   }
 
   // save to database
-  const dataset = await station.$relatedQuery('datasets').insertGraph(props).returning('*')
-  console.log(`dataset saved to db (id=${dataset.id})`)
+  const row = await station.$relatedQuery('datasets')
+    .insertGraph(props).returning('*')
+  printTable([row], ['id', 'station_id', 'uuid', 'filename'])
 }
 
 exports.processDataset = async function (id) {
-  console.log(`
-Process dataset
-  id: ${id}
-  `)
-
   const dataset = await Dataset.query().findById(id)
   if (!dataset) {
     console.error(`Error: Dataset not found (id=${id})`)
@@ -127,11 +111,6 @@ Process dataset
 }
 
 exports.deleteDataset = async function (id) {
-  console.log(`
-Delete dataset
-  id: ${id}
-  `)
-
   const dataset = await Dataset.query().findById(id)
   if (!dataset) {
     console.error(`Error: Dataset not found (id=${id})`)

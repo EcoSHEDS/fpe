@@ -1,8 +1,8 @@
 const createError = require('http-errors')
 const { v4: uuidv4 } = require('uuid')
 
-const { s3, lambda, batch, createPresignedPostPromise } = require('../aws')
-const { Station, Imageset, Camera } = require('../db/models')
+const { s3, batch, createPresignedPostPromise } = require('../aws')
+const { Station, Imageset } = require('../db/models')
 
 const attachImageset = async (req, res, next) => {
   const row = await Imageset.query().findById(req.params.imagesetId).withGraphFetched('images').modifyGraph('images', builder => {
@@ -23,10 +23,6 @@ const getImageset = async (req, res, next) => {
 }
 
 const postImagesets = async (req, res, next) => {
-  if (!req.body.camera_id) throw createError(400, 'Camera not specified (missing camera_id field)')
-  const camera = await Camera.query().findById(req.body.camera_id)
-  if (!camera) throw createError(400, `Camera must be assigned to this Imageset (camera_id=${req.body.camera_id})`)
-
   const props = {
     ...req.body,
     status: 'CREATED',
