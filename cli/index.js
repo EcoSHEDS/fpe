@@ -82,7 +82,6 @@ imagesets
 imagesets
   .command('create <folder>')
   .requiredOption('-s, --station <id>', 'Station ID associated with this imageset')
-  .requiredOption('-c, --camera <id>', 'Camera ID associated with this imageset')
   .option('-d, --dry-run', 'Dry run (nothing saved to database)', false)
   .description('Create a new imageset')
   .action(createImageset)

@@ -2,7 +2,7 @@ const fs = require('fs')
 const path = require('path')
 const { v4: uuidv4 } = require('uuid')
 
-const { Station, Camera, Imageset } = require('../api/db/models')
+const { Station, Imageset } = require('../api/db/models')
 const { printTable } = require('./lib/utils')
 const { NotFoundError } = require('./lib/errors')
 
