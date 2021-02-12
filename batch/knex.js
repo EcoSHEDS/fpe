@@ -1,4 +1,8 @@
-const { secretsmanager } = require('./aws')
+const AWS = require('aws-sdk')
+
+const secretsmanager = new AWS.SecretsManager({
+  region: process.env.AWS_REGION || 'us-east-1'
+})
 
 async function getCreds () {
   const secret = await secretsmanager
@@ -21,30 +25,7 @@ const config = {
       user: creds.username,
       password: creds.password
     }
-  },
-  migrations: {
-    tableName: 'knex_migrations',
-    directory: `${__dirname}/db/migrations`
   }
 }
 
-module.exports = {
-  development: {
-    ...config,
-    seeds: {
-      directory: `${__dirname}/db/seeds/development`
-    }
-  },
-  staging: {
-    ...config,
-    seeds: {
-      directory: `${__dirname}/db/seeds/staging`
-    }
-  },
-  production: {
-    ...config,
-    seeds: {
-      directory: `${__dirname}/db/seeds/production`
-    }
-  }
-}
+module.exports = require('knex')(config)

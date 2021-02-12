@@ -7,8 +7,8 @@ const { program } = require('commander')
 const { listUsers } = require('./cli/users')
 const { listCameras, createCamera, deleteCamera } = require('./cli/cameras')
 const { listStations, createStation, deleteStation } = require('./cli/stations')
-const { listDatasets, createDataset, deleteDataset } = require('./cli/datasets')
-const { listImagesets, createImageset, deleteImageset } = require('./cli/imagesets')
+const { listDatasets, createDataset, processDataset, deleteDataset } = require('./cli/datasets')
+const { listImagesets, createImageset, processImageset, deleteImageset } = require('./cli/imagesets')
 
 const { collect } = require('./cli/lib/utils')
 
@@ -81,6 +81,11 @@ datasets
   .action(createDataset)
 
 datasets
+  .command('process <id>')
+  .description('Process a dataset')
+  .action(processDataset)
+
+datasets
   .command('delete <id>')
   .description('Delete a dataset')
   .action(deleteDataset)
@@ -100,6 +105,11 @@ imagesets
   .option('-d, --dry-run', 'Dry run (nothing saved to database)', false)
   .description('Create a new imageset')
   .action(createImageset)
+
+imagesets
+  .command('process <id>')
+  .description('Process an imageset')
+  .action(processImageset)
 
 imagesets
   .command('delete <id>')

@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Cognito user pool for FPE
+Parameters:
+  userPoolName:
+    Type: String
+    Default: fpe-userpool
+  userPoolClientName:
+    Type: String
+    Default: fpe-userpool-client
+Resources:
+  UserPool:
+    Type: "AWS::Cognito::UserPool"
+    UpdateReplacePolicy: Retain
+    Properties:
+      UserPoolName: !Ref userPoolName
+      UserPoolTags:
+        project: fpe
+        env: dev
+      Schema:
+        - Name: email
+          Required: true
+          Mutable: true
+          AttributeDataType: String
+        - Name: name
+          Required: true
+          Mutable: true
+          AttributeDataType: String
+        - Name: affiliation
+          Required: false
+          Mutable: true
+          AttributeDataType: String
+      AutoVerifiedAttributes: ["email"]
+      EmailVerificationMessage: "Your verification code is {####}. Please return to FPE and use this code to confirm your email."
+      EmailVerificationSubject: "[FPE] Your Verification Code"
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+          RequireUppercase: true
+      UsernameAttributes: ["email"]
+      MfaConfiguration: "OFF"
+  UserPoolClient:
+    Type: "AWS::Cognito::UserPoolClient"
+    Properties:
+      ClientName: !Ref userPoolClientName
+      GenerateSecret: false
+      RefreshTokenValidity: 30
+      UserPoolId: !Ref UserPool
+    DependsOn: UserPool
+Outputs:
+  UserPoolId:
+    Value: !Ref UserPool
+    Description: Id for the user pool

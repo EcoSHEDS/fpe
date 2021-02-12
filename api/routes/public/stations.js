@@ -2,21 +2,20 @@ const express = require('express')
 const asyncHandler = require('express-async-handler')
 
 const {
-  getStations,
-
   attachStation,
-  getStation,
-
-  getDatasets,
-
-  attachDataset,
-  getDataset,
-
-  getImagesets,
-
-  attachImageset,
-  getImageset
+  getStations,
+  getStation
 } = require('../../controllers/stations')
+const {
+  attachDataset,
+  getDatasets,
+  getDataset
+} = require('../../controllers/datasets')
+const {
+  attachImageset,
+  getImagesets,
+  getImageset
+} = require('../../controllers/imagesets')
 
 var router = express.Router()
 

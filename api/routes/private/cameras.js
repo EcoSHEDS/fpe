@@ -8,10 +8,9 @@ const {
   attachCamera,
   getCamera,
   putCamera,
-  deleteCamera,
-
-  isOwner
+  deleteCamera
 } = require('../../controllers/cameras')
+const { isOwner } = require('../../middleware/auth')
 
 var router = express.Router()
 

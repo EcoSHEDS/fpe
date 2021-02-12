@@ -1,4 +1,3 @@
-const Papa = require('papaparse')
 const fs = require('fs')
 const path = require('path')
 const { v4: uuidv4 } = require('uuid')
@@ -7,7 +6,7 @@ const { Station, Dataset } = require('../api/db/models')
 const { NotFoundError } = require('./lib/errors')
 const { fw } = require('./lib/utils')
 
-const { s3, lambda } = require('../api/aws')
+const { s3, batch } = require('../api/aws')
 
 function uploadDatasetToS3 (file, { dryRun, uuid }) {
   if (dryRun) return Promise.resolve({ Location: `http://example.org/${path.basename(file)}` })
@@ -96,25 +95,35 @@ variable column(s): ${options.variable}
   // save to database
   const dataset = await station.$relatedQuery('datasets').insertGraph(props).returning('*')
   console.log(`dataset saved to db (id=${dataset.id})`)
+}
 
-  // trigger processor
-  console.log('processing dataset')
-  const results = await lambda.invoke({
-    FunctionName: 'fpe-lambda-dataset',
-    Payload: JSON.stringify({ id: dataset.id, client: 'cli' })
-  }).promise()
+exports.processDataset = async function (id) {
+  console.log(`
+Process dataset
+  id: ${id}
+  `)
 
-  // console.log(results)
-  if (results.FunctionError) {
-    console.log('failed to process dataset')
-    console.error(JSON.parse(results.Payload))
-    console.log('deleting file from s3')
-    await deleteFromS3(uploaded)
-    console.log('deleting dataset from database')
-    await dataset.$query().delete()
-  } else {
-    console.log('dataset processed')
+  const dataset = await Dataset.query().findById(id)
+  if (!dataset) {
+    console.error(`Error: Dataset not found (id=${id})`)
+    process.exit(1)
   }
+
+  const results = await batch.submitJob({
+    jobName: 'process-dataset',
+    jobDefinition: 'fpe-batch-job-definition',
+    jobQueue: 'fpe-batch-job-queue',
+    containerOverrides: {
+      command: [
+        'node',
+        'process.js',
+        'dataset',
+        '-i',
+        id
+      ]
+    }
+  }).promise()
+  console.log(`batch job submitted (jobId: ${results.jobId})`)
 }
 
 exports.deleteDataset = async function (id) {

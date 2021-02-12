@@ -1,0 +1,89 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: RDS Instance for FPE
+Parameters:
+  dbName:
+    Type: String
+    Default: fpe
+  vpcId:
+    Type: String
+    Default: vpc-0bbf7e0e987fdcb66
+  subnetIds:
+    Type: CommaDelimitedList
+    Default: 'subnet-06821c12e0348081f,subnet-04a189a052284439c'
+Resources:
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Internal subnets available for the RDS DB Instance
+      SubnetIds: !Ref subnetIds
+  DBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow PostgreSQL access
+      VpcId: !Ref vpcId
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: '5432'
+        ToPort: '5432'
+        CidrIp: 75.68.245.53/32
+      - IpProtocol: tcp
+        FromPort: '5432'
+        ToPort: '5432'
+        CidrIp: 10.0.0.0/16
+  DBInstanceSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Join ['', [!Ref 'AWS::StackName', '-secret']]
+      Description: 'Credentials for FPE RDS instance'
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "jeff"}'
+        GenerateStringKey: 'password'
+        PasswordLength: 16
+        ExcludeCharacters: '"@/\'
+  SecretDBInstanceAttachment:
+    Type: AWS::SecretsManager::SecretTargetAttachment
+    Properties:
+      SecretId: !Ref DBInstanceSecret
+      TargetId: !Ref DBInstance
+      TargetType: AWS::RDS::DBInstance
+  DBInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: 20
+      DBInstanceClass: db.t2.micro
+      AllowMajorVersionUpgrade: false
+      AutoMinorVersionUpgrade: true
+      DBInstanceIdentifier: !Ref dbName
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      DBName: !Ref dbName
+      Engine: postgres
+      EngineVersion: 12.4
+      MasterUsername: !Join ['', ['{{resolve:secretsmanager:', !Ref DBInstanceSecret, ':SecretString:username}}' ]]
+      MasterUserPassword: !Join ['', ['{{resolve:secretsmanager:', !Ref DBInstanceSecret, ':SecretString:password}}' ]]
+      MultiAZ: false
+      Port: 5432
+      PubliclyAccessible: true
+      StorageType: gp2
+      VPCSecurityGroups:
+        - !Ref DBSecurityGroup
+      Tags:
+        - Key: project
+          Value: fpe
+        - Key: env
+          Value: dev
+Outputs:
+  DBSecretArn:
+    Description: Secret Arn to access database
+    Value: !Ref DBInstanceSecret
+  DBAddress:
+    Description: Database endpoint address
+    Value:
+      Fn::GetAtt:
+        - DBInstance
+        - Endpoint.Address
+  DBPort:
+    Description: Database endpoint port
+    Value:
+      Fn::GetAtt:
+        - DBInstance
+        - Endpoint.Port

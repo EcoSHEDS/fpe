@@ -2,37 +2,35 @@ const express = require('express')
 const asyncHandler = require('express-async-handler')
 
 const {
-  getStations,
-  postStations,
-
   attachStation,
+  getStations,
   getStation,
+  postStations,
   putStation,
-  deleteStation,
-
-  getDatasets,
-  postDatasets,
-
+  deleteStation
+} = require('../../controllers/stations')
+const {
   attachDataset,
+  getDatasets,
   getDataset,
+  postDatasets,
   putDataset,
   deleteDataset,
-  processDataset,
-
-  getImagesets,
-  postImagesets,
-
+  processDataset
+} = require('../../controllers/datasets')
+const {
   attachImageset,
+  getImagesets,
   getImageset,
+  postImagesets,
   putImageset,
   deleteImageset,
-  processImageset,
-
-  // attachImage,
-  postImage,
-
-  isOwner
-} = require('../../controllers/stations')
+  processImageset
+} = require('../../controllers/imagesets')
+const {
+  postImage
+} = require('../../controllers/images')
+const { isOwner } = require('../../middleware/auth')
 
 var router = express.Router()
 

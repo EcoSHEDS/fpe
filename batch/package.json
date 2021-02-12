@@ -1,0 +1,21 @@
+{
+  "name": "fpe-batch",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.807.0",
+    "commander": "^6.2.1",
+    "csv-parse": "^4.14.1",
+    "exif-parser": "^0.1.12",
+    "knex": "^0.21.12",
+    "objection": "^2.2.3",
+    "pg": "^8.5.1",
+    "sharp": "^0.26.3"
+  }
+}

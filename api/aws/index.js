@@ -10,6 +10,15 @@ exports.lambda = new AWS.Lambda({
   region: process.env.FPE_REGION
 })
 
+exports.batch = new AWS.Batch({
+  apiVersion: '2016-08-10',
+  region: process.env.FPE_REGION
+})
+
+exports.secretsmanager = new AWS.SecretsManager({
+  region: process.env.FPE_REGION
+})
+
 exports.createPresignedPostPromise = (params) => {
   return new Promise((resolve, reject) => {
     exports.s3.createPresignedPost(params, (err, data) => {

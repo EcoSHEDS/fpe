@@ -6,7 +6,7 @@ const { Station, Camera, Imageset } = require('../api/db/models')
 const { fw } = require('./lib/utils')
 const { NotFoundError } = require('./lib/errors')
 
-const { s3 } = require('../api/aws')
+const { s3, batch } = require('../api/aws')
 
 exports.listImagesets = async function (options) {
   console.log(`
@@ -19,7 +19,7 @@ List imagesets
     query = query.where({ station_id: options.station })
   }
   const rows = await query
-console.log(rows)
+
   if (rows.length === 0) {
     console.log('No imagesets found')
   } else {
@@ -34,17 +34,6 @@ function listFolder (folder) {
   return files
 }
 
-function processImage (file, options) {
-  return uploadImage(file, options)
-    .then(result => ({
-      filename: path.basename(file),
-      url: result.Location,
-      timestamp: '2020-07-16T12:00Z',
-      metadata: {},
-      status: 'CREATED'
-    }))
-}
-
 function uploadImage (file, { dryRun, uuid }) {
   if (dryRun) return Promise.resolve({ Location: `http://example.org/${path.basename(file)}` })
   const stream = fs.createReadStream(file)
@@ -53,13 +42,23 @@ function uploadImage (file, { dryRun, uuid }) {
     Key: `images/${uuid}/${path.basename(file)}`,
     Body: stream
   }).promise()
+    .then(result => ({
+      filename: path.basename(file),
+      url: result.Location,
+      s3: {
+        Bucket: result.Bucket,
+        Key: result.Key
+      },
+      metadata: {}
+      // status: 'CREATED'
+    }))
 }
 
-async function processImages (files, options) {
+async function uploadImages (files, options) {
   const images = []
   for (let i = 0; i < files.length; i++) {
     console.log(`processing image ${path.basename(files[i])} (${i + 1}/${files.length})`)
-    const image = await processImage(files[i], options)
+    const image = await uploadImage(files[i], options)
     images.push(image)
   }
   return images
@@ -93,14 +92,14 @@ station id: ${options.station}
 
   // list files
   const files = await listFolder(folder)
-  console.log(`folder listed (n files=${files.length.toLocaleString()})`)
+  console.log(`files listed (n=${files.length.toLocaleString()})`)
 
   // validate config
   // validateConfig(parsed, config)
-  console.log('configuration validated')
+  // console.log('configuration validated')
 
   // transform
-  const images = await processImages(files, { dryRun: options.dryRun, uuid })
+  const images = await uploadImages(files, { dryRun: options.dryRun, uuid })
   console.log(`images processed (n images=${images.length.toLocaleString()})`)
 
   // create imageset object
@@ -109,7 +108,7 @@ station id: ${options.station}
     uuid,
     config,
     n_images: images.length,
-    status: 'DONE',
+    status: 'CREATED',
     images
   }
 
@@ -118,9 +117,47 @@ station id: ${options.station}
     console.log('created imageset:')
     console.log(JSON.stringify(props, null, 2))
   } else {
-    const imageset = await station.$relatedQuery('imagesets').insertGraph(props).returning('*')
+    const imageset = await station.$relatedQuery('imagesets')
+      .insertGraph(props)
+      .returning('*')
     console.log(`imageset saved to db (id=${imageset.id})`)
   }
+}
+
+exports.processImageset = async function (id) {
+  console.log(`
+Process imageset
+  id: ${id}
+  `)
+
+  const imageset = await Imageset.query().findById(id)
+  if (!imageset) {
+    console.error(`Error: Imageset not found (id=${id})`)
+    process.exit(1)
+  }
+
+  const results = await batch.submitJob({
+    jobName: 'process-imageset',
+    jobDefinition: 'fpe-batch-job-definition',
+    jobQueue: 'fpe-batch-job-queue',
+    containerOverrides: {
+      command: [
+        'node',
+        'process.js',
+        'imageset',
+        '-i',
+        id
+      ]
+    }
+  }).promise()
+  console.log(`batch job submitted (jobId: ${results.jobId})`)
+}
+
+function deleteImageFromS3 ({ Bucket, Key }) {
+  return s3.deleteObject({
+    Bucket,
+    Key
+  }).promise()
 }
 
 exports.deleteImageset = async function (id) {
@@ -128,6 +165,19 @@ exports.deleteImageset = async function (id) {
 Delete imageset
   id: ${id}
   `)
+
+  const imageset = await Imageset.query().findById(id)
+    .withGraphFetched('images')
+  if (!imageset) {
+    console.error(`Error: Imageset not found (id=${id})`)
+    process.exit(1)
+  }
+
+  console.log('deleting images from s3')
+  for (let i = 0; i < imageset.images.length; i++) {
+    console.log(`deleting image ${i + 1}/${imageset.images.length}`)
+    await deleteImageFromS3(imageset.images[i].s3)
+  }
 
   const nrow = await Imageset.query().deleteById(id)
   if (nrow === 0) {
