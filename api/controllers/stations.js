@@ -5,7 +5,7 @@ const { Station } = require('../db/models')
 const attachStation = async (req, res, next) => {
   const row = await Station.query()
     .findById(req.params.stationId)
-    .withGraphFetched('[user, datasets, imagesets]')
+    .withGraphFetched('[datasets, imagesets]')
   if (!row) throw createError(404, `Station (id = ${req.params.stationId}) not found`)
   res.locals.station = row
   return next()

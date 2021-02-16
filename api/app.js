@@ -3,6 +3,7 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 const logger = require('morgan')
 const asyncHandler = require('express-async-handler')
+const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware')
 
 const { attachUser } = require('./middleware/auth')
 
@@ -11,6 +12,7 @@ const app = express()
 app.use(logger('dev'))
 app.use(bodyParser.json())
 app.use(cors())
+app.use(awsServerlessExpressMiddleware.eventContext())
 
 app.use(asyncHandler(attachUser))
 
