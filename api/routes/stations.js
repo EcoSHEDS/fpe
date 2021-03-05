@@ -28,6 +28,7 @@ const {
   processImageset
 } = require('../controllers/imagesets')
 const {
+  getImages,
   postImage
 } = require('../controllers/images')
 const { isOwner } = require('../middleware/auth')
@@ -76,6 +77,7 @@ router.route('/:stationId/imagesets/:imagesetId/process')
 
 router.route('/:stationId/imagesets/:imagesetId/images')
   .all(asyncHandler(attachStation), asyncHandler(attachImageset))
+  .get(asyncHandler(getImages))
   .post(isOwner, asyncHandler(postImage))
 
 module.exports = router

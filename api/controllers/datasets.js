@@ -19,13 +19,13 @@ const getDatasets = async (req, res, next) => {
 
 const getDataset = async (req, res, next) => {
   res.locals.dataset.series = await res.locals.dataset.$relatedQuery('series')
-    .withGraphFetched('observations')
+    .withGraphFetched('variable')
   return res.status(200).json(res.locals.dataset)
 }
 
 const postDatasets = async (req, res, next) => {
   const props = {
-    config: req.body.config,
+    ...req.body,
     status: 'CREATED',
     uuid: uuidv4()
   }
@@ -78,7 +78,7 @@ const processDataset = async (req, res, next) => {
   console.log(`process dataset (id=${res.locals.dataset.id})`)
 
   const response = await batch.submitJob({
-    jobName: 'process-dataset',
+    jobName: `process-dataset-${res.locals.dataset.id}`,
     jobDefinition: 'fpe-batch-job-definition',
     jobQueue: 'fpe-batch-job-queue',
     containerOverrides: {
@@ -86,7 +86,6 @@ const processDataset = async (req, res, next) => {
         'node',
         'process.js',
         'dataset',
-        '-i',
         res.locals.dataset.id.toString()
       ]
     }

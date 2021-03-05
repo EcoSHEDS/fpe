@@ -86,7 +86,6 @@ exports.createImageset = async function (folder, options) {
   const props = {
     uuid,
     config,
-    n_images: images.length,
     status: 'CREATED',
     images
   }
@@ -145,7 +144,8 @@ exports.deleteImageset = async function (id) {
   console.log('deleting images from s3')
   for (let i = 0; i < imageset.images.length; i++) {
     console.log(`deleting image ${i + 1}/${imageset.images.length}`)
-    await deleteImageFromS3(imageset.images[i].s3)
+    await deleteImageFromS3(imageset.images[i].full_s3)
+    await deleteImageFromS3(imageset.images[i].thumb_s3)
   }
 
   const nrow = await Imageset.query().deleteById(id)

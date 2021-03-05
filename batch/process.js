@@ -2,13 +2,11 @@ const { program } = require('commander')
 
 const { processDataset, processImageset } = require('./processors')
 
-program.command('imageset')
-  .requiredOption('-i, --id <id>', 'Imageset ID to process')
+program.command('imageset [id]')
   .description('Process imageset')
   .action(processImageset)
 
-program.command('dataset')
-  .requiredOption('-i, --id <id>', 'Dataset ID to process')
+program.command('dataset [id]')
   .description('Process dataset')
   .action(processDataset)
 

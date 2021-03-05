@@ -1,5 +1,7 @@
 exports.Dataset = require('./Dataset')
-exports.Imageset = require('./Imageset')
 exports.Image = require('./Image')
+exports.Imageset = require('./Imageset')
+exports.Series = require('./Series')
 exports.Station = require('./Station')
+exports.Value = require('./Value')
 exports.Variable = require('./Variable')

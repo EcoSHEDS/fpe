@@ -10,8 +10,8 @@ async function handleImage (image) {
   console.log(`processing image (id=${image.id})`)
 
   // download file
-  console.log(`downloading image file (id=${image.id}, Key=${image.s3.Key})`)
-  const s3ImageFile = await s3.getObject(image.s3).promise()
+  console.log(`downloading image file (id=${image.id}, Key=${image.full_s3.Key})`)
+  const s3ImageFile = await s3.getObject(image.full_s3).promise()
 
   // extract exif
   console.log(`extracting exif (id=${image.id})`)
@@ -25,11 +25,11 @@ async function handleImage (image) {
   }
 
   // create thumbnail
-  const thumbKey = image.s3.Key.replace('images/', 'thumbs/')
+  const thumbKey = image.full_s3.Key.replace('images/', 'thumbs/')
   console.log(`thumbKey: ${thumbKey}`)
   const thumbBuffer = await sharp(s3ImageFile.Body).resize(200).toBuffer()
   await s3.putObject({
-    Bucket: image.s3.Bucket,
+    Bucket: image.full_s3.Bucket,
     Key: thumbKey,
     Body: thumbBuffer,
     ContentType: 'image'
@@ -37,30 +37,27 @@ async function handleImage (image) {
 
   // update record
   console.log(`updating image record (id=${image.id})`)
-  console.log('exif')
-  console.log(result)
+  // console.log('exif')
+  // console.log(result)
   const timestamp = (new Date(result.tags.CreateDate * 1000)).toISOString()
-  const metadata = {
-    make: result.tags.Make,
-    model: result.tags.Model,
-    width: result.imageSize.width,
-    height: result.imageSize.height
-  }
+
   const payload = {
+    ...result.imageSize,
+    exif: result.tags,
     timestamp,
     thumb_s3: {
-      Bucket: image.s3.Bucket,
+      Bucket: image.full_s3.Bucket,
       Key: thumbKey
     },
-    thumb_url: `https://${image.s3.Bucket}.s3.amazonaws.com/${thumbKey}`,
-    metadata
+    thumb_url: `https://${image.full_s3.Bucket}.s3.amazonaws.com/${thumbKey}`,
+    status: 'DONE'
   }
 
   image = await image.$query().patch(payload).returning('*')
   return image
 }
 
-module.exports = async function ({ id }) {
+async function processImageset (id) {
   console.log(`processing imageset (id=${id})`)
 
   console.log(`fetching imageset record (id=${id})`)
@@ -86,4 +83,19 @@ module.exports = async function ({ id }) {
   imageset = await imageset.$query().patch(payload).returning('*')
 
   return imageset
+}
+
+module.exports = async function (id) {
+  try {
+    await processImageset(id)
+  } catch (e) {
+    console.log('failed')
+    console.error(e)
+    await Imageset.query()
+      .patch({
+        status: 'FAILED',
+        error_message: e.toString()
+      })
+      .findById(id)
+  }
 }

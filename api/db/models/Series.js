@@ -8,7 +8,7 @@ class Series extends Base {
   static get relationMappings () {
     const Dataset = require('./Dataset')
     const Variable = require('./Variable')
-    const Observation = require('./Observation')
+    const Value = require('./Value')
     return {
       dataset: {
         relation: Base.BelongsToOneRelation,
@@ -26,12 +26,12 @@ class Series extends Base {
           to: 'variables.id'
         }
       },
-      observations: {
+      values: {
         relation: Base.HasManyRelation,
-        modelClass: Observation,
+        modelClass: Value,
         join: {
-          from: 'series.id',
-          to: 'observations.series_id'
+          from: 'values.series_id',
+          to: 'series.id'
         }
       }
     }

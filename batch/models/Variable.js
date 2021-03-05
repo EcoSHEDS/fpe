@@ -5,11 +5,9 @@ class Variable extends Base {
     return 'variables'
   }
 
-  $beforeInsert () {
-  }
+  $beforeInsert () { }
 
-  $beforeUpdate () {
-  }
+  $beforeUpdate () { }
 }
 
 module.exports = Variable

@@ -4,20 +4,11 @@ require('dotenv-flow').config()
 
 const { program } = require('commander')
 
-const { listUsers } = require('./users')
 const { listStations, createStation, deleteStation } = require('./stations')
 const { listDatasets, createDataset, processDataset, deleteDataset } = require('./datasets')
 const { listImagesets, createImageset, processImageset, deleteImageset } = require('./imagesets')
 
 const { collect } = require('./lib/utils')
-
-// USERS
-const users = program.command('users').description('Manage users')
-
-users
-  .command('list')
-  .description('List users')
-  .action(listUsers)
 
 // STATIONS
 const stations = program.command('stations').description('Manage stations')

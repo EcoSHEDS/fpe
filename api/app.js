@@ -9,17 +9,21 @@ const { attachUser } = require('./middleware/auth')
 
 const app = express()
 
-app.use(logger('dev'))
+app.use(logger('tiny'))
 app.use(bodyParser.json())
 app.use(cors())
-app.use(awsServerlessExpressMiddleware.eventContext())
+
+const isLambda = !!process.env.LAMBDA_TASK_ROOT
+if (isLambda) {
+  app.use(awsServerlessExpressMiddleware.eventContext())
+}
 
 app.use(asyncHandler(attachUser))
 
 app.use('/', require('./routes/index'))
 
 app.use((err, req, res, next) => {
-  console.error(err)
+  // console.error(err)
   const status = err.status || 500
   res.status(status)
   const payload = {

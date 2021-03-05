@@ -1,5 +1,7 @@
 const AWS = require('aws-sdk')
 const parse = require('csv-parse')
+const Joi = require('joi')
+
 const { Dataset } = require('../models')
 
 const s3 = new AWS.S3()
@@ -7,27 +9,28 @@ const s3 = new AWS.S3()
 function validateConfig (rows, config) {
   // TODO: validate variable ids from database
   const fields = Object.keys(rows[0])
-  if (!config) {
-    throw new Error('Dataset configuration not found')
-  }
-  if (!config.columns) {
-    throw new Error('Column definitions not defined in dataset configuration')
-  }
-  if (!config.columns.timestamp) {
-    throw new Error('Timestamp column not defined in dataset configuration')
-  }
-  if (!fields.includes(config.columns.timestamp)) {
-    throw new Error(`Timestamp column (${config.columns.timestamp}) not found in dataset file`)
-  }
-  if (!config.columns.variables || config.columns.variables.lenth === 0) {
-    throw new Error('No variable columns defined in dataset configuration')
-  }
-  config.columns.variables.forEach(v => {
-    if (!fields.includes(v.column)) {
-      throw new Error(`Variable column (${v.column}) not found in dataset file`)
-    }
+  const column = Joi.string().valid(...fields).required()
+  const schema = Joi.object({
+    timestamp: Joi.object({
+      column,
+      timezone: Joi.string().valid('UTC', 'EDT', 'EST').required()
+    }),
+    variables: Joi.array().items(
+      Joi.object({
+        column,
+        id: Joi.string().valid('FLOW_CFS', 'STAGE_FT')
+      })
+    ).required().min(1)
   })
-  return true
+
+  const { error, value } = schema.validate(config)
+
+  if (error) {
+    console.error(error)
+    throw new Error(`Invalid config object (${error.toString()})`)
+  }
+
+  return value
 }
 
 function parseDataset ({ s3: s3File }) {
@@ -48,39 +51,26 @@ function parseDataset ({ s3: s3File }) {
   })
 }
 
-function generateSeries (data, { columns }) {
-  const series = columns.variables.map(c => {
-    const observations = data.map(d => ({
-      timestamp: d[columns.timestamp],
-      value: d[c.column]
+function generateSeries (data, { timestamp, variables }) {
+  const series = variables.map(variable => {
+    const values = data.map(d => ({
+      timestamp: d[timestamp.column],
+      value: d[variable.column]
     }))
     return {
-      variable_id: c.variable_id,
-      start_timestamp: observations[0].timestamp,
-      end_timestamp: observations[observations.length - 1].timestamp,
-      n_values: observations.length,
-      observations
+      variable_id: variable.id,
+      values
     }
   })
   return series
 }
 
-// exports.testDataset = async function (event, context, callback) {
-//   console.log('event: ', JSON.stringify(event, null, 2))
-
-//   console.log(`fetching dataset record (id=${event.id})`)
-//   const dataset = await Dataset.query().patch({ status: 'PROCESSING' }).findById(event.id).returning('*')
-//   if (!dataset) throw new Error(`Dataset record (id=${event.id}) not found`)
-
-//   console.log(JSON.stringify(dataset, null, 2))
-//   return dataset
-// }
-
-module.exports = async function ({ id }) {
+async function processDataset (id) {
   console.log(`processing dataset (id=${id})`)
 
   console.log(`fetching dataset record (id=${id})`)
-  let dataset = await Dataset.query().patch({ status: 'PROCESSING' })
+  const dataset = await Dataset.query()
+    .patch({ status: 'PROCESSING' })
     .findById(id).returning('*')
   if (!dataset) throw new Error(`Dataset record (id=${id}) not found`)
 
@@ -96,19 +86,37 @@ module.exports = async function ({ id }) {
   if (!rows || rows.length === 0) throw new Error('No data found in dataset')
 
   console.log('validating config file')
-  validateConfig(rows, dataset.config)
+  const config = dataset.config
+  validateConfig(rows, config)
 
-  console.log(`generating series (nrows=${rows.length}, nvars=${dataset.config.columns.variables.length})`)
-  const series = generateSeries(rows, dataset.config)
+  console.log(`generating series (nrows=${rows.length}, nvars=${config.variables.length})`)
+  const series = generateSeries(rows, config)
 
   console.log(`saving series (n=${series.length})`)
   await dataset.$relatedQuery('series').insertGraph(series)
 
   console.log('updating dataset status')
-  await dataset.$query().patch({ status: 'DONE' }).returning('*')
+  await dataset.$query().patch({
+    status: 'DONE',
+    start_timestamp: rows[0][config.timestamp.column],
+    end_timestamp: rows[rows.length - 1][config.timestamp.column],
+    n_rows: rows.length
+  }).returning('*')
 
-  dataset = await Dataset.query().findById(id).withGraphFetched('series')
-  console.log(JSON.stringify(dataset, null, 2))
+  return await Dataset.query().findById(id).withGraphFetched('series')
+}
 
-  return dataset
+module.exports = async function (id) {
+  try {
+    await processDataset(id)
+  } catch (e) {
+    console.log('failed')
+    console.error(e)
+    await Dataset.query()
+      .patch({
+        status: 'FAILED',
+        error_message: e.toString()
+      })
+      .findById(id)
+  }
 }

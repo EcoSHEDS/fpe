@@ -13,9 +13,6 @@ exports.up = knex => knex.schema.createTable('series', t => {
     .index()
     .notNullable()
     .onDelete('CASCADE')
-  t.timestamp('start_timestamp')
-  t.timestamp('end_timestamp')
-  t.integer('n_values')
   t.timestamps(true, true)
 })
 

@@ -6,18 +6,9 @@ class Station extends Base {
   }
 
   static get relationMappings () {
-    const User = require('./User')
     const Dataset = require('./Dataset')
     const Imageset = require('./Imageset')
     return {
-      user: {
-        relation: Base.BelongsToOneRelation,
-        modelClass: User,
-        join: {
-          from: 'stations.user_id',
-          to: 'users.id'
-        }
-      },
       datasets: {
         relation: Base.HasManyRelation,
         modelClass: Dataset,

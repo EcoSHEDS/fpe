@@ -8,12 +8,21 @@ exports.up = knex => knex.schema.createTable('datasets', t => {
     .index()
     .notNullable()
     .onDelete('CASCADE')
+
   t.text('uuid')
-  t.text('url')
-  t.json('s3')
-  t.json('config')
   t.enu('status', statusTypes, { useNative: true, enumName: 'status_type' })
   t.text('error_message')
+
+  t.json('config')
+  t.text('filename')
+
+  t.text('url')
+  t.json('s3')
+
+  t.timestamp('start_timestamp')
+  t.timestamp('end_timestamp')
+  t.integer('n_rows')
+
   t.timestamps(true, true)
 })
 

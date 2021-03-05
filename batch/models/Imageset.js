@@ -5,6 +5,25 @@ class Imageset extends Base {
     return 'imagesets'
   }
 
+  static get modifiers () {
+    return {
+      imageSummary (builder) {
+        builder.select(
+          '*',
+          Imageset.relatedQuery('images')
+            .count()
+            .as('n_images'),
+          Imageset.relatedQuery('images')
+            .min('timestamp')
+            .as('start_timestamp'),
+          Imageset.relatedQuery('images')
+            .max('timestamp')
+            .as('end_timestamp')
+        )
+      }
+    }
+  }
+
   static get relationMappings () {
     const Station = require('./Station')
     const Image = require('./Image')

@@ -5,16 +5,23 @@ const { s3, batch, createPresignedPostPromise } = require('../aws')
 const { Station, Imageset } = require('../db/models')
 
 const attachImageset = async (req, res, next) => {
-  const row = await Imageset.query().findById(req.params.imagesetId).withGraphFetched('images').modifyGraph('images', builder => {
-    builder.orderBy('filename')
-  })
-  if (!row) throw createError(404, `Imageset (id = ${req.params.imagesetId}) not found`)
+  const row = await Imageset.query()
+    .modify('imageSummary')
+    .withGraphFetched('images(defaultSelect,defaultOrderBy)')
+    .findById(req.params.imagesetId)
+
+  if (!row) {
+    throw createError(404, `Imageset (id = ${req.params.imagesetId}) not found`)
+  }
+
   res.locals.imageset = row
   return next()
 }
 
 const getImagesets = async (req, res, next) => {
-  const rows = await Imageset.query().where({ station_id: res.locals.station.id })
+  const rows = await Imageset.query()
+    .modify('imageSummary')
+    .where({ station_id: res.locals.station.id })
   return res.status(200).json(rows)
 }
 
@@ -63,8 +70,8 @@ const deleteImageset = async (req, res, next) => {
   res.locals.imageset.images.forEach(image => {
     console.log(`Deleting image (id=${image.id})`)
     let params = {
-      Bucket: image.s3.Bucket,
-      Key: image.s3.Key
+      Bucket: image.full_s3.Bucket,
+      Key: image.full_s3.Key
     }
     s3.deleteObject(params)
       .promise()
@@ -89,7 +96,7 @@ const processImageset = async (req, res, next) => {
   console.log(`process imageset (id=${res.locals.imageset.id})`)
 
   const response = await batch.submitJob({
-    jobName: 'process-imageset',
+    jobName: `process-imageset-${res.locals.imageset.id}`,
     jobDefinition: 'fpe-batch-job-definition',
     jobQueue: 'fpe-batch-job-queue',
     containerOverrides: {
@@ -97,11 +104,12 @@ const processImageset = async (req, res, next) => {
         'node',
         'process.js',
         'imageset',
-        '-i',
         res.locals.imageset.id.toString()
       ]
     }
   }).promise()
+
+  await res.locals.imageset.$query().patch({ status: 'QUEUED' })
 
   return res.status(200).json(response)
 }

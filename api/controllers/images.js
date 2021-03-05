@@ -9,9 +9,17 @@ const attachImage = async (req, res, next) => {
   return next()
 }
 
+const getImages = async (req, res, next) => {
+  const rows = await res.locals.imageset.$relatedQuery('images')
+    .modify('defaultOrderBy')
+    .modify('defaultSelect')
+  return res.status(200).json(rows)
+}
+
 const postImage = async (req, res, next) => {
   const props = {
-    ...req.body
+    ...req.body,
+    status: 'CREATED'
   }
 
   const rows = await Imageset.relatedQuery('images')
@@ -25,5 +33,6 @@ const postImage = async (req, res, next) => {
 
 module.exports = {
   attachImage,
+  getImages,
   postImage
 }

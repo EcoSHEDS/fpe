@@ -7,19 +7,26 @@ exports.up = knex => knex.schema.createTable('images', t => {
     .index()
     .notNullable()
     .onDelete('CASCADE')
+
   t.text('filename')
-  t.json('meta')
   t.timestamp('timestamp')
-  t.json('s3')
-  t.text('url')
+  t.integer('width')
+  t.integer('height')
+  t.json('exif')
+
+  t.json('full_s3')
+  t.text('full_url')
+
   t.json('thumb_s3')
   t.text('thumb_url')
+
   t.enu('status', null, {
     useNative: true,
     existingType: true,
     enumName: 'status_type'
   })
   t.text('error_message')
+
   t.timestamps(true, true)
 })
 

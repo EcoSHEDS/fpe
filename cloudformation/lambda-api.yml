@@ -10,6 +10,12 @@ Parameters:
   dbSecretArn:
     Type: String
     Default: arn:aws:secretsmanager:us-east-1:474916309046:secret:fpe-rds-secret-jO8YDC
+  jobDefinitionArn:
+    Type: String
+    Default: arn:aws:batch:us-east-1:474916309046:job-definition/fpe-batch-job-definition:*
+  jobQueueArn:
+    Type: String
+    Default: arn:aws:batch:us-east-1:474916309046:job-queue/fpe-batch-job-queue
   functionName:
     Type: String
     Default: fpe-lambda-api
@@ -55,7 +61,7 @@ Resources:
       Timeout: '15'
       Code:
         S3Bucket: walkerenvres-fpe-lambda
-        S3Key: api/cd02f496e883eb5feae4006c68f77c3d
+        S3Key: api/da0e52cea96f4b64b4773b299605f5e6
       VpcConfig:
         SecurityGroupIds:
         - Ref: SecurityGroup
@@ -122,6 +128,10 @@ Resources:
           - secretsmanager:ListSecretVersionIds
           Resource:
             Ref: dbSecretArn
+        - Effect: Allow
+          Action:
+          - batch:*
+          Resource: '*'
 Outputs:
   Region:
     Value:
