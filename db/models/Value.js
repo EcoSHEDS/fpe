@@ -22,7 +22,7 @@ class Value extends Base {
             raw('avg(value) as mean'),
             raw('max(value) as max')
           )
-          .groupBy(raw('to_char(timestamp, \'YYYY-MM-DD\')'))
+          .groupBy([raw('to_char(timestamp, \'YYYY-MM-DD\')'), 'series_id'])
           .orderBy('date')
       }
     }

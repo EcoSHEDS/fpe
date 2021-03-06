@@ -61,7 +61,7 @@ Resources:
       Timeout: '15'
       Code:
         S3Bucket: walkerenvres-fpe-lambda
-        S3Key: api/da0e52cea96f4b64b4773b299605f5e6
+        S3Key: api/31f0c8d0b3e39a453d0b6e3e9cd7d4a4
       VpcConfig:
         SecurityGroupIds:
         - Ref: SecurityGroup

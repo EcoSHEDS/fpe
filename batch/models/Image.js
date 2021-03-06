@@ -1,4 +1,4 @@
-// const { raw } = require('objection')
+const { raw } = require('objection')
 const Base = require('./Base')
 
 class Image extends Base {
@@ -18,6 +18,16 @@ class Image extends Base {
           'full_url', 'thumb_url',
           'status', 'error_message'
         )
+      },
+      daily (builder) {
+        builder
+          .select(
+            raw('to_char(timestamp, \'YYYY-MM-DD\') as date'),
+            'id', 'imageset_id',
+            'filename', 'timestamp', 'thumb_url'
+          )
+          .where('status', 'DONE')
+          .orderBy('timestamp')
       }
     }
   }

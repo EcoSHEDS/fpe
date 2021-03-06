@@ -68,22 +68,16 @@ const deleteImageset = async (req, res, next) => {
   }
 
   res.locals.imageset.images.forEach(image => {
-    console.log(`Deleting image (id=${image.id})`)
-    let params = {
-      Bucket: image.full_s3.Bucket,
-      Key: image.full_s3.Key
+    if (image.full_s3) {
+      console.log(`Deleting image full (id=${image.id})`)
+      s3.deleteObject(image.full_s3)
+        .promise()
+        .catch((err) => console.log(err))
     }
-    s3.deleteObject(params)
-      .promise()
-      .catch((err) => console.log(err))
 
     if (image.thumb_s3) {
       console.log(`Deleting image thumb (id=${image.id})`)
-      params = {
-        Bucket: image.thumb_s3.Bucket,
-        Key: image.thumb_s3.Key
-      }
-      s3.deleteObject(params)
+      s3.deleteObject(image.thumb_s3)
         .promise()
         .catch((err) => console.log(err))
     }

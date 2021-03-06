@@ -1,4 +1,5 @@
 const createError = require('http-errors')
+const { rollup } = require('d3-array')
 
 const { Station } = require('../db/models')
 
@@ -38,6 +39,27 @@ const deleteStation = async (req, res, next) => {
   return res.status(204).json()
 }
 
+const getStationDaily = async (req, res, next) => {
+  const data = await res.locals.station
+    .$query()
+    .withGraphFetched('[datasets(done).series.values(daily),imagesets(imageSummary,done).images(daily)]')
+
+  const aggregate = v => {
+    const mid = Math.floor(v.length / 2)
+    return {
+      n_images: v.length,
+      image: v[mid]
+    }
+  }
+  data.imagesets.forEach(d => {
+    d.images = Array.from(
+      rollup(d.images, aggregate, d => d.date),
+      ([key, value]) => ({ date: key, ...value })
+    )
+  })
+  return res.status(200).json(data)
+}
+
 module.exports = {
   getStations,
   postStations,
@@ -45,5 +67,7 @@ module.exports = {
   attachStation,
   getStation,
   putStation,
-  deleteStation
+  deleteStation,
+
+  getStationDaily
 }

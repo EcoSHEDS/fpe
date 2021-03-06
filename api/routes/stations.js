@@ -7,7 +7,8 @@ const {
   getStation,
   postStations,
   putStation,
-  deleteStation
+  deleteStation,
+  getStationDaily
 } = require('../controllers/stations')
 const {
   attachDataset,
@@ -44,6 +45,10 @@ router.route('/:stationId')
   .get(asyncHandler(getStation))
   .put(isOwner, asyncHandler(putStation))
   .delete(isOwner, asyncHandler(deleteStation))
+
+router.route('/:stationId/daily')
+  .all(asyncHandler(attachStation))
+  .get(asyncHandler(getStationDaily))
 
 router.route('/:stationId/datasets')
   .all(asyncHandler(attachStation))

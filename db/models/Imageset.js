@@ -7,6 +7,9 @@ class Imageset extends Base {
 
   static get modifiers () {
     return {
+      done (builder) {
+        builder.where('status', 'DONE')
+      },
       imageSummary (builder) {
         builder.select(
           '*',

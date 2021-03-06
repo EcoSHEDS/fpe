@@ -5,6 +5,14 @@ class Dataset extends Base {
     return 'datasets'
   }
 
+  static get modifiers () {
+    return {
+      done (builder) {
+        builder.where('status', 'DONE')
+      }
+    }
+  }
+
   static get relationMappings () {
     const Station = require('./Station')
     const Series = require('./Series')
