@@ -15,7 +15,6 @@ const { Dataset } = require('../models')
 const s3 = new AWS.S3()
 
 function validateConfig (rows, config) {
-  // TODO: validate variable ids from database
   const fields = Object.keys(rows[0])
   const fileColumn = Joi.string().valid(...fields)
   const schema = Joi.object({
@@ -47,7 +46,7 @@ function validateConfig (rows, config) {
   return value
 }
 
-function parseDatasetStream ({ s3: s3File }) {
+function parseFile ({ s3: s3File }) {
   const { Bucket, Key } = s3File
   const stream = s3.getObject({ Bucket, Key }).createReadStream()
   const rows = []
@@ -69,28 +68,33 @@ function parseDatasetStream ({ s3: s3File }) {
   })
 }
 
-function generateSeries (data, { timestamp, variables }) {
+function createRowParser (timestamp, variable) {
   const utcOffset = timestamp.timezone.utcOffset
+  return (d, i) => {
+    const rawTimestamp = d[timestamp.column]
+    const parsedTimestamp = dayjs(rawTimestamp).utc(true).subtract(utcOffset, 'hour')
+    if (!parsedTimestamp.isValid()) {
+      throw new Error(`Failed to parse timestamp at row ${i.toLocaleString()} ("${rawTimestamp}").`)
+    }
+
+    const rawValue = d[variable.column]
+    const parsedValue = rawValue.length === 0 ? NaN : Number(rawValue).toFixed(3)
+
+    const parsedFlag = variable.flag && d[variable.flag].length > 0 ? d[variable.flag] : null
+
+    return {
+      date: parsedTimestamp.add(utcOffset, 'hour').format('YYYY-MM-DD'),
+      timestamp: parsedTimestamp.toISOString(),
+      value: parsedValue,
+      flag: parsedFlag
+    }
+  }
+}
+
+function createSeries (data, { timestamp, variables }) {
   const series = variables.map(variable => {
-    const values = data.map((d, i) => {
-      const rawTimestamp = d[timestamp.column]
-      const parsedTimestamp = dayjs(rawTimestamp).utc(true).subtract(utcOffset, 'hour')
-      if (!parsedTimestamp.isValid()) {
-        throw new Error(`Failed to parse timestamp at row ${i.toLocaleString()} ("${rawTimestamp}").`)
-      }
-
-      const rawValue = d[variable.column]
-      const parsedValue = rawValue.length === 0 ? NaN : Number(rawValue).toFixed(3)
-
-      const parsedFlag = variable.flag && d[variable.flag].length > 0 ? d[variable.flag] : null
-
-      return {
-        date: parsedTimestamp.add(utcOffset, 'hour').format('YYYY-MM-DD'),
-        timestamp: parsedTimestamp.toISOString(),
-        value: parsedValue,
-        flag: parsedFlag
-      }
-    })
+    const parser = createRowParser(timestamp, variable)
+    const values = data.map(parser)
     return {
       variable_id: variable.id,
       values
@@ -106,7 +110,8 @@ async function processDataset (id, dryRun) {
   console.log(`fetching dataset record (id=${id})`)
   const dataset = await Dataset.query()
     .patch({ status: 'PROCESSING' })
-    .findById(id).returning('*')
+    .findById(id)
+    .returning('*')
   if (!dataset) throw new Error(`Dataset record (id=${id}) not found`)
 
   if (!dryRun) {
@@ -118,21 +123,22 @@ async function processDataset (id, dryRun) {
   }
 
   console.log(`parsing dataset file (id=${id}, Key=${dataset.s3.Key})`)
-  const rows = await parseDatasetStream(dataset)
+  const rows = await parseFile(dataset)
 
   if (!rows || rows.length === 0) throw new Error('No data found in dataset file')
 
   console.log(`validating config file (id=${id})`)
   const config = dataset.config
   validateConfig(rows, config)
+  console.log(`config (id=${id}):`, JSON.stringify(dataset.config))
 
-  console.log(`generating series (id=${id}, nrows=${rows.length}, nvars=${config.variables.length})`)
-  const series = generateSeries(rows, config)
+  console.log(`creating series (id=${id}, nrows=${rows.length}, nvars=${config.variables.length})`)
+  const series = createSeries(rows, config)
 
   if (dryRun) {
-    console.log('finished')
+    console.log(`finished (id=${id})`)
     series.map((s, i) => {
-      console.log(`series ${i} (variable_id='${s.variable_id}', n_values=${s.values.length})`)
+      console.log(`series ${i} (variable_id=${s.variable_id}, n_values=${s.values.length})`)
       console.log(s.values.slice(0, 9))
     })
     return series
@@ -153,11 +159,11 @@ async function processDataset (id, dryRun) {
   return await Dataset.query().findById(id).withGraphFetched('series')
 }
 
-module.exports = async function (id, options) {
+module.exports = async function (id, { dryRun }) {
   try {
-    await processDataset(id, options.dryRun)
+    await processDataset(id, dryRun)
   } catch (e) {
-    console.log(`failed (id=${id})`)
+    console.log(`failed (id=${id}): ${e.message || e.toString()}`)
     console.error(e)
     await Dataset.query()
       .patch({
