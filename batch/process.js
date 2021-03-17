@@ -7,6 +7,7 @@ program.command('imageset [id]')
   .action(processImageset)
 
 program.command('dataset [id]')
+  .option('-d, --dry-run', 'dry run')
   .description('Process dataset')
   .action(processDataset)
 

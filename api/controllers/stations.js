@@ -1,6 +1,8 @@
 const createError = require('http-errors')
 const { rollup } = require('d3-array')
 
+const { deleteDatasetFiles } = require('./datasets')
+const { deleteImagesetFiles } = require('./imagesets')
 const { Station } = require('../db/models')
 
 const attachStation = async (req, res, next) => {
@@ -36,7 +38,19 @@ const deleteStation = async (req, res, next) => {
   if (nrow === 0) {
     throw createError(500, `Failed to delete station (id = ${res.locals.station.id})`)
   }
+
+  await deleteStationFiles(res.locals.station)
+
   return res.status(204).json()
+}
+
+const deleteStationFiles = async ({ datasets, imagesets }) => {
+  for (let i = 0; i < datasets.length; i++) {
+    await deleteDatasetFiles(datasets[i])
+  }
+  for (let i = 0; i < imagesets.length; i++) {
+    await deleteImagesetFiles(imagesets[i])
+  }
 }
 
 const getStationDaily = async (req, res, next) => {

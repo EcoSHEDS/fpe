@@ -7,30 +7,21 @@ Parameters:
   subnetIds:
     Type: CommaDelimitedList
     Default: subnet-0052282d1c0eefc84
-  dbSecretArn:
-    Type: String
-    Default: arn:aws:secretsmanager:us-east-1:474916309046:secret:fpe-rds-secret-jO8YDC
-  jobDefinitionArn:
-    Type: String
-    Default: arn:aws:batch:us-east-1:474916309046:job-definition/fpe-batch-job-definition:*
-  jobQueueArn:
-    Type: String
-    Default: arn:aws:batch:us-east-1:474916309046:job-queue/fpe-batch-job-queue
   functionName:
     Type: String
-    Default: fpe-lambda-api
+    Default: fpe-lambda-worker
   roleName:
     Type: String
-    Default: fpe-lambda-api-role
+    Default: fpe-lambda-worker-role
   policyName:
     Type: String
-    Default: fpe-lambda-api-policy
+    Default: fpe-lambda-worker-policy
   dataBucket:
     Type: String
     Default: walkerenvres-fpe-data
-  workerFunctionName:
+  apiFunctionName:
     Type: String
-    Default: fpe-lambda-worker
+    Default: fpe-lambda-api
 Resources:
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -52,19 +43,15 @@ Resources:
       Handler: lambda.handler
       Environment:
         Variables:
-          FPE_REGION:
-            Ref: AWS::Region
-          FPE_S3_BUCKET:
-            Ref: dataBucket
+          FPE_REGION: !Ref "AWS::Region"
+          FPE_S3_BUCKET: !Ref dataBucket
       Role:
         Fn::GetAtt:
         - LambdaExecutionRole
         - Arn
       Runtime: nodejs14.x
       Timeout: '15'
-      Code:
-        S3Bucket: walkerenvres-fpe-lambda
-        S3Key: api/e129f6b35149169e97f2c45d1829fccd
+      Code: ../worker
       VpcConfig:
         SecurityGroupIds:
         - Ref: SecurityGroup
@@ -125,30 +112,21 @@ Resources:
           Resource:
           - Fn::Sub: arn:aws:s3:::${dataBucket}
           - Fn::Sub: arn:aws:s3:::${dataBucket}/*
-        - Effect: Allow
-          Action:
-          - secretsmanager:GetResourcePolicy
-          - secretsmanager:GetSecretValue
-          - secretsmanager:DescribeSecret
-          - secretsmanager:ListSecretVersionIds
-          Resource:
-            Ref: dbSecretArn
-        - Effect: Allow
-          Action:
-          - batch:*
-          Resource: '*'
-        - Effect: Allow
-          Action:
-          - lambda:InvokeFunction
-          Resource:
-            Fn::Join:
-            - ''
-            - - 'arn:aws:lambda:'
-              - Ref: AWS::Region
-              - ':'
-              - Ref: AWS::AccountId
-              - ':function:'
-              - Ref: workerFunctionName
+  # ApiLambdaPermission:
+  #   Type: "AWS::Lambda::Permission"
+  #   Properties:
+  #     Action: lambda:InvokeFunction
+  #     FunctionName: !Ref functionName
+  #     Principal: lambda.amazonaws.com
+  #     SourceAccount: !Ref "AWS::AccountId"
+  #     SourceArn: !Join
+  #       - ""
+  #       - - "arn:aws:lambda:"
+  #         - !Ref "AWS::Region"
+  #         - ":"
+  #         - !Ref "AWS::AccountId"
+  #         - ":function:"
+  #         - !Ref apiFunctionName
 Outputs:
   Region:
     Value:

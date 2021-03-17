@@ -1,12 +1,12 @@
 const createError = require('http-errors')
 const { v4: uuidv4 } = require('uuid')
 
-const { s3, batch, createPresignedPostPromise } = require('../aws')
+const { batch, invokeWorker, createPresignedPostPromise } = require('../aws')
 const { Station, Dataset } = require('../db/models')
 
 const attachDataset = async (req, res, next) => {
   const row = await Dataset.query().findById(req.params.datasetId)
-  if (!row) throw createError(404, `Dataset (id = ${req.params.datasetId}) not found`)
+  if (!row) throw createError(404, `Dataset (id=${req.params.datasetId}) not found`)
   res.locals.dataset = row
   return next()
 }
@@ -34,7 +34,8 @@ const postDatasets = async (req, res, next) => {
     Bucket: process.env.FPE_S3_BUCKET,
     Fields: {
       key: `datasets/${props.uuid}/${req.body.filename}`
-    }
+    },
+    Expires: 60 * 60 * 1 // one hour
   })
   props.s3 = {
     Bucket: presignedUrl.fields.bucket,
@@ -57,26 +58,8 @@ const putDataset = async (req, res, next) => {
   return res.status(200).json(row)
 }
 
-const deleteDataset = async (req, res, next) => {
-  // delete database entry
-  const nrow = await Dataset.query().deleteById(res.locals.dataset.id)
-  if (nrow === 0) {
-    throw createError(500, `Failed to delete dataset (id = ${res.locals.dataset.id})`)
-  }
-
-  // delete file on s3
-  const params = {
-    Bucket: res.locals.dataset.s3.Bucket,
-    Key: res.locals.dataset.s3.Key
-  }
-  await s3.deleteObject(params).promise()
-
-  return res.status(204).json()
-}
-
 const processDataset = async (req, res, next) => {
-  console.log(`process dataset (id=${res.locals.dataset.id})`)
-
+  // console.log(`process dataset (id=${res.locals.dataset.id})`)
   const response = await batch.submitJob({
     jobName: `process-dataset-${res.locals.dataset.id}`,
     jobDefinition: 'fpe-batch-job-definition',
@@ -96,6 +79,39 @@ const processDataset = async (req, res, next) => {
   return res.status(200).json(response)
 }
 
+const deleteDataset = async (req, res, next) => {
+  const nrow = await Dataset.query().deleteById(res.locals.dataset.id)
+  if (nrow === 0) {
+    throw createError(500, `Failed to delete dataset (id=${res.locals.dataset.id})`)
+  }
+
+  await deleteDatasetFiles(res.locals.dataset)
+
+  res.status(204).json()
+}
+
+const deleteDatasetFiles = async (dataset) => {
+  try {
+    const response = await invokeWorker({
+      method: 'deleteS3Objects',
+      prefix: `datasets/${dataset.uuid}`
+    })
+    return response
+  } catch (err) {
+    console.log(`Failed to delete dataset files on s3 (id=${dataset.id})`)
+    console.error(err)
+  }
+}
+
+const listDatasetFiles = async (req, res, next) => {
+  const response = await invokeWorker({
+    method: 'listS3Objects',
+    prefix: `datasets/${res.locals.dataset.uuid}`
+  })
+
+  return res.status(200).json(response)
+}
+
 module.exports = {
   attachDataset,
   getDataset,
@@ -103,5 +119,7 @@ module.exports = {
   postDatasets,
   putDataset,
   deleteDataset,
-  processDataset
+  deleteDatasetFiles,
+  processDataset,
+  listDatasetFiles
 }

@@ -5,10 +5,19 @@ exports.s3 = new AWS.S3({
   region: process.env.FPE_REGION
 })
 
-exports.lambda = new AWS.Lambda({
+const lambda = new AWS.Lambda({
   apiVersion: '2015-03-31',
   region: process.env.FPE_REGION
 })
+
+exports.invokeWorker = (payload) => {
+  const params = {
+    FunctionName: 'fpe-lambda-worker',
+    InvocationType: 'Event',
+    Payload: Buffer.from(JSON.stringify(payload))
+  }
+  return lambda.invoke(params).promise()
+}
 
 exports.batch = new AWS.Batch({
   apiVersion: '2016-08-10',

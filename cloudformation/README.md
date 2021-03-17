@@ -13,6 +13,8 @@ aws cloudformation create-stack --stack-name fpe-rds --template-body file://rds.
 aws cloudformation create-stack --stack-name fpe-batch --template-body file://batch.yml --capabilities CAPABILITY_NAMED_IAM
 aws cloudformation package --template lambda-api-local.yml --s3-bucket walkerenvres-fpe-lambda --s3-prefix api --output-template lambda-api.yml
 aws cloudformation create-stack --stack-name fpe-lambda-api --template-body file://lambda-api.yml --capabilities CAPABILITY_NAMED_IAM
+aws cloudformation package --template lambda-worker-local.yml --s3-bucket walkerenvres-fpe-lambda --s3-prefix worker --output-template lambda-worker.yml
+aws cloudformation create-stack --stack-name fpe-lambda-worker --template-body file://lambda-worker.yml --capabilities CAPABILITY_NAMED_IAM
 aws cloudformation create-stack --stack-name fpe-api --template-body file://api.yml --capabilities CAPABILITY_NAMED_IAM
 
 aws cloudformation deploy --stack-name fpe-rds --template-file rds.yml
@@ -21,4 +23,7 @@ aws cloudformation deploy --stack-name fpe-api --template-file api.yml
 
 aws cloudformation package --template lambda-api-local.yml --s3-bucket walkerenvres-fpe-lambda --s3-prefix api --output-template lambda-api.yml
 aws cloudformation deploy --stack-name fpe-lambda-api --template-file lambda-api.yml --capabilities CAPABILITY_NAMED_IAM
+
+aws cloudformation package --template lambda-worker-local.yml --s3-bucket walkerenvres-fpe-lambda --s3-prefix worker --output-template lambda-worker.yml
+aws cloudformation deploy --stack-name fpe-lambda-worker --template-file lambda-worker.yml --capabilities CAPABILITY_NAMED_IAM
 ```

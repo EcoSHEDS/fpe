@@ -17,7 +17,8 @@ const {
   postDatasets,
   putDataset,
   deleteDataset,
-  processDataset
+  processDataset,
+  listDatasetFiles
 } = require('../controllers/datasets')
 const {
   attachImageset,
@@ -26,7 +27,8 @@ const {
   postImagesets,
   putImageset,
   deleteImageset,
-  processImageset
+  processImageset,
+  listImagesetFiles
 } = require('../controllers/imagesets')
 const {
   getImages,
@@ -65,6 +67,10 @@ router.route('/:stationId/datasets/:datasetId/process')
   .all(asyncHandler(attachStation), asyncHandler(attachDataset))
   .post(isOwner, asyncHandler(processDataset))
 
+router.route('/:stationId/datasets/:datasetId/list')
+  .all(asyncHandler(attachStation), asyncHandler(attachDataset))
+  .get(asyncHandler(listDatasetFiles))
+
 router.route('/:stationId/imagesets')
   .all(asyncHandler(attachStation))
   .get(asyncHandler(getImagesets))
@@ -84,5 +90,9 @@ router.route('/:stationId/imagesets/:imagesetId/images')
   .all(asyncHandler(attachStation), asyncHandler(attachImageset))
   .get(asyncHandler(getImages))
   .post(isOwner, asyncHandler(postImage))
+
+router.route('/:stationId/imagesets/:imagesetId/list')
+  .all(asyncHandler(attachStation), asyncHandler(attachImageset))
+  .get(asyncHandler(listImagesetFiles))
 
 module.exports = router

@@ -1,7 +1,7 @@
 const createError = require('http-errors')
 const { v4: uuidv4 } = require('uuid')
 
-const { s3, batch, createPresignedPostPromise } = require('../aws')
+const { batch, invokeWorker, createPresignedPostPromise } = require('../aws')
 const { Station, Imageset } = require('../db/models')
 
 const attachImageset = async (req, res, next) => {
@@ -11,7 +11,7 @@ const attachImageset = async (req, res, next) => {
     .findById(req.params.imagesetId)
 
   if (!row) {
-    throw createError(404, `Imageset (id = ${req.params.imagesetId}) not found`)
+    throw createError(404, `Imageset not found (id=${req.params.imagesetId})`)
   }
 
   res.locals.imageset = row
@@ -41,7 +41,7 @@ const postImagesets = async (req, res, next) => {
     Conditions: [
       ['starts-with', '$key', `imagesets/${props.uuid}/images/`]
     ],
-    Expires: 3600
+    Expires: 60 * 60 * 6 // 6 hours
   })
   presignedUrl.fields.key = `imagesets/${props.uuid}/images/`
 
@@ -59,31 +59,6 @@ const putImageset = async (req, res, next) => {
   const row = await Imageset.query()
     .patchAndFetchById(res.locals.imageset.id, req.body)
   return res.status(200).json(row)
-}
-
-const deleteImageset = async (req, res, next) => {
-  const nrow = await Imageset.query().deleteById(res.locals.imageset.id)
-  if (nrow === 0) {
-    throw createError(500, `Failed to delete imageset (id = ${res.locals.imageset.id})`)
-  }
-
-  res.locals.imageset.images.forEach(image => {
-    if (image.full_s3) {
-      console.log(`Deleting image full (id=${image.id})`)
-      s3.deleteObject(image.full_s3)
-        .promise()
-        .catch((err) => console.log(err))
-    }
-
-    if (image.thumb_s3) {
-      console.log(`Deleting image thumb (id=${image.id})`)
-      s3.deleteObject(image.thumb_s3)
-        .promise()
-        .catch((err) => console.log(err))
-    }
-  })
-
-  return res.status(204).json()
 }
 
 const processImageset = async (req, res, next) => {
@@ -108,6 +83,44 @@ const processImageset = async (req, res, next) => {
   return res.status(200).json(response)
 }
 
+const deleteImageset = async (req, res, next) => {
+  const nrow = await Imageset.query().deleteById(res.locals.imageset.id)
+  if (nrow === 0) {
+    throw createError(500, `Failed to delete imageset (id=${res.locals.imageset.id})`)
+  }
+
+  await deleteImagesetFiles(res.locals.imageset)
+
+  return res.status(204).json()
+}
+
+const deleteImagesetFiles = async (imageset) => {
+  try {
+    const response = await invokeWorker({
+      method: 'deleteS3Objects',
+      prefix: `imagesets/${imageset.uuid}`
+    })
+    return response
+  } catch (err) {
+    console.log(`Failed to delete imageset files on s3 (id=${imageset.id})`)
+    console.error(err)
+  }
+}
+
+const listImagesetFiles = async (req, res, next) => {
+  let keys = []
+  try {
+    keys = await listS3Objects(`imagesets/${res.locals.imageset.uuid}`)
+  } catch (err) {
+    console.error(err)
+    return res.status(500).json({
+      message: `Failed to list imageset files on s3 (id=${res.locals.imageset.id}, uuid=${res.locals.imageset.uuid})`
+    })
+  }
+
+  return res.status(200).json(keys)
+}
+
 module.exports = {
   attachImageset,
   getImagesets,
@@ -115,5 +128,7 @@ module.exports = {
   postImagesets,
   putImageset,
   deleteImageset,
-  processImageset
+  deleteImagesetFiles,
+  processImageset,
+  listImagesetFiles
 }

@@ -8,7 +8,6 @@ const attachUser = async (req, res, next) => {
     return next()
   }
 
-  console.log(req.apiGateway.event.requestContext)
   if (req.apiGateway.event.requestContext.authorizer &&
     req.apiGateway.event.requestContext.authorizer.claims.sub) {
     res.locals.userId = req.apiGateway.event.requestContext.authorizer.claims.sub
@@ -20,7 +19,7 @@ const attachUser = async (req, res, next) => {
 const isOwner = (req, res, next) => {
   if (!res.locals.station ||
     !res.locals.userId ||
-    res.locals.station.user_id !== res.locals.userId) {
+    (!!req.apiGateway && res.locals.station.user_id !== res.locals.userId)) {
     return next(createError(401, 'Not authorized'))
   }
   next()

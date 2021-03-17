@@ -17,6 +17,21 @@
 
 # Container
 
+## Dependencies (Lambda Only?)
+
+For image processing, the `sharp` library must be compiled for linux (see [Installation for AWS Lambda](https://sharp.pixelplumbing.com/install#aws-lambda))
+
+```
+# on windows, use docker
+rm -rf node_modules/sharp
+docker run -v "%cd%":/var/task lambci/lambda:build-nodejs12.x npm install sharp # windows
+docker run -v "$PWD$":/var/task lambci/lambda:build-nodejs12.x npm install sharp # unix
+
+# on mac
+rm -rf node_modules/sharp
+SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install --arch=x64 --platform=linux sharp
+```
+
 ## Build
 
 ```
