@@ -13,8 +13,9 @@ exports.up = knex => knex.schema.createTable('datasets', t => {
   t.enu('status', statusTypes, { useNative: true, enumName: 'status_type' })
   t.text('error_message')
 
-  t.json('config')
   t.text('filename')
+  t.json('config')
+  t.json('metadata')
 
   t.text('url')
   t.json('s3')

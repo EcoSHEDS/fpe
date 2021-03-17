@@ -17,13 +17,13 @@ class Value extends Base {
       daily (builder) {
         builder
           .select(
-            raw('to_char(timestamp, \'YYYY-MM-DD\') as date'),
+            raw('date'),
             raw('min(value) as min'),
             raw('avg(value) as mean'),
             raw('max(value) as max')
           )
-          .groupBy([raw('to_char(timestamp, \'YYYY-MM-DD\')'), 'series_id'])
-          .orderBy('date')
+          .groupBy(['series_id', 'date'])
+          .orderBy(['series_id', 'date'])
       }
     }
   }

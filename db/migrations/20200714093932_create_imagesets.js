@@ -17,6 +17,7 @@ exports.up = knex => knex.schema.createTable('imagesets', t => {
   t.text('error_message')
 
   t.json('config')
+  t.json('metadata')
 
   t.timestamps(true, true)
 })
