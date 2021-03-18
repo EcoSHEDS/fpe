@@ -14,7 +14,7 @@ class Image extends Base {
       defaultSelect (builder) {
         builder.select(
           'id', 'imageset_id',
-          'filename', 'timestamp',
+          'filename', 'date', 'timestamp',
           'full_url', 'thumb_url',
           'status', 'error_message'
         )
@@ -22,9 +22,9 @@ class Image extends Base {
       daily (builder) {
         builder
           .select(
-            raw('to_char(timestamp, \'YYYY-MM-DD\') as date'),
             'id', 'imageset_id',
-            'filename', 'timestamp', 'thumb_url'
+            'filename', 'date', 'timestamp',
+            'full_url', 'thumb_url'
           )
           .where('status', 'DONE')
           .orderBy('timestamp')

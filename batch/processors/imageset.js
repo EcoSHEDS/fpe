@@ -16,10 +16,12 @@ const s3 = new AWS.S3()
 
 function validateConfig (config) {
   const schema = Joi.object({
-    timezone: Joi.object({
-      id: Joi.string().required(),
-      label: Joi.string().required(),
-      utcOffset: Joi.number().required()
+    timestamp: Joi.object({
+      timezone: Joi.object({
+        id: Joi.string().required(),
+        label: Joi.string().required(),
+        utcOffset: Joi.number().required()
+      }).required()
     }).required()
   }).required()
 
@@ -33,7 +35,7 @@ function validateConfig (config) {
   return value
 }
 
-async function processImage (image, utcOffset) {
+async function processImage (image, utcOffset, dryRun) {
   console.log(`processing image (image_id=${image.id})`)
 
   // download file
@@ -56,20 +58,24 @@ async function processImage (image, utcOffset) {
   const thumbKey = image.full_s3.Key.replace('images/', 'thumbs/')
   const thumbBuffer = await sharp(s3ImageFile.Body).resize(200).toBuffer()
 
-  await s3.putObject({
-    Bucket: image.full_s3.Bucket,
-    Key: thumbKey,
-    Body: thumbBuffer,
-    ContentType: 'image'
-  }).promise()
+  if (!dryRun) {
+    console.log(`saving thumbnail (image_id=${image.id})`)
+    await s3.putObject({
+      Bucket: image.full_s3.Bucket,
+      Key: thumbKey,
+      Body: thumbBuffer,
+      ContentType: 'image'
+    }).promise()
+  }
 
   // update record
   console.log(`updating image record (image_id=${image.id})`)
   const rawDate = new Date(exif.tags.CreateDate * 1000)
-  const timestamp = dayjs(rawDate).subtract(utcOffset || 0, 'hour')
+  const timestamp = dayjs(rawDate).subtract(utcOffset, 'hour')
   const payload = {
     ...exif.imageSize,
     exif: exif.tags,
+    date: timestamp.add(utcOffset, 'hour').utc().format('YYYY-MM-DD'),
     timestamp: timestamp.toISOString(),
     thumb_s3: {
       Bucket: image.full_s3.Bucket,
@@ -78,7 +84,12 @@ async function processImage (image, utcOffset) {
     thumb_url: `https://${image.full_s3.Bucket}.s3.amazonaws.com/${thumbKey}`,
     status: 'DONE'
   }
-  return await image.$query().patch(payload).returning('*')
+
+  if (!dryRun) {
+    image = await image.$query().patch(payload).returning('*')
+  }
+
+  return image
 }
 
 async function processImageset (id, dryRun) {
@@ -86,10 +97,16 @@ async function processImageset (id, dryRun) {
   console.log(`processing imageset (id=${id})`)
 
   console.log(`fetching imageset record (id=${id})`)
-  let imageset = await Imageset.query()
-    .patch({ status: 'PROCESSING' })
-    .findById(id)
-    .returning('*')
+  let imageset
+  if (dryRun) {
+    imageset = await Imageset.query()
+      .findById(id)
+  } else {
+    imageset = await Imageset.query()
+      .patch({ status: 'PROCESSING' })
+      .findById(id)
+      .returning('*')
+  }
   if (!imageset) throw new Error(`Imageset record (id=${id}) not found`)
 
   console.log(`validating config (id=${id})`)
@@ -105,7 +122,7 @@ async function processImageset (id, dryRun) {
 
   console.log(`processing images (id=${id}, n=${images.length})`)
   for (let i = 0; i < images.length; i++) {
-    await processImage(images[i], imageset.config.timezone.utcOffset, dryRun)
+    await processImage(images[i], imageset.config.timestamp.timezone.utcOffset, dryRun)
   }
 
   if (dryRun) {

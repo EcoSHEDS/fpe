@@ -9,6 +9,7 @@ exports.up = knex => knex.schema.createTable('images', t => {
     .onDelete('CASCADE')
 
   t.text('filename')
+  t.date('date')
   t.timestamp('timestamp')
   t.integer('width')
   t.integer('height')

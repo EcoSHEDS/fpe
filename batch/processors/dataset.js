@@ -83,7 +83,7 @@ function createRowParser (timestamp, variable) {
     const parsedFlag = variable.flag && d[variable.flag].length > 0 ? d[variable.flag] : null
 
     return {
-      date: parsedTimestamp.add(utcOffset, 'hour').format('YYYY-MM-DD'),
+      date: parsedTimestamp.add(utcOffset, 'hour').utc().format('YYYY-MM-DD'),
       timestamp: parsedTimestamp.toISOString(),
       value: parsedValue,
       flag: parsedFlag
@@ -107,11 +107,17 @@ async function processDataset (id, dryRun) {
   if (dryRun) console.log('dryRun: on')
   console.log(`processing dataset (id=${id})`)
 
+  let dataset
   console.log(`fetching dataset record (id=${id})`)
-  const dataset = await Dataset.query()
-    .patch({ status: 'PROCESSING' })
-    .findById(id)
-    .returning('*')
+  if (dryRun) {
+    dataset = await Dataset.query()
+      .findById(id)
+  } else {
+    dataset = await Dataset.query()
+      .patch({ status: 'PROCESSING' })
+      .findById(id)
+      .returning('*')
+  }
   if (!dataset) throw new Error(`Dataset record (id=${id}) not found`)
 
   if (!dryRun) {
@@ -135,6 +141,11 @@ async function processDataset (id, dryRun) {
   console.log(`creating series (id=${id}, nrows=${rows.length}, nvars=${config.variables.length})`)
   const series = createSeries(rows, config)
 
+  const utcOffset = config.timestamp.timezone.utcOffset
+  const dates = rows.map(d => dayjs(d[config.timestamp.column]).utc(true).subtract(utcOffset, 'hour').valueOf())
+  const startTimestamp = (new Date(Math.min(...dates))).toISOString()
+  const endTimestamp = (new Date(Math.max(...dates))).toISOString()
+
   if (dryRun) {
     console.log(`finished (id=${id})`)
     series.map((s, i) => {
@@ -150,8 +161,8 @@ async function processDataset (id, dryRun) {
   console.log(`updating dataset status (id=${id})`)
   await dataset.$query().patch({
     status: 'DONE',
-    start_timestamp: rows[0][config.timestamp.column],
-    end_timestamp: rows[rows.length - 1][config.timestamp.column],
+    start_timestamp: startTimestamp,
+    end_timestamp: endTimestamp,
     n_rows: rows.length
   }).returning('*')
 
