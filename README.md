@@ -140,6 +140,10 @@ To manage files in S3 using the aws cli.
 ```bash
 # list all files
 aws s3 ls s3://walkerenvres-fpe-data/ --recursive
+# list dataset files
+aws s3 ls s3://walkerenvres-fpe-data/datasets/ --recursive
+# list imageset uuids (no files)
+aws s3 ls s3://walkerenvres-fpe-data/imagesets/
 # delete all image files for imageset uuid
 aws s3 rm s3://walkerenvres-fpe-data/ --recursive --exclude "*" --include "imagesets/<uuid>/*"
 # delete all csv files for dataset uuid
