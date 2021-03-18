@@ -1,6 +1,8 @@
 #!/usr/bin/env node
-
-require('dotenv-flow').config()
+const path = require('path')
+require('dotenv-flow').config({
+  path: path.resolve(__dirname, '..')
+})
 
 const { program } = require('commander')
 

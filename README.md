@@ -133,6 +133,19 @@ series generated (n series=2)
 dataset saved to db (id=53)
 ```
 
+## AWS CLI
+
+To manage files in S3 using the aws cli.
+
+```bash
+# list all files
+aws s3 ls s3://walkerenvres-fpe-data/ --recursive
+# delete all image files for imageset uuid
+aws s3 rm s3://walkerenvres-fpe-data/ --recursive --exclude "*" --include "imagesets/<uuid>/*"
+# delete all csv files for dataset uuid
+aws s3 rm s3://walkerenvres-fpe-data/ --recursive --exclude "*" --include "datasets/<uuid>/*"
+```
+
 ## References
 
 - [AWS Security Best Practices Part 2 (Uploading)](https://hedgehoglab.com/blog/aws-s3-security-best-practices-part-2)
