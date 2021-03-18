@@ -14,6 +14,8 @@ const { Imageset } = require('../models')
 
 const s3 = new AWS.S3()
 
+const THUMB_WIDTH = 400
+
 function validateConfig (config) {
   const schema = Joi.object({
     timestamp: Joi.object({
@@ -54,9 +56,9 @@ async function processImage (image, utcOffset, dryRun) {
   }
 
   // create thumbnail
-  console.log(`generating thumbnail (image_id=${image.id})`)
+  console.log(`generating thumbnail (image_id=${image.id}, width=${THUMB_WIDTH})`)
   const thumbKey = image.full_s3.Key.replace('images/', 'thumbs/')
-  const thumbBuffer = await sharp(s3ImageFile.Body).resize(200).toBuffer()
+  const thumbBuffer = await sharp(s3ImageFile.Body).resize(THUMB_WIDTH).toBuffer()
 
   if (!dryRun) {
     console.log(`saving thumbnail (image_id=${image.id})`)
