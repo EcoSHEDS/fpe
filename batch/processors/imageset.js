@@ -52,7 +52,17 @@ async function processImage (image, utcOffset, dryRun) {
     exif = parser.enableSimpleValues(true).parse()
   } catch (err) {
     console.log(err)
-    console.log(`failed to extract exif data (image_id=${image.id})`)
+    throw new Error(`failed to extract exif data (image_id=${image.id}, filename=${image.filename})`)
+  }
+
+  // check exif
+  if (!exif.tags || Object.keys(exif.tags).length === 0) {
+    throw new Error(`Image file (${image.filename}) does not have EXIF data`)
+  }
+
+  // check exif.CreateDate
+  if (!exif.tags.CreateDate) {
+    throw new Error(`Image file (${image.filename}) is missing timestamp (CreateDate) in EXIF data`)
   }
 
   // create thumbnail
