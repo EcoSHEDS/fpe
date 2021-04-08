@@ -1,6 +1,6 @@
 const AWS = require('aws-sdk')
 const Papa = require('papaparse')
-const stripBomStream = require('strip-bom-stream')
+const stripBom = require('strip-bom')
 const Joi = require('joi')
 const dayjs = require('dayjs')
 const timezone = require('dayjs/plugin/timezone')
@@ -14,8 +14,7 @@ const { Dataset } = require('../models')
 
 const s3 = new AWS.S3()
 
-function validateConfig (rows, config) {
-  const fields = Object.keys(rows[0])
+function validateConfig (config, fields) {
   const fileColumn = Joi.string().valid(...fields)
   const schema = Joi.object({
     timestamp: Joi.object({
@@ -46,26 +45,20 @@ function validateConfig (rows, config) {
   return value
 }
 
-function parseFile ({ s3: s3File }) {
+async function parseFile ({ s3: s3File }) {
   const { Bucket, Key } = s3File
-  const stream = s3.getObject({ Bucket, Key }).createReadStream()
-  const rows = []
-  return new Promise((resolve, reject) => {
-    const parser = Papa.parse(Papa.NODE_STREAM_INPUT, {
-      header: true,
-      comments: '#',
-      delimiter: ',',
-      columns: true,
-      skipEmptyLines: 'greedy'
-    })
+  const object = await s3.getObject({ Bucket, Key }).promise()
+  const csv = stripBom(object.Body.toString())
 
-    return stream
-      .pipe(stripBomStream())
-      .pipe(parser)
-      .on('data', (row) => rows.push(row))
-      .on('end', () => resolve(rows))
-      .on('err', err => reject(err))
+  const parsed = Papa.parse(csv, {
+    header: true,
+    comments: '#',
+    delimiter: ',',
+    columns: true,
+    skipEmptyLines: 'greedy'
   })
+
+  return parsed
 }
 
 function createRowParser (timestamp, variable) {
@@ -130,20 +123,24 @@ async function processDataset (id, dryRun) {
   }
 
   console.log(`parsing dataset file (id=${id}, Key=${dataset.s3.Key})`)
-  const rows = await parseFile(dataset)
+  const parsed = await parseFile(dataset)
 
-  if (!rows || rows.length === 0) throw new Error('No data found in dataset file')
+  if (parsed.errors.length > 0) {
+    console.log(parsed.errors)
+    throw new Error(`Failed to parse file (${parsed.errors[0].message || parsed.errors[0].toString()})`)
+  }
 
-  console.log(`validating config file (id=${id})`)
+  if (!parsed.data || parsed.data.length === 0) throw new Error('No data found in dataset file')
+
   const config = dataset.config
-  validateConfig(rows, config)
-  console.log(`config (id=${id}):`, JSON.stringify(dataset.config))
+  console.log(`validating dataset config (id=${id})`, JSON.stringify(dataset.config))
+  validateConfig(config, parsed.meta.fields)
 
-  console.log(`creating series (id=${id}, nrows=${rows.length}, nvars=${config.variables.length})`)
-  const series = createSeries(rows, config)
+  console.log(`creating series (id=${id}, nrows=${parsed.data.length}, nvars=${config.variables.length})`)
+  const series = createSeries(parsed.data, config)
 
   const utcOffset = config.timestamp.timezone.utcOffset
-  const dates = rows.map(d => dayjs(d[config.timestamp.column]).utc(true).subtract(utcOffset, 'hour').valueOf())
+  const dates = parsed.data.map(d => dayjs(d[config.timestamp.column]).utc(true).subtract(utcOffset, 'hour').valueOf())
   const startTimestamp = (new Date(Math.min(...dates))).toISOString()
   const endTimestamp = (new Date(Math.max(...dates))).toISOString()
 
@@ -164,7 +161,7 @@ async function processDataset (id, dryRun) {
     status: 'DONE',
     start_timestamp: startTimestamp,
     end_timestamp: endTimestamp,
-    n_rows: rows.length
+    n_rows: parsed.data.length
   }).returning('*')
 
   console.log(`finished (id=${id})`)
