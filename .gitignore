@@ -6,3 +6,7 @@ node_modules/
 # dotenv environment variables files (local only)
 .env.local
 .env.*.local
+
+# r
+.Rproj.user
+r/config.yml
