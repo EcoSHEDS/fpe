@@ -1,0 +1,30 @@
+[
+  {
+    "ParameterKey": "appName",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "env",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "vpcId",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "vpcSecurityGroupIds",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "subnetIds",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "dbInstanceClass",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "username",
+    "ParameterValue": ""
+  }
+]

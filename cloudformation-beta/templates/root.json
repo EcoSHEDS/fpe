@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Root Stack for vue-amplify",
+  "Description": "Root Stack",
   "Parameters": {
     "appName": {
       "Description": "Application name",
@@ -16,6 +16,26 @@
       "Description": "Permissions boundary",
       "Type": "String",
       "Default": "NONE"
+    },
+    "vpcId": {
+      "Description": "VPC ID",
+      "Type": "String"
+    },
+    "publicSubnetIds": {
+      "Description": "Public subnet IDs",
+      "Type": "String"
+    },
+    "privateSubnetIds": {
+      "Description": "Private subnet IDs",
+      "Type": "String"
+    },
+    "dbSecretArn": {
+      "Description": "Secret Arn for database credentials",
+      "Type": "String"
+    },
+    "dbSecretName": {
+      "Description": "Secret name for database credentials",
+      "Type": "String"
     }
   },
   "Resources": {
@@ -46,21 +66,28 @@
         }
       }
     },
-    "RestLambdaStack": {
+    "LambdaApiStack": {
       "Type": "AWS::CloudFormation::Stack",
       "Properties": {
-        "TemplateURL": "./rest/lambda-packaged.json",
+        "TemplateURL": "./lambda-api-packaged.json",
         "Parameters": {
           "appName": { "Ref": "appName" },
           "env": { "Ref": "env" },
-          "permissionsBoundaryName": { "Ref": "permissionsBoundaryName" }
+          "permissionsBoundaryName": { "Ref": "permissionsBoundaryName" },
+          "vpcId": { "Ref": "vpcId" },
+          "privateSubnetIds": { "Ref": "privateSubnetIds" },
+          "dbSecretArn": { "Ref": "dbSecretArn" },
+          "dbSecretName": { "Ref": "dbSecretName" },
+          "storageBucketName": {
+            "Fn::GetAtt": [ "StorageStack", "Outputs.BucketName" ]
+          }
         }
       }
     },
-    "RestApiStack": {
+    "ApiStack": {
       "Type": "AWS::CloudFormation::Stack",
       "Properties": {
-        "TemplateURL": "./rest/api.json",
+        "TemplateURL": "./api.json",
         "Parameters": {
           "appName": { "Ref": "appName" },
           "env": { "Ref": "env" },
@@ -68,8 +95,20 @@
             "Fn::GetAtt": [ "AuthStack", "Outputs.UserPoolId" ]
           },
           "lambdaName": {
-            "Fn::GetAtt": [ "RestLambdaStack", "Outputs.LambdaName" ]
+            "Fn::GetAtt": [ "LambdaApiStack", "Outputs.LambdaName" ]
           }
+        }
+      }
+    },
+    "BatchStack": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": "./batch.json",
+        "Parameters": {
+          "appName": { "Ref": "appName" },
+          "env": { "Ref": "env" },
+          "vpcId": { "Ref": "vpcId" },
+          "publicSubnetIds": { "Ref": "publicSubnetIds" }
         }
       }
     }
@@ -99,10 +138,10 @@
         "Fn::GetAtt": [ "AuthStack", "Outputs.UserPoolClientWebId" ]
       }
     },
-    "RestApiRootUrl": {
+    "ApiRootUrl": {
       "Description": "Root URL for REST API",
       "Value": {
-        "Fn::GetAtt": [ "RestApiStack", "Outputs.ApiRootUrl" ]
+        "Fn::GetAtt": [ "ApiStack", "Outputs.ApiRootUrl" ]
       }
     },
     "StorageBucket": {

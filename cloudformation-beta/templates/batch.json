@@ -1,0 +1,329 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Batch compute environment",
+  "Parameters": {
+    "appName": {
+      "Description": "Application name",
+      "Type": "String",
+      "Default": "myapp"
+    },
+    "env": {
+      "Description": "Environment",
+      "Type": "String",
+      "Default": "dev"
+    },
+    "vpcId": {
+      "Description": "VPC ID",
+      "Type": "String"
+    },
+    "publicSubnetIds": {
+      "Description": "Public subnet IDs",
+      "Type": "CommaDelimitedList"
+    }
+  },
+  "Resources": {
+    "SecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "EC2 Security Group for instances launched by Batch",
+        "VpcId": {
+          "Ref": "vpcId"
+        }
+      }
+    },
+    "ServiceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": {
+          "Fn::Join": [
+            "-",
+            [
+              { "Ref": "appName" },
+              { "Ref": "env" },
+              "batch-service-role"
+            ]
+          ]
+        },
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "batch.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole"
+        ]
+      }
+    },
+    "ExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": {
+          "Fn::Join": [
+            "-",
+            [
+              { "Ref": "appName" },
+              { "Ref": "env" },
+              "batch-execution-role"
+            ]
+          ]
+        },
+        "AssumeRolePolicyDocument": {
+          "Version": "2008-10-17",
+          "Statement": [
+            {
+              "Sid": "",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ecs-tasks.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+        ]
+      }
+    },
+    "JobRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": {
+          "Fn::Join": [
+            "-",
+            [
+              { "Ref": "appName" },
+              { "Ref": "env" },
+              "batch-job-role"
+            ]
+          ]
+        },
+        "AssumeRolePolicyDocument": {
+          "Version": "2008-10-17",
+          "Statement": [
+            {
+              "Sid": "",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ecs-tasks.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
+          "arn:aws:iam::aws:policy/AmazonS3FullAccess",
+          "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
+        ]
+      }
+    },
+    "JobDefinition": {
+      "Type": "AWS::Batch::JobDefinition",
+      "Properties": {
+        "Type": "container",
+        "JobDefinitionName": {
+          "Fn::Join": [
+            "-",
+            [
+              { "Ref": "appName" },
+              { "Ref": "env" },
+              "batch-job-definition"
+            ]
+          ]
+        },
+        "PlatformCapabilities": [
+          "FARGATE"
+        ],
+        "ContainerProperties": {
+          "Image": {
+            "Fn::Sub": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${Repository}:latest"
+          },
+          "ExecutionRoleArn": {
+            "Fn::GetAtt": [
+              "ExecutionRole",
+              "Arn"
+            ]
+          },
+          "JobRoleArn": {
+            "Fn::GetAtt": [
+              "JobRole",
+              "Arn"
+            ]
+          },
+          "FargatePlatformConfiguration": {
+            "PlatformVersion": "LATEST"
+          },
+          "ResourceRequirements": [
+            {
+              "Type": "MEMORY",
+              "Value": 1024
+            },
+            {
+              "Type": "VCPU",
+              "Value": 0.25
+            }
+          ],
+          "Command": [
+            "node",
+            "process.js"
+          ],
+          "NetworkConfiguration": {
+            "AssignPublicIp": "ENABLED"
+          },
+          "Environment": [
+            {
+              "Name": "REGION",
+              "Value": {
+                "Ref": "AWS::Region"
+              }
+            }
+          ]
+        },
+        "RetryStrategy": {
+          "Attempts": 1
+        }
+      }
+    },
+    "JobQueue": {
+      "Type": "AWS::Batch::JobQueue",
+      "Properties": {
+        "JobQueueName": {
+          "Fn::Join": [
+            "-",
+            [
+              { "Ref": "appName" },
+              { "Ref": "env" },
+              "batch-job-queue"
+            ]
+          ]
+        },
+        "Priority": 1,
+        "ComputeEnvironmentOrder": [
+          {
+            "Order": 1,
+            "ComputeEnvironment": {
+              "Ref": "ComputeEnvironment"
+            }
+          }
+        ]
+      }
+    },
+    "ComputeEnvironment": {
+      "Type": "AWS::Batch::ComputeEnvironment",
+      "Properties": {
+        "ComputeEnvironmentName": {
+          "Fn::Join": [
+            "-",
+            [
+              { "Ref": "appName" },
+              { "Ref": "env" },
+              "batch-compute-environment"
+            ]
+          ]
+        },
+        "Type": "MANAGED",
+        "ComputeResources": {
+          "Type": "FARGATE",
+          "MaxvCpus": 32,
+          "Subnets": {
+            "Ref": "publicSubnetIds"
+          },
+          "SecurityGroupIds": [
+            {
+              "Ref": "SecurityGroup"
+            }
+          ]
+        },
+        "ServiceRole": {
+          "Ref": "ServiceRole"
+        }
+      }
+    },
+    "Repository": {
+      "Type": "AWS::ECR::Repository",
+      "Properties": {
+        "RepositoryName": {
+          "Fn::Join": [
+            "-",
+            [
+              { "Ref": "appName" },
+              { "Ref": "env" },
+              "batch-repo"
+            ]
+          ]
+        },
+        "RepositoryPolicyText": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "AllowPushPull",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": [
+                  {
+                    "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:role/${ExecutionRole}"
+                  }
+                ]
+              },
+              "Action": [
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:BatchGetImage",
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:PutImage",
+                "ecr:InitiateLayerUpload",
+                "ecr:UploadLayerPart",
+                "ecr:CompleteLayerUpload"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "ComputeEnvironmentArn": {
+      "Description": "Compute environment Arn",
+      "Value": { "Ref": "ComputeEnvironment" }
+    },
+    "JobQueueName": {
+      "Description": "Job queue name",
+      "Value": {
+        "Fn::Join": [
+          "-",
+          [
+            { "Ref": "appName" },
+            { "Ref": "env" },
+            "batch-job-queue"
+          ]
+        ]
+      }
+    },
+    "JobDefinitionName": {
+      "Description": "Job definition name",
+      "Value": {
+        "Fn::Join": [
+          "-",
+          [
+            { "Ref": "appName" },
+            { "Ref": "env" },
+            "batch-job-definition"
+          ]
+        ]
+      }
+    },
+    "RepositoryUrl": {
+      "Description": "Batch repository URL",
+      "Value": {
+        "Fn::Sub": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${Repository}"
+      }
+    }
+  }
+}

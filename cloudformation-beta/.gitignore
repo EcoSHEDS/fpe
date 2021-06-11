@@ -1,2 +1,2 @@
 *-packaged.json
-parameters.local.json
+parameters/*.local.json

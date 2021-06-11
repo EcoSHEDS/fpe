@@ -1,0 +1,199 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Database",
+  "Parameters": {
+    "appName": {
+      "Description": "Application name",
+      "Type": "String",
+      "Default": "shedstemplate"
+    },
+    "env": {
+      "Description": "Environment",
+      "Type": "String",
+      "Default": "dev"
+    },
+    "vpcId": {
+      "Description": "VPC ID",
+      "Type": "String"
+    },
+    "vpcSecurityGroupIds": {
+      "Description": "VPC security group IDs for allowing postgres access",
+      "Type": "CommaDelimitedList"
+    },
+    "subnetIds": {
+      "Description": "Subnet IDs",
+      "Type": "CommaDelimitedList"
+    },
+    "username": {
+      "Description": "Database username",
+      "Type": "String",
+      "Default": "postgres"
+    },
+    "dbInstanceClass": {
+      "Description": "Database instance class",
+      "Type": "String",
+      "Default": "db.t2.micro"
+    }
+  },
+  "Resources": {
+    "DBSubnetGroup": {
+      "Type": "AWS::RDS::DBSubnetGroup",
+      "Properties": {
+        "DBSubnetGroupDescription": "Subnets available for the RDS DB Instance",
+        "SubnetIds": {
+          "Ref": "subnetIds"
+        }
+      }
+    },
+    "DBInstanceSecret": {
+      "Type": "AWS::SecretsManager::Secret",
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              { "Ref": "AWS::StackName" },
+              "-secret"
+            ]
+          ]
+        },
+        "Description": "Credentials for RDS instance",
+        "GenerateSecretString": {
+          "SecretStringTemplate": {
+            "Fn::Join": [
+              "",
+              [
+                "{\"username\": \"",
+                { "Ref": "username" },
+                "\"}"
+              ]
+            ]
+          },
+          "GenerateStringKey": "password",
+          "PasswordLength": 16,
+          "ExcludeCharacters": "\"@/\\"
+        }
+      }
+    },
+    "SecretDBInstanceAttachment": {
+      "Type": "AWS::SecretsManager::SecretTargetAttachment",
+      "Properties": {
+        "SecretId": {
+          "Ref": "DBInstanceSecret"
+        },
+        "TargetId": {
+          "Ref": "DBInstance"
+        },
+        "TargetType": "AWS::RDS::DBInstance"
+      }
+    },
+    "DBInstance": {
+      "Type": "AWS::RDS::DBInstance",
+      "Properties": {
+        "DeletionProtection": true,
+        "AllocatedStorage": 20,
+        "DBInstanceClass": { "Ref": "dbInstanceClass" },
+        "AllowMajorVersionUpgrade": false,
+        "AutoMinorVersionUpgrade": true,
+        "DBInstanceIdentifier": {
+          "Fn::Join": [
+            "-",
+            [
+              {
+                "Ref": "appName"
+              },
+              {
+                "Ref": "env"
+              },
+              "db"
+            ]
+          ]
+        },
+        "DBSubnetGroupName": {
+          "Ref": "DBSubnetGroup"
+        },
+        "Engine": "postgres",
+        "EngineVersion": 12.4,
+        "MasterUsername": {
+          "Fn::Join": [
+            "",
+            [
+              "{{resolve:secretsmanager:",
+              { "Ref": "DBInstanceSecret" },
+              ":SecretString:username}}"
+            ]
+          ]
+        },
+        "MasterUserPassword": {
+          "Fn::Join": [
+            "",
+            [
+              "{{resolve:secretsmanager:",
+              { "Ref": "DBInstanceSecret" },
+              ":SecretString:password}}"
+            ]
+          ]
+        },
+        "MultiAZ": false,
+        "Port": 5432,
+        "PubliclyAccessible": true,
+        "StorageType": "gp2",
+        "VPCSecurityGroups": {
+          "Ref": "vpcSecurityGroupIds"
+        },
+        "Tags": [
+          {
+            "Key": "project",
+            "Value": {
+              "Ref": "appName"
+            }
+          },
+          {
+            "Key": "env",
+            "Value": {
+              "Ref": "env"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "SecretArn": {
+      "Description": "Arn of secret to access database",
+      "Value": {
+        "Ref": "DBInstanceSecret"
+      }
+    },
+    "SecretName": {
+      "Description": "Name of secret to access database",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            { "Ref": "AWS::StackName" },
+            "-secret"
+          ]
+        ]
+      }
+    },
+    "DbAddress": {
+      "Description": "Database endpoint address",
+      "Value": {
+        "Fn::GetAtt": [
+          "DBInstance",
+          "Endpoint.Address"
+        ]
+      }
+    },
+    "DbPort": {
+      "Description": "Database endpoint port",
+      "Value": {
+        "Fn::GetAtt": [
+          "DBInstance",
+          "Endpoint.Port"
+        ]
+      }
+    }
+  }
+}
