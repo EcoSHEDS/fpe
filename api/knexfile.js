@@ -3,7 +3,7 @@ const { secretsmanager } = require('./aws')
 async function getCreds () {
   const secret = await secretsmanager
     .getSecretValue({
-      SecretId: 'fpe-rds-secret',
+      SecretId: process.env.DB_SECRET_NAME,
       VersionStage: 'AWSCURRENT'
     }).promise()
   return JSON.parse(secret.SecretString)

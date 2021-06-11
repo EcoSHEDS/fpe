@@ -1,13 +1,13 @@
 const AWS = require('aws-sdk')
 
 const secretsmanager = new AWS.SecretsManager({
-  region: process.env.AWS_REGION || 'us-east-1'
+  region: process.env.REGION || 'us-east-1'
 })
 
 async function getCreds () {
   const secret = await secretsmanager
     .getSecretValue({
-      SecretId: 'fpe-rds-secret',
+      SecretId: process.env.DB_SECRET_NAME,
       VersionStage: 'AWSCURRENT'
     }).promise()
   return JSON.parse(secret.SecretString)

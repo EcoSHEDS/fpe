@@ -30,11 +30,11 @@
       "Type": "String"
     },
     "dbSecretArn": {
-      "Description": "Secret Arn for database credentials",
+      "Description": "Arn of secret for database credentials",
       "Type": "String"
     },
     "dbSecretName": {
-      "Description": "Secret name for database credentials",
+      "Description": "Name of secret for database credentials",
       "Type": "String"
     }
   },
@@ -80,6 +80,9 @@
           "dbSecretName": { "Ref": "dbSecretName" },
           "storageBucketName": {
             "Fn::GetAtt": [ "StorageStack", "Outputs.BucketName" ]
+          },
+          "lambdaWorkerName": {
+            "Fn::GetAtt": [ "LambdaWorkerStack", "Outputs.LambdaName" ]
           }
         }
       }
@@ -108,7 +111,24 @@
           "appName": { "Ref": "appName" },
           "env": { "Ref": "env" },
           "vpcId": { "Ref": "vpcId" },
-          "publicSubnetIds": { "Ref": "publicSubnetIds" }
+          "publicSubnetIds": { "Ref": "publicSubnetIds" },
+          "dbSecretName": { "Ref": "dbSecretName" }
+        }
+      }
+    },
+    "LambdaWorkerStack": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": "./lambda-worker-packaged.json",
+        "Parameters": {
+          "appName": { "Ref": "appName" },
+          "env": { "Ref": "env" },
+          "permissionsBoundaryName": { "Ref": "permissionsBoundaryName" },
+          "vpcId": { "Ref": "vpcId" },
+          "privateSubnetIds": { "Ref": "privateSubnetIds" },
+          "storageBucketName": {
+            "Fn::GetAtt": [ "StorageStack", "Outputs.BucketName" ]
+          }
         }
       }
     }

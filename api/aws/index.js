@@ -12,7 +12,7 @@ const lambda = new AWS.Lambda({
 
 exports.invokeWorker = (payload) => {
   const params = {
-    FunctionName: 'fpe-lambda-worker',
+    FunctionName: process.env.LAMBDA_WORKER,
     InvocationType: 'Event',
     Payload: Buffer.from(JSON.stringify(payload))
   }

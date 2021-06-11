@@ -19,6 +19,10 @@
     "publicSubnetIds": {
       "Description": "Public subnet IDs",
       "Type": "CommaDelimitedList"
+    },
+    "dbSecretName": {
+      "Description": "Name of secret for database credentials",
+      "Type": "String"
     }
   },
   "Resources": {
@@ -181,9 +185,11 @@
           "Environment": [
             {
               "Name": "REGION",
-              "Value": {
-                "Ref": "AWS::Region"
-              }
+              "Value": { "Ref": "AWS::Region" }
+            },
+            {
+              "Name": "DB_SECRET_NAME",
+              "Value": { "Ref": "dbSecretName" }
             }
           ]
         },

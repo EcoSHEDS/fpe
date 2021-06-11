@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Lambda function for REST API Gateway",
+  "Description": "Lambda function for FPE API",
   "Parameters": {
     "appName": {
       "Description": "Application name",
@@ -23,20 +23,8 @@
       "Description": "Private subnet IDs",
       "Type": "CommaDelimitedList"
     },
-    "dbSecretArn": {
-      "Description": "Arn of secret for database credentials",
-      "Type": "String"
-    },
-    "dbSecretName": {
-      "Description": "Name of secret for database credentials",
-      "Type": "String"
-    },
     "storageBucketName": {
       "Description": "Name of storage bucket",
-      "Type": "String"
-    },
-    "lambdaWorkerName": {
-      "Description": "Name of lambda worker function",
       "Type": "String"
     }
   },
@@ -72,7 +60,7 @@
             [
               { "Ref": "appName" },
               { "Ref": "env" },
-              "lambda-api"
+              "lambda-worker"
             ]
           ]
         },
@@ -90,10 +78,8 @@
         "Environment": {
           "Variables": {
             "ENV": { "Ref": "env" },
-            "REGION": { "Ref": "AWS::Region"},
-            "BUCKET": { "Ref": "storageBucketName"},
-            "DB_SECRET_NAME": { "Ref": "dbSecretName" },
-            "LAMBDA_WORKER": { "Ref": "lambdaWorkerName" }
+            "REGION": { "Ref": "AWS::Region" },
+            "BUCKET": { "Ref": "storageBucketName" }
           }
         },
         "Role": {
@@ -103,8 +89,8 @@
           ]
         },
         "Runtime": "nodejs14.x",
-        "Timeout": "25",
-        "Code": "../../api/",
+        "Timeout": "15",
+        "Code": "../../worker/",
         "VpcConfig": {
           "SecurityGroupIds": [
             { "Ref": "SecurityGroup" }
@@ -122,7 +108,7 @@
             [
               { "Ref": "appName" },
               { "Ref": "env" },
-              "lambda-api-role"
+              "lambda-worker-role"
             ]
           ]
         },
@@ -159,10 +145,8 @@
       }
     },
     "LambdaExecutionPolicy": {
-      "DependsOn": [
-        "LambdaExecutionRole"
-      ],
       "Type": "AWS::IAM::Policy",
+      "DependsOn": "LambdaExecutionRole",
       "Properties": {
         "PolicyName": {
           "Fn::Join": [
@@ -170,7 +154,7 @@
             [
               { "Ref": "appName" },
               { "Ref": "env" },
-              "lambda-api-policy"
+              "lambda-worker-policy"
             ]
           ]
         },
@@ -203,23 +187,6 @@
                 { "Fn::Sub": "arn:aws:s3:::${storageBucketName}" },
                 { "Fn::Sub": "arn:aws:s3:::${storageBucketName}/*" }
               ]
-            },
-            {
-              "Effect": "Allow",
-              "Action": [
-                "secretsmanager:GetResourcePolicy",
-                "secretsmanager:GetSecretValue",
-                "secretsmanager:DescribeSecret",
-                "secretsmanager:ListSecretVersionIds"
-              ],
-              "Resource": { "Ref": "dbSecretArn" }
-            },
-            {
-              "Effect": "Allow",
-              "Action": [
-                "batch:*"
-              ],
-              "Resource": "*"
             }
           ]
         }
@@ -240,12 +207,6 @@
           "LambdaFunction",
           "Arn"
         ]
-      }
-    },
-    "LambdaExecutionRole": {
-      "Description": "Execution role for lambda function",
-      "Value": {
-        "Ref": "LambdaExecutionRole"
       }
     }
   }

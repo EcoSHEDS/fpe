@@ -2,13 +2,13 @@ const AWS = require('aws-sdk')
 
 const s3 = new AWS.S3({
   apiVersion: '2006-03-01',
-  region: process.env.FPE_REGION
+  region: process.env.REGION
 })
 
 const listS3Objects = async (event, token) => {
   console.log(`listS3Objects(prefix='${event.prefix}',token=${!!token})`)
   const response = await s3.listObjectsV2({
-    Bucket: process.env.FPE_S3_BUCKET || event.bucket,
+    Bucket: process.env.BUCKET || event.bucket,
     Prefix: event.prefix,
     ContinuationToken: token
   }).promise()
@@ -37,7 +37,7 @@ const deleteS3Objects = async (event) => {
     try {
       // console.log(`deleteS3Objects: deleting object (key=${key})`)
       await s3.deleteObject({
-        Bucket: process.env.FPE_S3_BUCKET || event.bucket,
+        Bucket: process.env.BUCKET || event.bucket,
         Key: key
       }).promise()
     } catch (err) {
