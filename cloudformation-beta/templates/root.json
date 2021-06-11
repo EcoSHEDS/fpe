@@ -1,0 +1,115 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Root Stack for vue-amplify",
+  "Parameters": {
+    "appName": {
+      "Description": "Application name",
+      "Type": "String",
+      "Default": "myapp"
+    },
+    "env": {
+      "Description": "Environment",
+      "Type": "String",
+      "Default": "dev"
+    },
+    "permissionsBoundaryName": {
+      "Description": "Permissions boundary",
+      "Type": "String",
+      "Default": "NONE"
+    }
+  },
+  "Resources": {
+    "AuthStack": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": "./auth.json",
+        "Parameters": {
+          "appName": { "Ref": "appName" },
+          "env": { "Ref": "env" },
+          "permissionsBoundaryName": { "Ref": "permissionsBoundaryName" }
+        }
+      }
+    },
+    "StorageStack": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": "./storage.json",
+        "Parameters": {
+          "appName": { "Ref": "appName" },
+          "env": { "Ref": "env" },
+          "authRoleName": {
+            "Fn::GetAtt": [ "AuthStack", "Outputs.AuthRoleName" ]
+          },
+          "unauthRoleName": {
+            "Fn::GetAtt": [ "AuthStack", "Outputs.UnauthRoleName" ]
+          }
+        }
+      }
+    },
+    "RestLambdaStack": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": "./rest/lambda-packaged.json",
+        "Parameters": {
+          "appName": { "Ref": "appName" },
+          "env": { "Ref": "env" },
+          "permissionsBoundaryName": { "Ref": "permissionsBoundaryName" }
+        }
+      }
+    },
+    "RestApiStack": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": "./rest/api.json",
+        "Parameters": {
+          "appName": { "Ref": "appName" },
+          "env": { "Ref": "env" },
+          "userPoolId": {
+            "Fn::GetAtt": [ "AuthStack", "Outputs.UserPoolId" ]
+          },
+          "lambdaName": {
+            "Fn::GetAtt": [ "RestLambdaStack", "Outputs.LambdaName" ]
+          }
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "Region": {
+      "Description": "Stack region",
+      "Value": {
+        "Ref": "AWS::Region"
+      }
+    },
+    "IdentityPoolId": {
+      "Description": "Identity pool ID",
+      "Value": {
+        "Fn::GetAtt": [ "AuthStack", "Outputs.IdentityPoolId" ]
+      }
+    },
+    "UserPoolId": {
+      "Description": "User pool ID",
+      "Value": {
+        "Fn::GetAtt": [ "AuthStack", "Outputs.UserPoolId" ]
+      }
+    },
+    "UserPoolClientWebId": {
+      "Description": "User pool client id for web app",
+      "Value": {
+        "Fn::GetAtt": [ "AuthStack", "Outputs.UserPoolClientWebId" ]
+      }
+    },
+    "RestApiRootUrl": {
+      "Description": "Root URL for REST API",
+      "Value": {
+        "Fn::GetAtt": [ "RestApiStack", "Outputs.ApiRootUrl" ]
+      }
+    },
+    "StorageBucket": {
+      "Description": "Storage bucket name",
+      "Value": {
+        "Fn::GetAtt": [ "StorageStack", "Outputs.BucketName" ]
+      }
+    }
+  }
+}

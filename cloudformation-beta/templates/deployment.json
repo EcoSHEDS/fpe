@@ -1,0 +1,29 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Root Stack for vue-amplify",
+  "Parameters": {
+    "bucketName": {
+      "Description": "Bucket name",
+      "Type": "String"
+    }
+  },
+  "Resources": {
+    "DeploymentBucket": {
+      "Type": "AWS::S3::Bucket",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "BucketName": {
+          "Ref": "bucketName"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "deploymentBucketName": {
+      "Description": "Deployment bucket name for storing templates and lambda function code",
+      "Value": {
+        "Ref": "DeploymentBucket"
+      }
+    }
+  }
+}

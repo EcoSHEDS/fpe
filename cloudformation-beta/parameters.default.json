@@ -1,0 +1,14 @@
+[
+  {
+    "ParameterKey": "appName",
+    "ParameterValue": "aws-template"
+  },
+  {
+    "ParameterKey": "env",
+    "ParameterValue": "dev"
+  },
+  {
+    "ParameterKey": "permissionsBoundaryName",
+    "ParameterValue": "NONE"
+  }
+]
