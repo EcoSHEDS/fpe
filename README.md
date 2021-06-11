@@ -9,7 +9,7 @@ Required variables
 
 ```bash
 # server port
-FPE_PORT=8000
+PORT=8000
 
 # database connection
 FPE_DB_HOST=

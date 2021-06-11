@@ -37,7 +37,7 @@ const postImagesets = async (req, res, next) => {
   }
 
   const presignedUrl = await createPresignedPostPromise({
-    Bucket: process.env.FPE_S3_BUCKET,
+    Bucket: process.env.BUCKET,
     Conditions: [
       ['starts-with', '$key', `imagesets/${props.uuid}/images/`]
     ],

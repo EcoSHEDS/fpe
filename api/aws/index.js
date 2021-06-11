@@ -2,12 +2,12 @@ const AWS = require('aws-sdk')
 
 exports.s3 = new AWS.S3({
   apiVersion: '2006-03-01',
-  region: process.env.FPE_REGION
+  region: process.env.REGION
 })
 
 const lambda = new AWS.Lambda({
   apiVersion: '2015-03-31',
-  region: process.env.FPE_REGION
+  region: process.env.REGION
 })
 
 exports.invokeWorker = (payload) => {
@@ -21,11 +21,11 @@ exports.invokeWorker = (payload) => {
 
 exports.batch = new AWS.Batch({
   apiVersion: '2016-08-10',
-  region: process.env.FPE_REGION
+  region: process.env.REGION
 })
 
 exports.secretsmanager = new AWS.SecretsManager({
-  region: process.env.FPE_REGION
+  region: process.env.REGION
 })
 
 exports.createPresignedPostPromise = (params) => {

@@ -31,7 +31,7 @@ const postDatasets = async (req, res, next) => {
   }
 
   const presignedUrl = await createPresignedPostPromise({
-    Bucket: process.env.FPE_S3_BUCKET,
+    Bucket: process.env.BUCKET,
     Fields: {
       key: `datasets/${props.uuid}/${req.body.filename}`
     },

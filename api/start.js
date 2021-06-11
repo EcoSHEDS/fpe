@@ -2,10 +2,9 @@
 require('dotenv-flow').config({ path: '../' })
 
 var app = require('./app')
-var debug = require('debug')('fpe-api:server')
 var http = require('http')
 
-var port = normalizePort(process.env.FPE_PORT || '3000')
+var port = normalizePort(process.env.PORT || '3000')
 app.set('port', port)
 
 var server = http.createServer(app)
@@ -64,5 +63,5 @@ function onListening () {
   var bind = typeof addr === 'string'
     ? 'pipe ' + addr
     : 'port ' + addr.port
-  debug('Listening on ' + bind)
+  console.log('listening on ' + bind)
 }
