@@ -28,35 +28,26 @@ function attachUser (req, res, next) {
   next()
 }
 
-// const attachUser = async (req, res, next) => {
-//   res.locals.userId = null
-
-//   if (!req.apiGateway) {
-//     res.locals.userId = 'local'
-//     return next()
-//   }
-
-//   if (req.apiGateway.event.requestContext.authorizer &&
-//     req.apiGateway.event.requestContext.authorizer.claims.sub) {
-//     res.locals.userId = req.apiGateway.event.requestContext.authorizer.claims.sub
-//   }
-
-//   next()
-// }
+function requireAdmin (req, res, next) {
+  if (!res.locals.user || !res.locals.user.isAdmin) {
+    return next(createError(401, 'Unauthorized'))
+  }
+  next()
+}
 
 const requireStationOwnerOrAdmin = (req, res, next) => {
+  // no station
   if (!res.locals.station) {
-    // no station
     return next(createError(404, 'Station not found'))
   }
 
+  // no user
   if (!res.locals.user) {
-    // no user
     return next(createError(401, 'Unauthorized'))
   }
 
+  // user is not owner
   if (res.locals.station.user_id !== res.locals.user.id && !res.locals.user.isAdmin) {
-    // user is not owner
     return next(createError(401, 'Unauthorized'))
   }
 
@@ -65,5 +56,6 @@ const requireStationOwnerOrAdmin = (req, res, next) => {
 
 module.exports = {
   attachUser,
+  requireAdmin,
   requireStationOwnerOrAdmin
 }

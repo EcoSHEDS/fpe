@@ -4,12 +4,11 @@ const createError = require('http-errors')
 const router = express.Router()
 
 router.get('/', function (req, res, next) {
-  res.status(200).json({ message: 'Welcome to the SHEDS FPE API' })
+  res.status(200).json({ message: 'Welcome to the FPE API' })
 })
 
-router.use('/datasets', require('./datasets'))
-router.use('/series', require('./series'))
-router.use('/stations', require('./stations'))
+router.use('/public', require('./public'))
+router.use('/restricted', require('./restricted'))
 
 router.use('*', (req, res, next) => {
   next(createError(404, `Path not found (${req.originalUrl})`))

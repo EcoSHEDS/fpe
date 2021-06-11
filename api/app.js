@@ -3,10 +3,8 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 const logger = require('morgan')
 const createError = require('http-errors')
-// const asyncHandler = require('express-async-handler')
 const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware')
 
-// const { attachUser } = require('./middleware/auth')
 const { isLambda } = require('./utils')
 
 const app = express()
@@ -19,10 +17,7 @@ if (isLambda()) {
   app.use(awsServerlessExpressMiddleware.eventContext())
 }
 
-// app.use(asyncHandler(attachUser))
-
-app.use('/public', require('./routes/public'))
-app.use('/restricted', require('./routes/restricted'))
+app.use('/', require('./routes'))
 
 app.use('*', (req, res, next) => {
   next(createError(404, `Path not found (${req.originalUrl})`))

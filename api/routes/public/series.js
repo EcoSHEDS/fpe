@@ -6,7 +6,7 @@ const {
   getSeries,
   getSeriesValues,
   getSeriesDaily
-} = require('../controllers/series')
+} = require('../../controllers/series')
 
 var router = express.Router()
 

@@ -3,7 +3,7 @@ const asyncHandler = require('express-async-handler')
 
 const {
   getDatasets
-} = require('../controllers/datasets')
+} = require('../../controllers/datasets')
 
 var router = express.Router()
 
