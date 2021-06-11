@@ -2,18 +2,18 @@ const fs = require('fs')
 const path = require('path')
 const { v4: uuidv4 } = require('uuid')
 
-const { Station, Dataset } = require('../api/db/models')
+const { Station, Dataset } = require('../db/models')
 const { NotFoundError } = require('./lib/errors')
 const { printTable } = require('./lib/utils')
 
-const { s3, batch } = require('../api/aws')
+const { s3, batch } = require('./lib/aws')
 
 function uploadDatasetToS3 (file, { dryRun, uuid }) {
   if (dryRun) return Promise.resolve({ Location: `http://example.org/${path.basename(file)}` })
 
   const stream = fs.createReadStream(file)
   return s3.upload({
-    Bucket: process.env.FPE_S3_BUCKET,
+    Bucket: process.env.BUCKET,
     Key: `datasets/${uuid}/${path.basename(file)}`,
     Body: stream
   }).promise()

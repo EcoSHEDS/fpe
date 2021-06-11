@@ -21,7 +21,7 @@ const config = {
     return {
       host: creds.host,
       port: creds.port,
-      database: creds.dbname,
+      database: creds.dbname || 'postgres',
       user: creds.username,
       password: creds.password
     }

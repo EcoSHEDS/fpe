@@ -1,6 +1,5 @@
-const { User, Station } = require('../api/db/models')
+const { Station } = require('../db/models')
 const { printTable } = require('./lib/utils')
-const { NotFoundError } = require('./lib/errors')
 
 exports.listStations = async function (options) {
   let query = Station.query().orderBy('id')
@@ -17,12 +16,6 @@ exports.listStations = async function (options) {
 }
 
 exports.createStation = async function (options) {
-  const user = await User.query().findById(options.user)
-
-  if (!user) {
-    throw new NotFoundError(`User (id=${options.user}) does not exist`)
-  }
-
   const row = await Station.query().insert({
     user_id: options.user,
     name: options.stationName,
