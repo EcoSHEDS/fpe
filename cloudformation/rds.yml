@@ -25,7 +25,7 @@ Resources:
       - IpProtocol: tcp
         FromPort: '5432'
         ToPort: '5432'
-        CidrIp: 75.68.245.53/32
+        CidrIp: 75.68.244.227/32
       - IpProtocol: tcp
         FromPort: '5432'
         ToPort: '5432'

@@ -64,6 +64,7 @@ async function parseFile ({ s3: s3File }) {
 function createRowParser (timestamp, variable) {
   const utcOffset = timestamp.timezone.utcOffset
   const scale = variable.scale || 1
+
   return (d, i) => {
     const rawTimestamp = d[timestamp.column]
     const parsedTimestamp = dayjs(rawTimestamp).utc(true).subtract(utcOffset, 'hour')
@@ -73,7 +74,6 @@ function createRowParser (timestamp, variable) {
 
     const rawValue = d[variable.column]
     const parsedValue = rawValue.length === 0 ? NaN : (Number(rawValue) * scale)
-
     const parsedFlag = variable.flag && d[variable.flag].length > 0 ? d[variable.flag] : null
 
     return {
