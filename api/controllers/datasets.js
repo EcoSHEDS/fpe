@@ -91,7 +91,6 @@ const deleteDataset = async (req, res, next) => {
 }
 
 const deleteDatasetFiles = async (dataset) => {
-  console.log(`deleteDatasetFiles(${dataset.id})`)
   try {
     const response = await invokeWorker({
       method: 'deleteS3Objects',
