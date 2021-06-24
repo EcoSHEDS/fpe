@@ -38,6 +38,14 @@
     "lambdaWorkerName": {
       "Description": "Name of lambda worker function",
       "Type": "String"
+    },
+    "batchJobDefinitionName": {
+      "Description": "Name of batch job definition",
+      "Type": "String"
+    },
+    "batchJobQueueName": {
+      "Description": "Name of batch job queue",
+      "Type": "String"
     }
   },
   "Conditions": {
@@ -45,7 +53,9 @@
       "Fn::Not": [
         {
           "Fn::Equals": [
-            { "Ref": "permissionsBoundaryName" },
+            {
+              "Ref": "permissionsBoundaryName"
+            },
             "NONE"
           ]
         }
@@ -70,8 +80,12 @@
           "Fn::Join": [
             "-",
             [
-              { "Ref": "appName" },
-              { "Ref": "env" },
+              {
+                "Ref": "appName"
+              },
+              {
+                "Ref": "env"
+              },
               "lambda-api"
             ]
           ]
@@ -79,21 +93,41 @@
         "Tags": [
           {
             "Key": "project",
-            "Value": { "Ref": "appName" }
+            "Value": {
+              "Ref": "appName"
+            }
           },
           {
             "Key": "env",
-            "Value": { "Ref": "env" }
+            "Value": {
+              "Ref": "env"
+            }
           }
         ],
         "Handler": "lambda.handler",
         "Environment": {
           "Variables": {
-            "ENV": { "Ref": "env" },
-            "REGION": { "Ref": "AWS::Region"},
-            "BUCKET": { "Ref": "storageBucketName"},
-            "DB_SECRET_NAME": { "Ref": "dbSecretName" },
-            "LAMBDA_WORKER": { "Ref": "lambdaWorkerName" }
+            "ENV": {
+              "Ref": "env"
+            },
+            "REGION": {
+              "Ref": "AWS::Region"
+            },
+            "BUCKET": {
+              "Ref": "storageBucketName"
+            },
+            "DB_SECRET_NAME": {
+              "Ref": "dbSecretName"
+            },
+            "LAMBDA_WORKER": {
+              "Ref": "lambdaWorkerName"
+            },
+            "JOB_DEFINITION": {
+              "Ref": "batchJobDefinitionName"
+            },
+            "JOB_QUEUE": {
+              "Ref": "batchJobQueueName"
+            }
           }
         },
         "Role": {
@@ -107,9 +141,13 @@
         "Code": "../../api/",
         "VpcConfig": {
           "SecurityGroupIds": [
-            { "Ref": "SecurityGroup" }
+            {
+              "Ref": "SecurityGroup"
+            }
           ],
-          "SubnetIds": { "Ref": "privateSubnetIds" }
+          "SubnetIds": {
+            "Ref": "privateSubnetIds"
+          }
         }
       }
     },
@@ -120,8 +158,12 @@
           "Fn::Join": [
             "-",
             [
-              { "Ref": "appName" },
-              { "Ref": "env" },
+              {
+                "Ref": "appName"
+              },
+              {
+                "Ref": "env"
+              },
               "lambda-api-role"
             ]
           ]
@@ -168,14 +210,20 @@
           "Fn::Join": [
             "-",
             [
-              { "Ref": "appName" },
-              { "Ref": "env" },
+              {
+                "Ref": "appName"
+              },
+              {
+                "Ref": "env"
+              },
               "lambda-api-policy"
             ]
           ]
         },
         "Roles": [
-          { "Ref": "LambdaExecutionRole" }
+          {
+            "Ref": "LambdaExecutionRole"
+          }
         ],
         "PolicyDocument": {
           "Version": "2012-10-17",
@@ -200,8 +248,12 @@
                 "s3:ListBucket"
               ],
               "Resource": [
-                { "Fn::Sub": "arn:aws:s3:::${storageBucketName}" },
-                { "Fn::Sub": "arn:aws:s3:::${storageBucketName}/*" }
+                {
+                  "Fn::Sub": "arn:aws:s3:::${storageBucketName}"
+                },
+                {
+                  "Fn::Sub": "arn:aws:s3:::${storageBucketName}/*"
+                }
               ]
             },
             {
@@ -212,7 +264,9 @@
                 "secretsmanager:DescribeSecret",
                 "secretsmanager:ListSecretVersionIds"
               ],
-              "Resource": { "Ref": "dbSecretArn" }
+              "Resource": {
+                "Ref": "dbSecretArn"
+              }
             },
             {
               "Effect": "Allow",
@@ -220,6 +274,25 @@
                 "batch:*"
               ],
               "Resource": "*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "lambda:InvokeFunction"
+              ],
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:lambda:",
+                    { "Ref": "AWS::Region" },
+                    ":",
+                    { "Ref": "AWS::AccountId" },
+                    ":function:",
+                    { "Ref": "lambdaWorkerName" }
+                  ]
+                ]
+              }
             }
           ]
         }

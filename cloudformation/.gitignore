@@ -1,2 +1,3 @@
 *-packaged.json
 parameters/*.local.json
+env.local.sh

@@ -4,12 +4,13 @@ const { isLambda } = require('../utils')
 
 function attachUser (req, res, next) {
   if (!isLambda()) {
-    if (!req.query.userId) {
-      return next(createError(401, 'Unauthorized'))
-    }
+    // if (!req.query.userId) {
+    //   return next(createError(401, 'Unauthorized'))
+    // }
     res.locals.user = {
-      id: req.query.userId,
+      id: req.query.userId || 'abcd1234',
       isAdmin: req.query.isAdmin === 'true',
+      isLocal: true,
       claims: {}
     }
     return next()
@@ -44,6 +45,11 @@ const requireStationOwnerOrAdmin = (req, res, next) => {
   // no user
   if (!res.locals.user) {
     return next(createError(401, 'Unauthorized'))
+  }
+
+  // local override
+  if (res.locals.user.isLocal) {
+    return next()
   }
 
   // user is not owner

@@ -66,8 +66,8 @@ const processImageset = async (req, res, next) => {
 
   const response = await batch.submitJob({
     jobName: `process-imageset-${res.locals.imageset.id}`,
-    jobDefinition: 'fpe-batch-job-definition',
-    jobQueue: 'fpe-batch-job-queue',
+    jobDefinition: process.env.JOB_DEFINITION,
+    jobQueue: process.env.JOB_QUEUE,
     containerOverrides: {
       command: [
         'node',

@@ -11,11 +11,13 @@ const lambda = new AWS.Lambda({
 })
 
 exports.invokeWorker = (payload) => {
+  console.log('invokeWorker')
   const params = {
     FunctionName: process.env.LAMBDA_WORKER,
     InvocationType: 'Event',
     Payload: Buffer.from(JSON.stringify(payload))
   }
+  console.log('params:', params)
   return lambda.invoke(params).promise()
 }
 

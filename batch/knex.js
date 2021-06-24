@@ -1,7 +1,7 @@
 const AWS = require('aws-sdk')
 
 const secretsmanager = new AWS.SecretsManager({
-  region: process.env.REGION || 'us-east-1'
+  region: process.env.REGION
 })
 
 async function getCreds () {

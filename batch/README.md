@@ -32,20 +32,24 @@ rm -rf node_modules/sharp
 SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install --arch=x64 --platform=linux sharp
 ```
 
-## Build
+## Build, Run and Deploy
 
-```
-docker build -t fpe-batch .
-docker run fpe-batch
-docker tag fpe-batch 474916309046.dkr.ecr.us-east-1.amazonaws.com/fpe-batch
-```
+```bash
+export REGION=<aws region>
+export ACCOUNT=<aws account number>
+export REPO=<repo name>
+export DB_SECRET_NAME=<db secret name>
 
-## Deploy
+docker build -t ${REPO} .
+docker run ${REPO}
+docker tag ${REPO} ${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/${REPO}
 
-```
+# run (fails due to missing AWS credentials)
+docker run -e "DB_SECRET_NAME=${DB_SECRET_NAME}" -e "REGION=${REGION}" ${REPO} node process.js dataset 1
+
 # authenticate
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 474916309046.dkr.ecr.us-east-1.amazonaws.com/fpe-batch
+aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/${REPO}
 
 # push
-docker push 474916309046.dkr.ecr.us-east-1.amazonaws.com/fpe-batch
+docker push ${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/${REPO}
 ```

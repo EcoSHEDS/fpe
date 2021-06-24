@@ -83,6 +83,12 @@
           },
           "lambdaWorkerName": {
             "Fn::GetAtt": [ "LambdaWorkerStack", "Outputs.LambdaName" ]
+          },
+          "batchJobDefinitionName": {
+            "Fn::GetAtt": [ "BatchStack", "Outputs.JobDefinitionName" ]
+          },
+          "batchJobQueueName": {
+            "Fn::GetAtt": [ "BatchStack", "Outputs.JobQueueName" ]
           }
         }
       }

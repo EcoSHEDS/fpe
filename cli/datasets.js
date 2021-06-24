@@ -95,8 +95,8 @@ exports.processDataset = async function (id) {
 
   const results = await batch.submitJob({
     jobName: 'process-dataset',
-    jobDefinition: 'fpe-batch-job-definition',
-    jobQueue: 'fpe-batch-job-queue',
+    jobDefinition: process.env.JOB_DEFINITION,
+    jobQueue: process.env.JOB_QUEUE,
     containerOverrides: {
       command: [
         'node',

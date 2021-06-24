@@ -1,13 +1,16 @@
-require('dotenv-flow').config()
+const path = require('path')
+require('dotenv-flow').config({
+  path: path.resolve(__dirname)
+})
 
 const config = {
   client: 'postgresql',
   connection: {
-    host: process.env.FPE_DB_HOST,
-    port: process.env.FPE_DB_PORT,
-    database: process.env.FPE_DB_DATABASE,
-    user: process.env.FPE_DB_USER,
-    password: process.env.FPE_DB_PASSWORD
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    database: process.env.DB_DATABASE,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD
   },
   migrations: {
     tableName: 'knex_migrations',

@@ -62,8 +62,8 @@ const processDataset = async (req, res, next) => {
   // console.log(`process dataset (id=${res.locals.dataset.id})`)
   const response = await batch.submitJob({
     jobName: `process-dataset-${res.locals.dataset.id}`,
-    jobDefinition: 'fpe-batch-job-definition',
-    jobQueue: 'fpe-batch-job-queue',
+    jobDefinition: process.env.JOB_DEFINITION,
+    jobQueue: process.env.JOB_QUEUE,
     containerOverrides: {
       command: [
         'node',
@@ -91,6 +91,7 @@ const deleteDataset = async (req, res, next) => {
 }
 
 const deleteDatasetFiles = async (dataset) => {
+  console.log(`deleteDatasetFiles(${dataset.id})`)
   try {
     const response = await invokeWorker({
       method: 'deleteS3Objects',

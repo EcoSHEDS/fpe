@@ -3,20 +3,26 @@ SHEDS Flow Photo Explorer API
 
 ## Configuration
 
-Use `.env` files with support for environment (`.env.development`, `.env.production`) and local (`.env.local`) via [`dotenv-flow`](npmjs.com/package/dotenv-flow). Local `.env` files are not tracked in the repo.
+Use `.env` files specifying environment (`.env.development`, `.env.production`) and local (`.env.local`) via [`dotenv-flow`](npmjs.com/package/dotenv-flow). Local `.env` files are not tracked in the repo.
 
 Required variables
 
 ```bash
-# server port
-PORT=8000
+# api server port (local development only)
+PORT
+
+# aws region
+REGION
+
+# bucket name for storing data and images
+BUCKET
 
 # database connection
-FPE_DB_HOST=
-FPE_DB_PORT=
-FPE_DB_DATABASE=
-FPE_DB_USER=
-FPE_DB_PASSWORD=
+DB_HOST
+DB_PORT
+DB_DATABASE
+DB_USER
+DB_PASSWORD
 ```
 
 ## Database
@@ -51,7 +57,7 @@ knex seed:run --sepecific my_seed.js # only one file
 
 Run development server via `nodemon`.
 
-```
+```bash
 cd api
 npm start
 ```
@@ -63,7 +69,7 @@ The `cli.js` file defines a CLI for managing the database.
 To make it globally available:
 
 ```sh
-yarn link
+npm link
 ```
 
 Be sure to set the `NODE_ENV` environmental variable.
@@ -87,18 +93,10 @@ NODE_ENV=development fpe stations list
 
 ### CLI Quickstart
 
-Find the id of the owner.
-
-```
-$ fpe users list
-ID | EMAIL                 | FULLNAME
-1  | jeff@walkerenvres.com | Jeff Walker
-```
-
 Create a station.
 
 ```
-$ fpe stations create -u 1 -n "My Station" -l 42.123 -g -72.394
+$ fpe stations create -u 10b8ece7... -n "My Station" -l 42.123 -g -72.394
 ID | USER_ID | NAME       | DESCRIPTION | LATITUDE | LONGITUDE
 2  | 1       | My Station |             | 42.123   | -72.394
 ```
@@ -138,16 +136,22 @@ dataset saved to db (id=53)
 To manage files in S3 using the aws cli.
 
 ```bash
+export BUCKET=<bucket name>
+
 # list all files
-aws s3 ls s3://walkerenvres-fpe-data/ --recursive
+aws s3 ls s3://${BUCKET}/ --recursive
+
 # list dataset files
-aws s3 ls s3://walkerenvres-fpe-data/datasets/ --recursive
+aws s3 ls s3://${BUCKET}/datasets/ --recursive
+
 # list imageset uuids (no files)
-aws s3 ls s3://walkerenvres-fpe-data/imagesets/
+aws s3 ls s3://${BUCKET}/imagesets/
+
 # delete all image files for imageset uuid
-aws s3 rm s3://walkerenvres-fpe-data/ --recursive --exclude "*" --include "imagesets/<uuid>/*"
+aws s3 rm s3://${BUCKET}/ --recursive --exclude "*" --include "imagesets/<uuid>/*"
+
 # delete all csv files for dataset uuid
-aws s3 rm s3://walkerenvres-fpe-data/ --recursive --exclude "*" --include "datasets/<uuid>/*"
+aws s3 rm s3://${BUCKET}/ --recursive --exclude "*" --include "datasets/<uuid>/*"
 ```
 
 ## References
