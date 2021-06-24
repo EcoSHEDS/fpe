@@ -10,6 +10,10 @@
       "Description": "Environment",
       "Type": "String"
     },
+    "bucketName": {
+      "Description": "Bucket name",
+      "Type": "String"
+    },
     "authRoleName": {
       "Type": "String"
     },
@@ -22,20 +26,7 @@
       "Type": "AWS::S3::Bucket",
       "DeletionPolicy": "Retain",
       "Properties": {
-        "BucketName": {
-          "Fn::Join": [
-            "-",
-            [
-              {
-                "Ref": "appName"
-              },
-              {
-                "Ref": "env"
-              },
-              "storage"
-            ]
-          ]
-        },
+        "BucketName": { "Ref": "bucketName" },
         "CorsConfiguration": {
           "CorsRules": [
             {
@@ -198,9 +189,7 @@
   },
   "Outputs": {
     "BucketName": {
-      "Value": {
-        "Ref": "Bucket"
-      },
+      "Value": { "Ref": "Bucket" },
       "Description": "Name of S3 bucket"
     }
   }

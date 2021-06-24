@@ -7,5 +7,4 @@ BUCKET=$2
 
 ./package-lambda.sh api ${BUCKET}
 ./package-lambda.sh worker ${BUCKET}
-./package.sh ${BUCKET}
-./deploy.sh ${STACK_NAME}
+./update-root.sh ${STACK_NAME} ${BUCKET}

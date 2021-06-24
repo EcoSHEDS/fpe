@@ -12,6 +12,10 @@
       "Type": "String",
       "Default": "dev"
     },
+    "storageBucketNamePrefix": {
+      "Description": "Prefix for storage bucket name",
+      "Type": "String"
+    },
     "permissionsBoundaryName": {
       "Description": "Permissions boundary",
       "Type": "String",
@@ -57,6 +61,17 @@
         "Parameters": {
           "appName": { "Ref": "appName" },
           "env": { "Ref": "env" },
+          "bucketName": {
+            "Fn::Join": [
+              "-",
+              [
+                { "Ref": "storageBucketNamePrefix" },
+                { "Ref": "appName" },
+                { "Ref": "env" },
+                "storage"
+              ]
+            ]
+          },
           "authRoleName": {
             "Fn::GetAtt": [ "AuthStack", "Outputs.AuthRoleName" ]
           },

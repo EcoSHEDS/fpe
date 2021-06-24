@@ -8,6 +8,10 @@
     "ParameterValue": ""
   },
   {
+    "ParameterKey": "storageBucketNamePrefix",
+    "ParameterValue": ""
+  },
+  {
     "ParameterKey": "permissionsBoundaryName",
     "ParameterValue": "NONE"
   },
