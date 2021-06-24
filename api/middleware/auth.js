@@ -1,20 +1,6 @@
 const createError = require('http-errors')
 
-const { isLambda } = require('../utils')
-
 function attachUser (req, res, next) {
-  if (!isLambda()) {
-    // if (!req.query.userId) {
-    //   return next(createError(401, 'Unauthorized'))
-    // }
-    res.locals.user = {
-      id: req.query.userId || 'abcd1234',
-      isAdmin: req.query.isAdmin === 'true',
-      isLocal: true,
-      claims: {}
-    }
-    return next()
-  }
   if (!req.apiGateway.event.requestContext.authorizer) {
     return next(createError(401, 'Unauthorized'))
   }
