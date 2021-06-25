@@ -16,8 +16,8 @@
       "Description": "VPC ID",
       "Type": "String"
     },
-    "publicSubnetIds": {
-      "Description": "Public subnet IDs",
+    "subnetIds": {
+      "Description": "Subnet IDs (public)",
       "Type": "CommaDelimitedList"
     },
     "dbSecretName": {
@@ -240,7 +240,7 @@
           "Type": "FARGATE",
           "MaxvCpus": 32,
           "Subnets": {
-            "Ref": "publicSubnetIds"
+            "Ref": "subnetIds"
           },
           "SecurityGroupIds": [
             {

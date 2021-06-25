@@ -19,8 +19,8 @@
       "Description": "VPC ID",
       "Type": "String"
     },
-    "privateSubnetIds": {
-      "Description": "Private subnet IDs",
+    "subnetIds": {
+      "Description": "Subnet IDs (private)",
       "Type": "CommaDelimitedList"
     },
     "storageBucketName": {
@@ -95,7 +95,7 @@
           "SecurityGroupIds": [
             { "Ref": "SecurityGroup" }
           ],
-          "SubnetIds": { "Ref": "privateSubnetIds" }
+          "SubnetIds": { "Ref": "subnetIds" }
         }
       }
     },

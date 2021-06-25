@@ -19,8 +19,8 @@
       "Description": "VPC ID",
       "Type": "String"
     },
-    "privateSubnetIds": {
-      "Description": "Private subnet IDs",
+    "subnetIds": {
+      "Description": "Subnet IDs (private)",
       "Type": "CommaDelimitedList"
     },
     "dbSecretArn": {
@@ -146,7 +146,7 @@
             }
           ],
           "SubnetIds": {
-            "Ref": "privateSubnetIds"
+            "Ref": "subnetIds"
           }
         }
       }

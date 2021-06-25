@@ -63,7 +63,7 @@
           "env": { "Ref": "env" },
           "permissionsBoundaryName": { "Ref": "permissionsBoundaryName" },
           "vpcId": { "Ref": "vpcId" },
-          "privateSubnetIds": { "Ref": "privateSubnetIds" },
+          "subnetIds": { "Ref": "privateSubnetIds" },
           "dbSecretArn": { "Ref": "dbSecretArn" },
           "dbSecretName": { "Ref": "dbSecretName" },
           "storageBucketName": { "Ref": "storageBucketName" },
@@ -103,7 +103,7 @@
           "appName": { "Ref": "appName" },
           "env": { "Ref": "env" },
           "vpcId": { "Ref": "vpcId" },
-          "publicSubnetIds": { "Ref": "publicSubnetIds" },
+          "subnetIds": { "Ref": "publicSubnetIds" },
           "dbSecretName": { "Ref": "dbSecretName" }
         }
       }
@@ -117,7 +117,7 @@
           "env": { "Ref": "env" },
           "permissionsBoundaryName": { "Ref": "permissionsBoundaryName" },
           "vpcId": { "Ref": "vpcId" },
-          "privateSubnetIds": { "Ref": "privateSubnetIds" },
+          "subnetIds": { "Ref": "privateSubnetIds" },
           "storageBucketName": { "Ref": "storageBucketName" }
         }
       }
