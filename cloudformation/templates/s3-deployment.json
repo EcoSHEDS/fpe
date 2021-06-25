@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Root Stack for vue-amplify",
+  "Description": "S3 bucket for cloudformation and lambda deployments",
   "Parameters": {
     "bucketName": {
       "Description": "Bucket name",
@@ -10,7 +10,6 @@
   "Resources": {
     "DeploymentBucket": {
       "Type": "AWS::S3::Bucket",
-      "DeletionPolicy": "Retain",
       "Properties": {
         "BucketName": {
           "Ref": "bucketName"

@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Root Stack",
+  "Description": "Root of nested stack",
   "Parameters": {
     "appName": {
       "Description": "Application name",
@@ -12,8 +12,8 @@
       "Type": "String",
       "Default": "dev"
     },
-    "storageBucketNamePrefix": {
-      "Description": "Prefix for storage bucket name",
+    "storageBucketName": {
+      "Description": "Storage bucket name",
       "Type": "String"
     },
     "permissionsBoundaryName": {
@@ -54,33 +54,6 @@
         }
       }
     },
-    "StorageStack": {
-      "Type": "AWS::CloudFormation::Stack",
-      "Properties": {
-        "TemplateURL": "./storage.json",
-        "Parameters": {
-          "appName": { "Ref": "appName" },
-          "env": { "Ref": "env" },
-          "bucketName": {
-            "Fn::Join": [
-              "-",
-              [
-                { "Ref": "storageBucketNamePrefix" },
-                { "Ref": "appName" },
-                { "Ref": "env" },
-                "storage"
-              ]
-            ]
-          },
-          "authRoleName": {
-            "Fn::GetAtt": [ "AuthStack", "Outputs.AuthRoleName" ]
-          },
-          "unauthRoleName": {
-            "Fn::GetAtt": [ "AuthStack", "Outputs.UnauthRoleName" ]
-          }
-        }
-      }
-    },
     "LambdaApiStack": {
       "Type": "AWS::CloudFormation::Stack",
       "Properties": {
@@ -93,9 +66,7 @@
           "privateSubnetIds": { "Ref": "privateSubnetIds" },
           "dbSecretArn": { "Ref": "dbSecretArn" },
           "dbSecretName": { "Ref": "dbSecretName" },
-          "storageBucketName": {
-            "Fn::GetAtt": [ "StorageStack", "Outputs.BucketName" ]
-          },
+          "storageBucketName": { "Ref": "storageBucketName" },
           "lambdaWorkerName": {
             "Fn::GetAtt": [ "LambdaWorkerStack", "Outputs.LambdaName" ]
           },
@@ -147,9 +118,7 @@
           "permissionsBoundaryName": { "Ref": "permissionsBoundaryName" },
           "vpcId": { "Ref": "vpcId" },
           "privateSubnetIds": { "Ref": "privateSubnetIds" },
-          "storageBucketName": {
-            "Fn::GetAtt": [ "StorageStack", "Outputs.BucketName" ]
-          }
+          "storageBucketName": { "Ref": "storageBucketName" }
         }
       }
     }
@@ -187,9 +156,7 @@
     },
     "StorageBucket": {
       "Description": "Storage bucket name",
-      "Value": {
-        "Fn::GetAtt": [ "StorageStack", "Outputs.BucketName" ]
-      }
+      "Value": { "Ref": "storageBucketName" }
     }
   }
 }

@@ -2,4 +2,6 @@
 # delete root stack
 # usage: ./delete.sh <stack name>
 
-aws cloudformation delete-stack --stack-name $1
+STACK_NAME=$1
+
+aws cloudformation delete-stack --stack-name ${STACK_NAME}

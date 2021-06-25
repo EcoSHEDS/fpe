@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Lambda function for FPE API",
+  "Description": "Lambda function for AWS worker",
   "Parameters": {
     "appName": {
       "Description": "Application name",

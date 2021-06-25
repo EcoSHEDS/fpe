@@ -3,7 +3,7 @@
 # usage: ./update-root.sh <stack name> <deployment bucket>
 
 STACK_NAME=$1
-BUCKET=$2
+DEPLOYMENT_BUCKET=$2
 
-./package.sh ${BUCKET}
+./package.sh ${DEPLOYMENT_BUCKET}
 ./deploy.sh ${STACK_NAME}
