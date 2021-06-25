@@ -20,11 +20,15 @@
     "ParameterValue": ""
   },
   {
+    "ParameterKey": "username",
+    "ParameterValue": ""
+  },
+  {
     "ParameterKey": "dbInstanceClass",
     "ParameterValue": ""
   },
   {
-    "ParameterKey": "username",
+    "ParameterKey": "publiclyAccessible",
     "ParameterValue": ""
   }
 ]

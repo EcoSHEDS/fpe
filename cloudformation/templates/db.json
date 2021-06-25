@@ -33,6 +33,12 @@
       "Description": "Database instance class",
       "Type": "String",
       "Default": "db.t2.micro"
+    },
+    "publiclyAccessible": {
+      "Description": "Enable public access",
+      "Type": "String",
+      "AllowedValues": ["true", "false"],
+      "Default": "false"
     }
   },
   "Resources": {
@@ -135,7 +141,7 @@
         },
         "MultiAZ": false,
         "Port": 5432,
-        "PubliclyAccessible": false,
+        "PubliclyAccessible": { "Ref": "publiclyAccessible" },
         "StorageType": "gp2",
         "VPCSecurityGroups": {
           "Ref": "vpcSecurityGroupIds"
