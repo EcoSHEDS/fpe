@@ -1,16 +1,33 @@
+const AWS = require('aws-sdk')
 const path = require('path')
 require('dotenv-flow').config({
   path: path.resolve(__dirname)
 })
 
+const secretsmanager = new AWS.SecretsManager({
+  region: process.env.REGION
+})
+
+async function getCreds () {
+  const secret = await secretsmanager.getSecretValue({
+    SecretId: process.env.DB_SECRET_NAME,
+    VersionStage: 'AWSCURRENT'
+  }).promise()
+  return JSON.parse(secret.SecretString)
+}
+
 const config = {
   client: 'postgresql',
-  connection: {
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
-    database: process.env.DB_DATABASE,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD
+  connection: async function () {
+    // https://github.com/knex/knex/pull/3364
+    const creds = await getCreds()
+    return {
+      host: creds.host,
+      port: creds.port,
+      database: creds.dbname || 'postgres',
+      user: creds.username,
+      password: creds.password
+    }
   },
   migrations: {
     tableName: 'knex_migrations',

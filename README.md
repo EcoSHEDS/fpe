@@ -17,12 +17,8 @@ REGION
 # bucket name for storing data and images
 BUCKET
 
-# database connection
-DB_HOST
-DB_PORT
-DB_DATABASE
-DB_USER
-DB_PASSWORD
+# database connection secret
+DB_SECRETS_NAME
 ```
 
 ## Database
