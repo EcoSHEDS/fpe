@@ -136,7 +136,7 @@
         },
         "MultiAZ": false,
         "Port": 5432,
-        "PubliclyAccessible": true,
+        "PubliclyAccessible": false,
         "StorageType": "gp2",
         "VPCSecurityGroups": {
           "Ref": "vpcSecurityGroupIds"
