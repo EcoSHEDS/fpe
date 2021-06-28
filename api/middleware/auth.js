@@ -1,7 +1,7 @@
 const createError = require('http-errors')
 
 function attachUser (req, res, next) {
-  if (!req.apiGateway.event.requestContext.authorizer) {
+  if (!req.apiGateway || !req.apiGateway.event.requestContext.authorizer) {
     return next(createError(401, 'Unauthorized'))
   }
   const claims = req.apiGateway.event.requestContext.authorizer.claims

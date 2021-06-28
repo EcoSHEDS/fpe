@@ -75,6 +75,9 @@
           },
           "batchJobQueueName": {
             "Fn::GetAtt": [ "BatchStack", "Outputs.JobQueueName" ]
+          },
+          "userPoolId": {
+            "Fn::GetAtt": [ "AuthStack", "Outputs.UserPoolId" ]
           }
         }
       }

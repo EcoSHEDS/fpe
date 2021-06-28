@@ -7,6 +7,7 @@ router.get('/', function (req, res, next) {
   res.status(200).json({ message: 'Welcome to the FPE API' })
 })
 
+router.use('/admin', require('./admin'))
 router.use('/public', require('./public'))
 router.use('/restricted', require('./restricted'))
 

@@ -18,6 +18,7 @@ if (isLambda()) {
   app.use(awsServerlessExpressMiddleware.eventContext())
 } else if (process.env.NODE_ENV === 'development') {
   // mock awsServerlessExpressMiddleware
+  console.log('mock awsServerlessExpressMiddleware')
   app.use((req, res, next) => {
     if (req.headers.authorization) {
       const decoded = jwt.decode(req.headers.authorization)

@@ -46,6 +46,10 @@
     "batchJobQueueName": {
       "Description": "Name of batch job queue",
       "Type": "String"
+    },
+    "userPoolId": {
+      "Description": "User pool ID",
+      "Type": "String"
     }
   },
   "Conditions": {
@@ -127,6 +131,9 @@
             },
             "JOB_QUEUE": {
               "Ref": "batchJobQueueName"
+            },
+            "USERPOOL_ID": {
+              "Ref": "userPoolId"
             }
           }
         },
