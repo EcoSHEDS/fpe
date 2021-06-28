@@ -11,7 +11,7 @@ async function attachAdminUser (req, res, next) {
   if (!user) throw createError(404, `User (${req.params.userId}) not found`)
   const groups = await listGroupsForUser(user.Username)
   res.locals.adminUser = {
-    username: user.Username,
+    id: user.Username,
     attributes: transformUserAttributes(user.UserAttributes),
     created_at: user.UserCreateDate,
     updated_at: user.UserLastModifiedDate,
@@ -22,57 +22,57 @@ async function attachAdminUser (req, res, next) {
   return next()
 }
 
-async function addUserToGroup (username, groupname) {
-  console.log(`addUserToGroup (${username}, ${groupname})`)
+async function addUserToGroup (id, groupname) {
+  console.log(`addUserToGroup (${id}, ${groupname})`)
   const params = {
     GroupName: groupname,
     UserPoolId: userPoolId,
-    Username: username
+    Username: id
   }
 
   await cognitoIdentityServiceProvider.adminAddUserToGroup(params).promise()
   return {
-    message: `User (${username}) added to group (${groupname})`
+    message: `User (${id}) added to group (${groupname})`
   }
 }
 
-async function removeUserFromGroup (username, groupname) {
-  console.log(`removeUserFromGroup (${username}, ${groupname})`)
+async function removeUserFromGroup (id, groupname) {
+  console.log(`removeUserFromGroup (${id}, ${groupname})`)
   const params = {
     GroupName: groupname,
     UserPoolId: userPoolId,
-    Username: username
+    Username: id
   }
 
   await cognitoIdentityServiceProvider.adminRemoveUserFromGroup(params).promise()
   return {
-    message: `User (${username}) removed from group (${groupname})`
+    message: `User (${id}) removed from group (${groupname})`
   }
 }
 
-async function disableUser (username) {
-  console.log(`disableUser(${username})`)
+async function disableUser (id) {
+  console.log(`disableUser(${id})`)
   const params = {
     UserPoolId: userPoolId,
-    Username: username
+    Username: id
   }
 
   await cognitoIdentityServiceProvider.adminDisableUser(params).promise()
   return {
-    message: `User (${username}) disabled`
+    message: `User (${id}) disabled`
   }
 }
 
-async function enableUser (username) {
-  console.log(`enableUser(${username})`)
+async function enableUser (id) {
+  console.log(`enableUser(${id})`)
   const params = {
     UserPoolId: userPoolId,
-    Username: username
+    Username: id
   }
 
   await cognitoIdentityServiceProvider.adminEnableUser(params).promise()
   return {
-    message: `User (${username}) enabled`
+    message: `User (${id}) enabled`
   }
 }
 
@@ -104,7 +104,7 @@ async function listUsers (users, token, iter) {
   const adminUserIds = adminUsers.map(d => d.Username)
 
   return users.map(d => ({
-    username: d.Username,
+    id: d.Username,
     attributes: transformUserAttributes(d.Attributes),
     created_at: d.UserCreateDate,
     updated_at: d.UserLastModifiedDate,
@@ -136,10 +136,10 @@ async function listUsersInGroup (groupname, users, token, iter) {
   return users
 }
 
-async function listGroupsForUser (username) {
+async function listGroupsForUser (id) {
   const params = {
     UserPoolId: userPoolId,
-    Username: username
+    Username: id
   }
 
   const result = await cognitoIdentityServiceProvider.adminListGroupsForUser(params).promise()
@@ -158,17 +158,17 @@ async function getUsers (req, res, next) {
   res.status(200).json(users)
 }
 
-async function fetchUser (username) {
-  console.log(`fetchUser(${username})`)
+async function fetchUser (id) {
+  console.log(`fetchUser(${id})`)
   const params = {
     UserPoolId: userPoolId,
-    Username: username
+    Username: id
   }
   try {
     return await cognitoIdentityServiceProvider.adminGetUser(params).promise()
   } catch (err) {
     if (err.code && err.code === 'UserNotFoundException') {
-      console.log(`user (${username}) not found`)
+      console.log(`user (${id}) not found`)
       return null
     }
     console.log(err)
@@ -183,30 +183,30 @@ async function getUser (req, res, next) {
 async function putUser (req, res, next) {
   let response
   if (req.body.action === 'enable') {
-    response = await enableUser(res.locals.adminUser.username)
+    response = await enableUser(res.locals.adminUser.id)
   } else if (req.body.action === 'disable') {
-    response = await disableUser(res.locals.adminUser.username)
+    response = await disableUser(res.locals.adminUser.id)
   } else if (req.body.action === 'addToAdmin') {
-    response = await addUserToGroup(res.locals.adminUser.username, 'admins')
+    response = await addUserToGroup(res.locals.adminUser.id, 'admins')
   } else if (req.body.action === 'removeFromAdmin') {
-    response = await removeUserFromGroup(res.locals.adminUser.username, 'admins')
+    response = await removeUserFromGroup(res.locals.adminUser.id, 'admins')
   } else if (req.body.action === 'signOut') {
-    response = await signOutUser(res.locals.adminUser.username)
+    response = await signOutUser(res.locals.adminUser.id)
   } else {
     throw createError(400, 'Invalid user action')
   }
   return res.status(200).json(response)
 }
 
-async function signOutUser (username) {
+async function signOutUser (id) {
   const params = {
     UserPoolId: userPoolId,
-    Username: username
+    Username: id
   }
 
   await cognitoIdentityServiceProvider.adminUserGlobalSignOut(params).promise()
   return {
-    message: `User (${username}) signed out from all devices`
+    message: `User (${id}) signed out from all devices`
   }
 }
 
