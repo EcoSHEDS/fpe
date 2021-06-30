@@ -42,7 +42,7 @@ Using AWS EC
 export NAME=fpe-beta-dev-batch
 export AWS_ACCOUNT=474916309046
 export AWS_REGION=us-east-1
-export AWS_REPO=${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com/${NAME} # -> batchContainerImage in root template
+export AWS_REPO=${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com/${NAME}
 
 # build image (turn off VPN!)
 docker build -t ${NAME} .

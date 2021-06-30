@@ -23,6 +23,10 @@
     "dbSecretName": {
       "Description": "Name of secret for database credentials",
       "Type": "String"
+    },
+    "notifyTopicArn": {
+      "Description": "Arn of notification topic",
+      "Type": "String"
     }
   },
   "Resources": {
@@ -113,7 +117,6 @@
           "Version": "2008-10-17",
           "Statement": [
             {
-              "Sid": "",
               "Effect": "Allow",
               "Principal": {
                 "Service": "ecs-tasks.amazonaws.com"
@@ -122,6 +125,25 @@
             }
           ]
         },
+        "Policies": [
+          {
+            "PolicyName": "root",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Publish"
+                  ],
+                  "Resource": {
+                    "Ref": "notifyTopicArn"
+                  }
+                }
+              ]
+            }
+          }
+        ],
         "ManagedPolicyArns": [
           "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
           "arn:aws:iam::aws:policy/AmazonS3FullAccess",
@@ -190,6 +212,10 @@
             {
               "Name": "DB_SECRET_NAME",
               "Value": { "Ref": "dbSecretName" }
+            },
+            {
+              "Name": "NOTIFY_TOPIC",
+              "Value": { "Ref": "notifyTopicArn" }
             }
           ]
         },

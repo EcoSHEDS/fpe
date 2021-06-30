@@ -1,0 +1,49 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Notifications",
+  "Parameters": {
+    "appName": {
+      "Description": "Application name",
+      "Type": "String",
+      "Default": "shedstemplate"
+    },
+    "env": {
+      "Description": "Environment",
+      "Type": "String",
+      "Default": "dev"
+    }
+  },
+  "Resources": {
+    "Topic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {
+        "TopicName": {
+          "Fn::Join": [
+            "-",
+            [
+              { "Ref": "appName" },
+              { "Ref": "env" }
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "TopicArn": {
+      "Description": "Arn of SNS topic",
+      "Value": {
+        "Ref": "Topic"
+      }
+    },
+    "TopicName": {
+      "Description": "Name of SNS topic",
+      "Value": {
+        "Fn::GetAtt": [
+          "Topic",
+          "TopicName"
+        ]
+      }
+    }
+  }
+}

@@ -8,6 +8,8 @@ const { Station } = require('../db/models')
 const attachStation = async (req, res, next) => {
   const row = await Station.query()
     .findById(req.params.stationId)
+    .select('stations.*', 'user.affiliation_name', 'user.affiliation_description')
+    .leftJoinRelated('user')
     .withGraphFetched('[datasets, imagesets]')
   if (!row) throw createError(404, `Station (id = ${req.params.stationId}) not found`)
   res.locals.station = row
@@ -15,7 +17,10 @@ const attachStation = async (req, res, next) => {
 }
 
 const getStations = async (req, res, next) => {
-  const rows = await Station.query().where(req.query)
+  const rows = await Station.query()
+    .select('stations.*', 'user.affiliation_name', 'user.affiliation_description')
+    .leftJoinRelated('user')
+    .where(req.query)
   return res.status(200).json(rows)
 }
 

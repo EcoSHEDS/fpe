@@ -21,6 +21,7 @@ source .env.local.sh
 
 # package lambda functions (must be done first to avoid s3-prefix clash)
 ./package-lambda.sh api ${DEPLOYMENT_BUCKET}
+./package-lambda.sh trigger ${DEPLOYMENT_BUCKET}
 ./package-lambda.sh worker ${DEPLOYMENT_BUCKET}
 
 # package root stack (uploads templates to s3)

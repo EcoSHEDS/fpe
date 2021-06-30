@@ -50,6 +50,10 @@
     "userPoolId": {
       "Description": "User pool ID",
       "Type": "String"
+    },
+    "notifyTopicArn": {
+      "Description": "Arn of notification topic",
+      "Type": "String"
     }
   },
   "Conditions": {
@@ -134,6 +138,9 @@
             },
             "USERPOOL_ID": {
               "Ref": "userPoolId"
+            },
+            "NOTIFY_TOPIC": {
+              "Ref": "notifyTopicArn"
             }
           }
         },
@@ -328,6 +335,15 @@
                     { "Ref": "userPoolId" }
                   ]
                 ]
+              }
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "sns:Publish"
+              ],
+              "Resource": {
+                "Ref": "notifyTopicArn"
               }
             }
           ]

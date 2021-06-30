@@ -2,7 +2,9 @@ const { Station } = require('../db/models')
 const { printTable } = require('./lib/utils')
 
 exports.listStations = async function (options) {
-  let query = Station.query().orderBy('id')
+  let query = Station.query()
+    .select('stations.*', 'user.affiliation_name')
+    .leftJoinRelated('user').orderBy('stations.id')
   if (options.user) {
     query = query.where({ user_id: options.user })
   }
@@ -11,7 +13,7 @@ exports.listStations = async function (options) {
   if (rows.length === 0) {
     console.log('No stations found')
   } else {
-    printTable(rows, ['id', 'user_id', 'name', 'description', 'latitude', 'longitude'])
+    printTable(rows, ['id', 'affiliation_name', 'user_id', 'name', 'description', 'latitude', 'longitude'])
   }
 }
 

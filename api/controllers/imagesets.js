@@ -43,6 +43,7 @@ const postImagesets = async (req, res, next) => {
     ],
     Expires: 60 * 60 * 6 // 6 hours
   })
+  console.log(presignedUrl)
   presignedUrl.fields.key = `imagesets/${props.uuid}/images/`
 
   const rows = await Station.relatedQuery('imagesets')

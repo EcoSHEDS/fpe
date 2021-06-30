@@ -2,11 +2,32 @@
 
 const { program } = require('commander')
 
+const { listUsers, createUser, deleteUser } = require('./users')
 const { listStations, createStation, deleteStation } = require('./stations')
 const { listDatasets, createDataset, processDataset, deleteDataset } = require('./datasets')
 const { listImagesets, createImageset, processImageset, deleteImageset } = require('./imagesets')
 
 const { collect } = require('./lib/utils')
+
+// USERS
+const users = program.command('users').description('Manage users')
+
+users
+  .command('list')
+  .description('List users')
+  .action(listUsers)
+
+users
+  .command('create <id>')
+  .requiredOption('-n, --affiliationName <text>', 'Affiliation name (short)')
+  .requiredOption('-d, --affiliationDescription <text>', 'Affiliation description')
+  .description('Create a new database user')
+  .action(createUser)
+
+users
+  .command('delete <id>')
+  .description('Delete a user')
+  .action(deleteUser)
 
 // STATIONS
 const stations = program.command('stations').description('Manage stations')
@@ -28,7 +49,7 @@ stations
 
 stations
   .command('delete <id>')
-  .description('Delete a dataset')
+  .description('Delete a station')
   .action(deleteStation)
 
 // DATASETS

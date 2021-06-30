@@ -50,7 +50,23 @@
         "Parameters": {
           "appName": { "Ref": "appName" },
           "env": { "Ref": "env" },
-          "permissionsBoundaryName": { "Ref": "permissionsBoundaryName" }
+          "permissionsBoundaryName": { "Ref": "permissionsBoundaryName" },
+          "lambdaTriggerArn": {
+            "Fn::GetAtt": [ "LambdaTriggerStack", "Outputs.LambdaArn" ]
+          },
+          "lambdaTriggerName": {
+            "Fn::GetAtt": [ "LambdaTriggerStack", "Outputs.LambdaName" ]
+          }
+        }
+      }
+    },
+    "NotifyStack": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": "./notify.json",
+        "Parameters": {
+          "appName": { "Ref": "appName" },
+          "env": { "Ref": "env" }
         }
       }
     },
@@ -78,6 +94,9 @@
           },
           "userPoolId": {
             "Fn::GetAtt": [ "AuthStack", "Outputs.UserPoolId" ]
+          },
+          "notifyTopicArn": {
+            "Fn::GetAtt": [ "NotifyStack", "Outputs.TopicArn" ]
           }
         }
       }
@@ -107,7 +126,26 @@
           "env": { "Ref": "env" },
           "vpcId": { "Ref": "vpcId" },
           "subnetIds": { "Ref": "publicSubnetIds" },
-          "dbSecretName": { "Ref": "dbSecretName" }
+          "dbSecretName": { "Ref": "dbSecretName" },
+          "notifyTopicArn": {
+            "Fn::GetAtt": [ "NotifyStack", "Outputs.TopicArn" ]
+          }
+        }
+      }
+    },
+    "LambdaTriggerStack": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": "./lambda-trigger-packaged.json",
+        "Parameters": {
+          "appName": { "Ref": "appName" },
+          "env": { "Ref": "env" },
+          "permissionsBoundaryName": { "Ref": "permissionsBoundaryName" },
+          "vpcId": { "Ref": "vpcId" },
+          "subnetIds": { "Ref": "privateSubnetIds" },
+          "notifyTopicArn": {
+            "Fn::GetAtt": [ "NotifyStack", "Outputs.TopicArn" ]
+          }
         }
       }
     },

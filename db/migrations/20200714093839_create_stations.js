@@ -1,7 +1,11 @@
 
 exports.up = knex => knex.schema.createTable('stations', t => {
   t.increments('id').primary().unsigned()
-  t.text('user_id').notNullable()
+  t.text('user_id')
+    .references('users.id')
+    .index()
+    .notNullable()
+    .onDelete('SET NULL')
   t.text('name').notNullable()
   t.text('description')
   t.float('latitude').notNullable()

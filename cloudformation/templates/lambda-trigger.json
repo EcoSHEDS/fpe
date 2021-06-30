@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Lambda function for AWS worker",
+  "Description": "Lambda function for cognito triggers",
   "Parameters": {
     "appName": {
       "Description": "Application name",
@@ -23,8 +23,8 @@
       "Description": "Subnet IDs (private)",
       "Type": "CommaDelimitedList"
     },
-    "storageBucketName": {
-      "Description": "Name of storage bucket",
+    "notifyTopicArn": {
+      "Description": "Arn of notification topic",
       "Type": "String"
     }
   },
@@ -60,7 +60,7 @@
             [
               { "Ref": "appName" },
               { "Ref": "env" },
-              "lambda-worker"
+              "lambda-trigger"
             ]
           ]
         },
@@ -79,7 +79,7 @@
           "Variables": {
             "ENV": { "Ref": "env" },
             "REGION": { "Ref": "AWS::Region" },
-            "BUCKET": { "Ref": "storageBucketName" }
+            "NOTIFY_TOPIC": { "Ref": "notifyTopicArn" }
           }
         },
         "Role": {
@@ -90,7 +90,7 @@
         },
         "Runtime": "nodejs14.x",
         "Timeout": "15",
-        "Code": "../../lambda/worker/",
+        "Code": "../../lambda/trigger/",
         "VpcConfig": {
           "SecurityGroupIds": [
             { "Ref": "SecurityGroup" }
@@ -108,7 +108,7 @@
             [
               { "Ref": "appName" },
               { "Ref": "env" },
-              "lambda-worker-role"
+              "lambda-trigger-role"
             ]
           ]
         },
@@ -154,7 +154,7 @@
             [
               { "Ref": "appName" },
               { "Ref": "env" },
-              "lambda-worker-policy"
+              "lambda-trigger-policy"
             ]
           ]
         },
@@ -178,15 +178,11 @@
             {
               "Effect": "Allow",
               "Action": [
-                "s3:GetObject",
-                "s3:PutObject",
-                "s3:DeleteObject",
-                "s3:ListBucket"
+                "sns:Publish"
               ],
-              "Resource": [
-                { "Fn::Sub": "arn:aws:s3:::${storageBucketName}" },
-                { "Fn::Sub": "arn:aws:s3:::${storageBucketName}/*" }
-              ]
+              "Resource": {
+                "Ref": "notifyTopicArn"
+              }
             }
           ]
         }
