@@ -8,9 +8,9 @@ const {
   postUser,
   putUser,
   deleteUser
-} = require('../../controllers/user')
+} = require('../../controllers/users')
 
-router.route('/')
+router.route('/:userId')
   .get(asyncHandler(getUser))
   .post(asyncHandler(postUser))
   .put(asyncHandler(putUser))

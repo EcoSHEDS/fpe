@@ -12,6 +12,6 @@ router.get('/', function (req, res, next) {
 
 router.use('/admin', require('./admin'))
 router.use('/stations', require('./stations'))
-router.use('/user', require('./user'))
+router.use('/users', require('./users'))
 
 module.exports = router
