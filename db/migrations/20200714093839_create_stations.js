@@ -10,6 +10,7 @@ exports.up = knex => knex.schema.createTable('stations', t => {
   t.text('description')
   t.float('latitude').notNullable()
   t.float('longitude').notNullable()
+  t.json('metadata')
   t.timestamps(true, true)
 
   t.unique(['user_id', 'name'])

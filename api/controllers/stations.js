@@ -8,7 +8,7 @@ const { Station } = require('../db/models')
 const attachStation = async (req, res, next) => {
   const row = await Station.query()
     .findById(req.params.stationId)
-    .select('stations.*', 'user.affiliation_name', 'user.affiliation_description')
+    .select('stations.*', 'user.affiliation_code', 'user.affiliation_name')
     .leftJoinRelated('user')
     .withGraphFetched('[datasets, imagesets]')
   if (!row) throw createError(404, `Station (id = ${req.params.stationId}) not found`)
@@ -18,13 +18,21 @@ const attachStation = async (req, res, next) => {
 
 const getStations = async (req, res, next) => {
   const rows = await Station.query()
-    .select('stations.*', 'user.affiliation_name', 'user.affiliation_description')
+    .select('stations.*', 'user.affiliation_code', 'user.affiliation_name')
     .leftJoinRelated('user')
     .where(req.query)
   return res.status(200).json(rows)
 }
 
 const postStations = async (req, res, next) => {
+  const existing = await Station.query()
+    .where('user_id', res.locals.user.id)
+    .where('name', req.body.name)
+  if (existing.length > 0) {
+    return res.status(400).json({
+      message: `Station names must be unique. "${req.body.name}" already exists.`
+    })
+  }
   const row = await Station.query().insert(req.body).returning('*')
   return res.status(201).json(row)
 }
@@ -34,6 +42,16 @@ const getStation = async (req, res, next) => {
 }
 
 const putStation = async (req, res, next) => {
+  if (req.body.name) {
+    const existing = await Station.query()
+      .where('user_id', res.locals.user.id)
+      .where('name', req.body.name)
+    if (existing.length > 0 && existing[0].id !== res.locals.station.id) {
+      return res.status(400).json({
+        message: `Station names must be unique. "${req.body.name}" already exists.`
+      })
+    }
+  }
   const row = await Station.query().patchAndFetchById(res.locals.station.id, req.body)
   return res.status(200).json(row)
 }

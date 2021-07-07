@@ -7,18 +7,18 @@ exports.listUsers = async function (options) {
   if (rows.length === 0) {
     console.log('No users found')
   } else {
-    printTable(rows, ['id', 'affiliation_name', 'affiliation_description'])
+    printTable(rows, ['id', 'affiliation_code', 'affiliation_name'])
   }
 }
 
 exports.createUser = async function (id, options) {
   const row = await User.query().insert({
     id,
-    affiliation_name: options.affiliationName,
-    affiliation_description: options.affiliationDescription
+    affiliation_code: options.affiliationCode,
+    affiliation_name: options.affiliationName
   }).returning('*')
 
-  printTable([row], ['id', 'affiliation_name', 'affiliation_description'])
+  printTable([row], ['id', 'affiliation_code', 'affiliation_name'])
 }
 
 exports.deleteUser = async function (id) {

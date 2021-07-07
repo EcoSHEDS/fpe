@@ -19,8 +19,8 @@ users
 
 users
   .command('create <id>')
-  .requiredOption('-n, --affiliationName <text>', 'Affiliation name (short)')
-  .requiredOption('-d, --affiliationDescription <text>', 'Affiliation description')
+  .requiredOption('-c, --affiliationCode <text>', 'Affiliation code')
+  .requiredOption('-n, --affiliationName <text>', 'Affiliation full name')
   .description('Create a new database user')
   .action(createUser)
 
