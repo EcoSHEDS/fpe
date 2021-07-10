@@ -1,6 +1,7 @@
 const createError = require('http-errors')
-const { rollup } = require('d3-array')
+// const { rollup } = require('d3-array')
 
+const knex = require('../db/knex')
 const { deleteDatasetFiles } = require('./datasets')
 const { deleteImagesetFiles } = require('./imagesets')
 const { Station } = require('../db/models')
@@ -76,25 +77,52 @@ const deleteStationFiles = async ({ datasets, imagesets }) => {
   }
 }
 
-const getStationDaily = async (req, res, next) => {
-  const data = await res.locals.station
-    .$query()
-    .withGraphFetched('[datasets(done).series.values(daily),imagesets(imageSummary,done).images(daily)]')
+// const getStationDaily = async (req, res, next) => {
+//   const data = await res.locals.station
+//     .$query()
+//     .withGraphFetched('[datasets(done).series.values(daily),imagesets(imageSummary,done).images(daily)]')
 
-  const aggregate = v => {
-    const mid = Math.floor(v.length / 2)
-    return {
-      n_images: v.length,
-      image: v[mid]
-    }
-  }
-  data.imagesets.forEach(d => {
-    d.images = Array.from(
-      rollup(d.images, aggregate, d => d.date),
-      ([key, value]) => ({ date: key, ...value })
-    )
-  })
-  return res.status(200).json(data)
+//   const aggregate = v => {
+//     const mid = Math.floor(v.length / 2)
+//     return {
+//       n_images: v.length,
+//       image: v[mid]
+//     }
+//   }
+//   data.imagesets.forEach(d => {
+//     d.images = Array.from(
+//       rollup(d.images, aggregate, d => d.date),
+//       ([key, value]) => ({ date: key, ...value })
+//     )
+//   })
+//   return res.status(200).json(data)
+// }
+
+const getStationDaily = async (req, res, next) => {
+  const result = await knex.raw(
+    'select * from f_station_daily(?)',
+    [res.locals.station.id]
+  )
+  const rows = result.rows
+  return res.status(200).json(rows)
+}
+
+const getStationImages = async (req, res, next) => {
+  const result = await knex.raw(
+    'select * from f_station_images(?,?,?)',
+    [res.locals.station.id, req.query.start, req.query.end]
+  )
+  const rows = result.rows
+  return res.status(200).json(rows)
+}
+
+const getStationValues = async (req, res, next) => {
+  const result = await knex.raw(
+    'select * from f_station_values(?,?,?,?)',
+    [res.locals.station.id, req.query.variable, req.query.start, req.query.end]
+  )
+  const rows = result.rows
+  return res.status(200).json(rows)
 }
 
 module.exports = {
@@ -106,5 +134,7 @@ module.exports = {
   putStation,
   deleteStation,
 
-  getStationDaily
+  getStationDaily,
+  getStationImages,
+  getStationValues
 }
