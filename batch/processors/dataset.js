@@ -19,11 +19,8 @@ function validateConfig (config, fields) {
   const schema = Joi.object({
     timestamp: Joi.object({
       column: fileColumn.required(),
-      timezone: Joi.object({
-        id: Joi.string().required(),
-        label: Joi.string().required(),
-        utcOffset: Joi.number().required()
-      }).required()
+      timeColumn: fileColumn,
+      utcOffset: Joi.number().required()
     }),
     variables: Joi.array().items(
       Joi.object({
@@ -61,12 +58,14 @@ async function parseFile ({ s3: s3File }) {
   return parsed
 }
 
-function createRowParser (timestamp, variable) {
-  const utcOffset = timestamp.timezone.utcOffset
+function createRowParser (timestamp, variable, timezone) {
+  const utcOffset = timestamp.utcOffset
   const scale = variable.scale || 1
 
   return (d, i) => {
-    const rawTimestamp = d[timestamp.column]
+    const rawTimestamp = timestamp.timeColumn
+      ? `${d[timestamp.column]} ${d[timestamp.timeColumn]}`
+      : d[timestamp.column]
     const parsedTimestamp = dayjs(rawTimestamp).utc(true).subtract(utcOffset, 'hour')
     if (!parsedTimestamp.isValid()) {
       throw new Error(`Failed to parse timestamp at row ${i.toLocaleString()} ("${rawTimestamp}").`)
@@ -77,7 +76,7 @@ function createRowParser (timestamp, variable) {
     const parsedFlag = variable.flag && d[variable.flag].length > 0 ? d[variable.flag] : null
 
     return {
-      date: parsedTimestamp.add(utcOffset, 'hour').utc().format('YYYY-MM-DD'),
+      date: parsedTimestamp.local().tz(timezone).format('YYYY-MM-DD'),
       timestamp: parsedTimestamp.toISOString(),
       value: parsedValue,
       flag: parsedFlag
@@ -85,9 +84,9 @@ function createRowParser (timestamp, variable) {
   }
 }
 
-function createSeries (data, { timestamp, variables }) {
+function createSeries (data, { timestamp, variables }, { timezone }) {
   const series = variables.map(variable => {
-    const parser = createRowParser(timestamp, variable)
+    const parser = createRowParser(timestamp, variable, timezone)
     const values = data.map(parser)
     return {
       variable_id: variable.id,
@@ -114,6 +113,9 @@ async function processDataset (id, dryRun) {
   }
   if (!dataset) throw new Error(`Dataset record (id=${id}) not found`)
 
+  console.log(`fetching station record (id=${dataset.station_id})`)
+  const station = await dataset.$relatedQuery('station')
+
   if (!dryRun) {
     const deletedSeries = await Dataset.relatedQuery('series').for(id).delete()
 
@@ -137,9 +139,9 @@ async function processDataset (id, dryRun) {
   validateConfig(config, parsed.meta.fields)
 
   console.log(`creating series (id=${id}, nrows=${parsed.data.length}, nvars=${config.variables.length})`)
-  const series = createSeries(parsed.data, config)
+  const series = createSeries(parsed.data, config, station)
 
-  const utcOffset = config.timestamp.timezone.utcOffset
+  const utcOffset = config.timestamp.utcOffset
   const dates = parsed.data.map(d => dayjs(d[config.timestamp.column]).utc(true).subtract(utcOffset, 'hour').valueOf())
   const startTimestamp = (new Date(Math.min(...dates))).toISOString()
   const endTimestamp = (new Date(Math.max(...dates))).toISOString()

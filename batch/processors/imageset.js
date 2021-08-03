@@ -19,11 +19,7 @@ const THUMB_WIDTH = 400
 function validateConfig (config) {
   const schema = Joi.object({
     timestamp: Joi.object({
-      timezone: Joi.object({
-        id: Joi.string().required(),
-        label: Joi.string().required(),
-        utcOffset: Joi.number().required()
-      }).required()
+      utcOffset: Joi.number().required()
     }).required()
   }).required()
 
@@ -37,7 +33,7 @@ function validateConfig (config) {
   return value
 }
 
-async function processImage (image, utcOffset, dryRun) {
+async function processImage (image, utcOffset, timezone, dryRun) {
   console.log(`processing image (image_id=${image.id})`)
 
   // download file
@@ -87,7 +83,7 @@ async function processImage (image, utcOffset, dryRun) {
   const payload = {
     ...exif.imageSize,
     exif: exif.tags,
-    date: timestamp.add(utcOffset, 'hour').utc().format('YYYY-MM-DD'),
+    date: timestamp.local().tz(timezone).format('YYYY-MM-DD'),
     timestamp: timestamp.toISOString(),
     thumb_s3: {
       Bucket: image.full_s3.Bucket,
@@ -121,6 +117,9 @@ async function processImageset (id, dryRun) {
   }
   if (!imageset) throw new Error(`Imageset record (id=${id}) not found`)
 
+  console.log(`fetching station record (id=${imageset.station_id})`)
+  const station = await imageset.$relatedQuery('station')
+
   console.log(`validating config (id=${id})`)
   const config = imageset.config
   validateConfig(config)
@@ -134,7 +133,7 @@ async function processImageset (id, dryRun) {
 
   console.log(`processing images (id=${id}, n=${images.length})`)
   for (let i = 0; i < images.length; i++) {
-    await processImage(images[i], imageset.config.timestamp.timezone.utcOffset, dryRun)
+    await processImage(images[i], imageset.config.timestamp.utcOffset, station.timezone, dryRun)
   }
 
   if (dryRun) {
