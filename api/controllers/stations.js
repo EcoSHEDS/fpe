@@ -19,8 +19,13 @@ const attachStation = async (req, res, next) => {
 
 const getStations = async (req, res, next) => {
   const rows = await Station.query()
-    .select('stations.*', 'user.affiliation_code', 'user.affiliation_name')
+    .select('stations.*', 'user.affiliation_code', 'user.affiliation_name', 't.summary')
     .leftJoinRelated('user')
+    .rightJoin(
+      knex.raw('(select t.station_id, json_build_object(\'values\', t.values, \'images\', t.images) as summary from f_stations_summary() t where t.images is not null) as t'),
+      'stations.id',
+      't.station_id'
+    )
     .where(req.query)
   return res.status(200).json(rows)
 }
@@ -39,6 +44,11 @@ const postStations = async (req, res, next) => {
 }
 
 const getStation = async (req, res, next) => {
+  const results = await knex.raw(
+    'select * from f_station_summary(?)',
+    [res.locals.station.id]
+  )
+  res.locals.station.summary = results.rows[0]
   return res.status(200).json(res.locals.station)
 }
 
