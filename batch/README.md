@@ -1,23 +1,4 @@
-# Configurations
-
-## Dataset
-
-```
-{
-  timestamp: {
-    column: 'column name',
-    timezone: 'UTC|EDT|EST...'
-  },
-  value: {
-    column: 'column name',
-    variable_id: <int>
-  }
-}
-```
-
-# Container
-
-## Dependencies
+# Dependencies
 
 If deploying to lambda, dependencies must be pre-installed, which means they need to run on linux. If deploying to batch, then dependencies get installed as part of docker build process.
 
@@ -34,7 +15,23 @@ rm -rf node_modules/sharp
 SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install --arch=x64 --platform=linux sharp
 ```
 
-## Build, Run and Deploy
+# Local Development
+
+Set environmental variables
+
+```sh
+export REGION=us-east-1
+export DB_SECRET_NAME=fpe-beta-dev-db-secret
+export NOTIFY_TOPIC=arn:aws:sns:us-east-1:474916309046:fpe-beta-dev
+```
+
+Run using node
+
+```sh
+node process.js dataset <id>
+```
+
+# Build, Run and Deploy
 
 Using AWS EC
 

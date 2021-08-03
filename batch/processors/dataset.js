@@ -19,7 +19,7 @@ function validateConfig (config, fields) {
   const schema = Joi.object({
     timestamp: Joi.object({
       column: fileColumn.required(),
-      timeColumn: fileColumn,
+      timeColumn: fileColumn.allow(null),
       utcOffset: Joi.number().required()
     }),
     variables: Joi.array().items(
