@@ -45,10 +45,9 @@ create or replace function f_station_daily_images(_station_id INT)
 returns table (
 	date DATE,
 	n_images BIGINT,
-	id INT,
-	"timestamp" TIMESTAMPTZ,
-	filename TEXT,
-	thumb_url TEXT
+	"start" TIMESTAMPTZ,
+	"end" TIMESTAMPTZ,
+	image JSON
 )
 as $$
 	with t_images as (
@@ -57,18 +56,19 @@ as $$
 			i.filename,
 			i.timestamp,
 			i.thumb_url,
-			(i.timestamp at time zone s.timezone)::date as date
+			(i.timestamp at time zone s.timezone)::date as date,
+			abs(date_part('hour', i.timestamp at time zone s.timezone) - 12) as hours_from_noon
 		from stations s
 		left join imagesets ss
 		on s.id=ss.station_id
 		left join images i
 		on ss.id=i.imageset_id
 		where s.id=_station_id
-		  and ss.status='DONE'
-		  and i.status='DONE'
+			and ss.status='DONE'
+			and i.status='DONE'
 		order by i.timestamp
 	), t_images_rank as (
-		select *, rank() over(partition by i.date order by i.timestamp) as rank
+		select *, rank() over(partition by i.date order by i.hours_from_noon, i.timestamp) as rank
 		from t_images i
 	), t_images_rank_avg as (
 		select i.*, i2.avg_rank
@@ -76,15 +76,19 @@ as $$
 		join (select date, ceil(avg(rank)) as avg_rank from t_images_rank group by date) i2
 		on i.date=i2.date
 	), t_images_count as (
-		select i.date, count(*) as n_images
+		select i.date, count(*) as n_images, min(timestamp) as start, max(timestamp) as end
 		from t_images i
 		group by i.date
 	)
-	select i.date, n.n_images, i.id, i.timestamp, i.filename, i.thumb_url
+	select i.date,
+		n.n_images,
+		n.start,
+		n.end,
+		json_build_object('id', i.id, 'timestamp', i.timestamp, 'filename', i.filename, 'thumb_url', i.thumb_url) as image
 	from t_images_rank_avg i
 	left join t_images_count n
 	on i.date=n.date
-	where i.rank=i.avg_rank
+	where i.rank=1
 $$ language sql;
 
 -- get daily values and images for station
@@ -109,12 +113,14 @@ as $$
 		select
 			date,
 			n_images,
-			json_build_object('id', id, 'filename', filename, 'timestamp', timestamp, 'thumb_url', thumb_url) as image
+			"start",
+			"end",
+			image
 		from f_station_daily_images(_station_id)
 	), t_images_json as (
 		select
 			date,
-			json_build_object('n_images', n_images, 'image', image) as images
+			json_build_object('n_images', n_images, 'start', "start", 'end', "end", 'image', image) as images
 		from t_images
 	)
 	select to_char(coalesce(i.date, v.date), 'YYYY-MM-DD') as date, i.images, v.values
