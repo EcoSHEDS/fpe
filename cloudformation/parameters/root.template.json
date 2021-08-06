@@ -34,5 +34,9 @@
   {
     "ParameterKey": "dbSecretName",
     "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "userPoolId",
+    "ParameterValue": ""
   }
 ]

@@ -16,6 +16,9 @@ source .env.local.sh
 # create database (kept separate to avoid accidental deletion)
 ./create-db.sh ${STACK_NAME} parameters/db.local.json
 
+# create auth (kept separate to avoid accidental deletion)
+./create-auth.sh ${STACK_NAME} parameters/auth.local.json
+
 # validate
 ./validate.sh root
 
@@ -30,7 +33,10 @@ source .env.local.sh
 
 # create (use packaged template)
 ./create.sh ${STACK_NAME} parameters/root.local.json
-# aws cloudformation create-stack --stack-name ${STACK_NAME} --template-body file://root-packaged.json --parameters/root file://root-parameters/root.json --capabilities CAPABILITY_NAMED_IAM
+# aws cloudformation create-stack --stack-name ${STACK_NAME} --template-body file://root-packaged.json --parameters file://root-parameters/root.json --capabilities CAPABILITY_NAMED_IAM
+
+# add trigger to auth
+aws cloudformation deploy --stack-name ${STACK_NAME}-auth --template-file templates/auth.json --capabilities CAPABILITY_NAMED_IAM --parameter-overrides lambdaTriggerArn=arn:aws:lambda:us-east-1:474916309046:function:${APP_NAME}-${ENV}-lambda-trigger
 
 # update (use packaged template)
 ./deploy.sh ${STACK_NAME}

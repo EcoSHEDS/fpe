@@ -1,0 +1,18 @@
+[
+  {
+    "ParameterKey": "appName",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "env",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "permissionsBoundaryName",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "lambdaTriggerArn",
+    "ParameterValue": ""
+  }
+]

@@ -40,26 +40,13 @@
     "dbSecretName": {
       "Description": "Name of secret for database credentials",
       "Type": "String"
+    },
+    "userPoolId": {
+      "Description": "User pool ID",
+      "Type": "String"
     }
   },
   "Resources": {
-    "AuthStack": {
-      "Type": "AWS::CloudFormation::Stack",
-      "Properties": {
-        "TemplateURL": "./auth.json",
-        "Parameters": {
-          "appName": { "Ref": "appName" },
-          "env": { "Ref": "env" },
-          "permissionsBoundaryName": { "Ref": "permissionsBoundaryName" },
-          "lambdaTriggerArn": {
-            "Fn::GetAtt": [ "LambdaTriggerStack", "Outputs.LambdaArn" ]
-          },
-          "lambdaTriggerName": {
-            "Fn::GetAtt": [ "LambdaTriggerStack", "Outputs.LambdaName" ]
-          }
-        }
-      }
-    },
     "NotifyStack": {
       "Type": "AWS::CloudFormation::Stack",
       "Properties": {
@@ -92,9 +79,7 @@
           "batchJobQueueName": {
             "Fn::GetAtt": [ "BatchStack", "Outputs.JobQueueName" ]
           },
-          "userPoolId": {
-            "Fn::GetAtt": [ "AuthStack", "Outputs.UserPoolId" ]
-          },
+          "userPoolId": { "Ref": "userPoolId" },
           "notifyTopicArn": {
             "Fn::GetAtt": [ "NotifyStack", "Outputs.TopicArn" ]
           }
@@ -108,9 +93,7 @@
         "Parameters": {
           "appName": { "Ref": "appName" },
           "env": { "Ref": "env" },
-          "userPoolId": {
-            "Fn::GetAtt": [ "AuthStack", "Outputs.UserPoolId" ]
-          },
+          "userPoolId": { "Ref": "userPoolId" },
           "lambdaName": {
             "Fn::GetAtt": [ "LambdaApiStack", "Outputs.LambdaName" ]
           }
@@ -145,7 +128,8 @@
           "subnetIds": { "Ref": "privateSubnetIds" },
           "notifyTopicArn": {
             "Fn::GetAtt": [ "NotifyStack", "Outputs.TopicArn" ]
-          }
+          },
+          "userPoolId": { "Ref": "userPoolId" }
         }
       }
     },
@@ -169,24 +153,6 @@
       "Description": "Stack region",
       "Value": {
         "Ref": "AWS::Region"
-      }
-    },
-    "IdentityPoolId": {
-      "Description": "Identity pool ID",
-      "Value": {
-        "Fn::GetAtt": [ "AuthStack", "Outputs.IdentityPoolId" ]
-      }
-    },
-    "UserPoolId": {
-      "Description": "User pool ID",
-      "Value": {
-        "Fn::GetAtt": [ "AuthStack", "Outputs.UserPoolId" ]
-      }
-    },
-    "UserPoolClientWebId": {
-      "Description": "User pool client id for web app",
-      "Value": {
-        "Fn::GetAtt": [ "AuthStack", "Outputs.UserPoolClientWebId" ]
       }
     },
     "ApiRootUrl": {
