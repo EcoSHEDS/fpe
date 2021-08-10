@@ -27,6 +27,7 @@ const getStations = async (req, res, next) => {
       't.station_id'
     )
     .where(req.query)
+    .andWhere('private', false)
   return res.status(200).json(rows)
 }
 
