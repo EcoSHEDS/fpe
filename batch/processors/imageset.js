@@ -82,8 +82,6 @@ async function processImage (image, utcOffset, timezone, dryRun) {
   const timestamp = dayjs(rawDate).subtract(utcOffset, 'hour')
   const payload = {
     ...exif.imageSize,
-    exif: exif.tags,
-    date: timestamp.local().tz(timezone).format('YYYY-MM-DD'),
     timestamp: timestamp.toISOString(),
     thumb_s3: {
       Bucket: image.full_s3.Bucket,
