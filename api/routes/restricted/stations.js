@@ -31,8 +31,10 @@ const {
   listImagesetFiles
 } = require('../../controllers/imagesets')
 const {
+  attachImage,
   getImages,
-  postImage
+  postImage,
+  deleteImage
 } = require('../../controllers/images')
 const { requireStationOwnerOrAdmin } = require('../../middleware/auth')
 
@@ -90,6 +92,10 @@ router.route('/:stationId/imagesets/:imagesetId/images')
   .all(asyncHandler(attachStation), asyncHandler(attachImageset))
   .get(asyncHandler(getImages))
   .post(requireStationOwnerOrAdmin, asyncHandler(postImage))
+
+router.route('/:stationId/imagesets/:imagesetId/images/:imageId')
+  .all(asyncHandler(attachStation), asyncHandler(attachImageset), asyncHandler(attachImage))
+  .delete(requireStationOwnerOrAdmin, asyncHandler(deleteImage))
 
 router.route('/:stationId/imagesets/:imagesetId/list')
   .all(asyncHandler(attachStation), asyncHandler(attachImageset))

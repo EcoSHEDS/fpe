@@ -1,4 +1,3 @@
-const { raw } = require('objection')
 const Base = require('./Base')
 
 class Image extends Base {
@@ -14,7 +13,7 @@ class Image extends Base {
       defaultSelect (builder) {
         builder.select(
           'id', 'imageset_id',
-          'filename', 'date', 'timestamp',
+          'filename', 'timestamp',
           'full_url', 'thumb_url',
           'status', 'error_message'
         )
@@ -23,7 +22,7 @@ class Image extends Base {
         builder
           .select(
             'id', 'imageset_id',
-            'filename', 'date', 'timestamp',
+            'filename', 'timestamp',
             'full_url', 'thumb_url'
           )
           .where('status', 'DONE')

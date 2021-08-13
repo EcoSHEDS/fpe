@@ -117,7 +117,7 @@ async function listUsers (users, token, iter) {
 async function listUsersInGroup (groupname, users, token, iter) {
   users = users || []
   iter = iter || 0
-  console.log(`listUsersInGroup(iter=${iter})`)
+  console.log(`listUsersInGroup(groupname=${groupname},iter=${iter})`)
 
   const params = {
     GroupName: groupname,

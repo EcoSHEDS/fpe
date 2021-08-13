@@ -109,17 +109,12 @@ const deleteImagesetFiles = async (imageset) => {
 }
 
 const listImagesetFiles = async (req, res, next) => {
-  let keys = []
-  try {
-    keys = await listS3Objects(`imagesets/${res.locals.imageset.uuid}`)
-  } catch (err) {
-    console.error(err)
-    return res.status(500).json({
-      message: `Failed to list imageset files on s3 (id=${res.locals.imageset.id}, uuid=${res.locals.imageset.uuid})`
-    })
-  }
+  const response = await invokeWorker({
+    method: 'listS3Objects',
+    prefix: `imagesets/${res.locals.imageset.uuid}`
+  })
 
-  return res.status(200).json(keys)
+  return res.status(200).json(response)
 }
 
 module.exports = {

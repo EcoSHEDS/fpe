@@ -1,5 +1,6 @@
 const createError = require('http-errors')
 
+const { s3 } = require('../aws')
 const { Image, Imageset } = require('../db/models')
 
 const attachImage = async (req, res, next) => {
@@ -31,8 +32,30 @@ const postImage = async (req, res, next) => {
   return res.status(201).json(row)
 }
 
+const deleteImage = async (req, res, next) => {
+  const nrow = await Image.query().deleteById(res.locals.image.id)
+  if (nrow === 0) {
+    throw createError(500, `Failed to delete image (id=${res.locals.image.id})`)
+  }
+
+  await deleteImageFiles(res.locals.image)
+
+  return res.status(204).json()
+}
+
+const deleteImageFiles = async (image) => {
+  try {
+    await s3.deleteObject(image.full_s3).promise()
+    await s3.deleteObject(image.thumb_s3).promise()
+  } catch (err) {
+    console.log(`Failed to delete image files on s3 (id=${image.id})`)
+    console.error(err)
+  }
+}
+
 module.exports = {
   attachImage,
   getImages,
-  postImage
+  postImage,
+  deleteImage
 }
