@@ -1,5 +1,20 @@
 const AWS = require('aws-sdk')
 
+const sns = new AWS.SNS({
+  apiVersion: '2010-03-31',
+  region: process.env.REGION
+})
+
+exports.notify = async (subject, message) => {
+  const params = {
+    TopicArn: process.env.NOTIFY_TOPIC,
+    Subject: `[FPE] ${subject}`,
+    Message: message
+  }
+
+  return await sns.publish(params).promise()
+}
+
 exports.s3 = new AWS.S3({
   apiVersion: '2006-03-01',
   region: process.env.REGION

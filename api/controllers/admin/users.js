@@ -1,6 +1,8 @@
 const { CognitoIdentityServiceProvider } = require('aws-sdk')
 const createError = require('http-errors')
 
+const { User } = require('../../db/models')
+
 const cognitoIdentityServiceProvider = new CognitoIdentityServiceProvider({
   region: process.env.REGION
 })
@@ -20,6 +22,87 @@ async function attachAdminUser (req, res, next) {
     is_admin: groups.includes('admins')
   }
   return next()
+}
+
+async function createCognitoUser (email, name) {
+  const params = {
+    UserPoolId: userPoolId,
+    Username: email,
+    DesiredDeliveryMediums: ['EMAIL'],
+    UserAttributes: [
+      {
+        Name: 'name',
+        Value: name
+      },
+      {
+        Name: 'email',
+        Value: email
+      },
+      {
+        Name: 'email_verified',
+        Value: 'true'
+      }
+    ]
+  }
+  const response = await cognitoIdentityServiceProvider.adminCreateUser(params).promise()
+  return response.User
+}
+
+async function createDatabaseUser (user) {
+  return await User.query().insert(user).returning('*')
+}
+
+async function setAffiliation (id, affiliation) {
+  console.log(`setAffiliation(id=${id})`)
+  const existing = await User.query().findById(id)
+  if (existing) {
+    return await User.query()
+      .patchAndFetchById(id, {
+        affiliation_name: affiliation.name,
+        affiliation_code: affiliation.code
+      })
+  } else {
+    return await User.query().insert({
+      id,
+      affiliation_name: affiliation.name,
+      affiliation_code: affiliation.code
+    }).returning('*')
+  }
+}
+
+async function deleteCognitoUser (id) {
+  console.log(`deleteUser (${id})`)
+  const params = {
+    UserPoolId: userPoolId,
+    Username: id
+  }
+
+  await cognitoIdentityServiceProvider.adminDeleteUser(params).promise()
+  return {
+    message: `User (${id}) has been deleted`
+  }
+}
+
+async function deleteUser (req, res, next) {
+  await deleteCognitoUser(res.locals.adminUser.id)
+  return res.status(204).json()
+}
+
+async function postUsers (req, res, next) {
+  const { email, name, affiliation, admin } = req.body // eslint-disable-line
+
+  const cognitoUser = await createCognitoUser(email, name)
+  if (admin) {
+    await addUserToGroup(cognitoUser.Username, 'admins')
+  }
+
+  await createDatabaseUser({
+    id: cognitoUser.Username,
+    affiliation_name: affiliation.name,
+    affiliation_code: affiliation.code
+  })
+
+  return res.status(201).json(cognitoUser)
 }
 
 async function addUserToGroup (id, groupname) {
@@ -177,7 +260,9 @@ async function fetchUser (id) {
 }
 
 async function getUser (req, res, next) {
-  res.status(200).json(res.locals.adminUser)
+  const affiliation = await User.query().findById(res.locals.adminUser.id)
+  console.log(affiliation)
+  res.status(200).json({ affiliation, ...res.locals.adminUser })
 }
 
 async function putUser (req, res, next) {
@@ -190,6 +275,8 @@ async function putUser (req, res, next) {
     response = await addUserToGroup(res.locals.adminUser.id, 'admins')
   } else if (req.body.action === 'removeFromAdmin') {
     response = await removeUserFromGroup(res.locals.adminUser.id, 'admins')
+  } else if (req.body.action === 'setAffiliation') {
+    response = await setAffiliation(res.locals.adminUser.id, req.body.payload.affiliation)
   } else if (req.body.action === 'signOut') {
     response = await signOutUser(res.locals.adminUser.id)
   } else {
@@ -213,6 +300,8 @@ async function signOutUser (id) {
 module.exports = {
   attachAdminUser,
   getUsers,
+  postUsers,
   getUser,
-  putUser
+  putUser,
+  deleteUser
 }

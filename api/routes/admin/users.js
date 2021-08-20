@@ -3,13 +3,15 @@ const asyncHandler = require('express-async-handler')
 
 const {
   attachAdminUser,
+  postUsers,
   // addUserToGroup,
   // removeUserFromGroup,
   // disableUser,
   // enableUser,
   getUsers,
   getUser,
-  putUser
+  putUser,
+  deleteUser
   // listUsersInGroup,
   // signUserOut
 } = require('../../controllers/admin/users')
@@ -18,11 +20,13 @@ var router = express.Router()
 
 router.route('/')
   .get(asyncHandler(getUsers))
+  .post(asyncHandler(postUsers))
 
 router.route('/:userId')
   .all(asyncHandler(attachAdminUser))
   .get(asyncHandler(getUser))
   .put(asyncHandler(putUser))
+  .delete(asyncHandler(deleteUser))
 
 // router.post('/addUserToGroup', async (req, res, next) => {
 //   if (!req.body.username || !req.body.groupname) {
