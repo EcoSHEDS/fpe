@@ -320,6 +320,8 @@
                 "cognito-idp:AdminListGroupsForUser",
                 "cognito-idp:AdminGetUser",
                 "cognito-idp:AdminConfirmSignUp",
+                "cognito-idp:AdminDeleteUser",
+                "cognito-idp:AdminCreateUser",
                 "cognito-idp:ListUsers",
                 "cognito-idp:ListGroups"
               ],
