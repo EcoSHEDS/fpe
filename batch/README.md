@@ -20,9 +20,9 @@ SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install --arch=x64 --platform=linux sharp
 Set environmental variables
 
 ```sh
-export REGION=us-east-1
-export DB_SECRET_NAME=fpe-beta-dev-db-secret
-export NOTIFY_TOPIC=arn:aws:sns:us-east-1:474916309046:fpe-beta-dev
+export REGION=
+export DB_SECRET_NAME=
+export NOTIFY_TOPIC=
 ```
 
 Run using node
@@ -36,9 +36,9 @@ node process.js dataset <id>
 Using AWS EC
 
 ```bash
-export NAME=fpe-beta-dev-batch
-export AWS_ACCOUNT=474916309046
-export AWS_REGION=us-east-1
+export NAME=${APP_NAME}-${ENV}-batch
+export AWS_ACCOUNT=
+export AWS_REGION=
 export AWS_REPO=${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com/${NAME}
 
 # build image (turn off VPN!)
@@ -57,8 +57,8 @@ docker push ${AWS_REPO}
 Using docker hub
 
 ```bash
-export NAME=fpe-beta-dev-batch
-export DOCKER_USER=walkerenvres
+export NAME=${APP_NAME}-${ENV}-batch
+export DOCKER_USER=
 export DOCKER_REPO=${DOCKER_USER}/${NAME}
 
 # build image (turn off VPN!)

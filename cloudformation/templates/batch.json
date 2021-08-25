@@ -20,6 +20,11 @@
       "Description": "Subnet IDs (public)",
       "Type": "CommaDelimitedList"
     },
+    "permissionsBoundaryName": {
+      "Description": "Permissions boundary",
+      "Type": "String",
+      "Default": "NONE"
+    },
     "dbSecretName": {
       "Description": "Name of secret for database credentials",
       "Type": "String"
@@ -27,6 +32,13 @@
     "notifyTopicArn": {
       "Description": "Arn of notification topic",
       "Type": "String"
+    }
+  },
+  "Conditions": {
+    "PermissionsBoundaryExists": {
+      "Fn::Not": [{
+        "Fn::Equals": [ { "Ref": "permissionsBoundaryName" }, "NONE" ]
+      }]
     }
   },
   "Resources": {
@@ -66,7 +78,14 @@
         },
         "ManagedPolicyArns": [
           "arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole"
-        ]
+        ],
+        "PermissionsBoundary": {
+          "Fn::If": [
+            "PermissionsBoundaryExists",
+            { "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:policy/${permissionsBoundaryName}" },
+            { "Ref": "AWS::NoValue" }
+          ]
+        }
       }
     },
     "ExecutionRole": {
@@ -97,7 +116,14 @@
         },
         "ManagedPolicyArns": [
           "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-        ]
+        ],
+        "PermissionsBoundary": {
+          "Fn::If": [
+            "PermissionsBoundaryExists",
+            { "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:policy/${permissionsBoundaryName}" },
+            { "Ref": "AWS::NoValue" }
+          ]
+        }
       }
     },
     "JobRole": {
@@ -148,7 +174,14 @@
           "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
           "arn:aws:iam::aws:policy/AmazonS3FullAccess",
           "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
-        ]
+        ],
+        "PermissionsBoundary": {
+          "Fn::If": [
+            "PermissionsBoundaryExists",
+            { "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:policy/${permissionsBoundaryName}" },
+            { "Ref": "AWS::NoValue" }
+          ]
+        }
       }
     },
     "JobDefinition": {

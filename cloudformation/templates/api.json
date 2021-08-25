@@ -61,15 +61,7 @@
               ]
             ]
           },
-          "basePath": {
-            "Fn::Join": [
-              "",
-              [
-                "/",
-                { "Ref": "env" }
-              ]
-            ]
-          },
+          "basePath": "/api",
           "schemes": [
             "https"
           ],
@@ -515,7 +507,7 @@
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "Description": "Deployment of REST API",
-        "StageName": { "Ref": "env" },
+        "StageName": "api",
         "RestApiId": { "Ref": "Api" }
       }
     },
@@ -553,8 +545,7 @@
             { "Ref": "Api" },
             ".execute-api.",
             { "Ref": "AWS::Region" },
-            ".amazonaws.com/",
-            { "Ref": "env" }
+            ".amazonaws.com/api"
           ]
         ]
       }

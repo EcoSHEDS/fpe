@@ -45,6 +45,9 @@ aws cloudformation deploy --stack-name ${STACK_NAME}-auth --template-file templa
 # repackage and deploy
 ./update-all.sh ${STACK_NAME} ${DEPLOYMENT_BUCKET}
 
+# repackage and deploy root only (no lambdas)
+./update-root.sh ${STACK_NAME} ${DEPLOYMENT_BUCKET}
+
 # delete
 ./delete.sh ${STACK_NAME}
 # aws cloudformation delete-stack --stack-name ${STACK_NAME}

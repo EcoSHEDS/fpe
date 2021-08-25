@@ -109,6 +109,7 @@
           "env": { "Ref": "env" },
           "vpcId": { "Ref": "vpcId" },
           "subnetIds": { "Ref": "publicSubnetIds" },
+          "permissionsBoundaryName": { "Ref": "permissionsBoundaryName" },
           "dbSecretName": { "Ref": "dbSecretName" },
           "notifyTopicArn": {
             "Fn::GetAtt": [ "NotifyStack", "Outputs.TopicArn" ]
