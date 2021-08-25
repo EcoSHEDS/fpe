@@ -11,8 +11,12 @@ exports.notify = async (subject, message) => {
     Subject: `[FPE] ${subject}`,
     Message: message
   }
+  console.log(`notify: start(TopicArn=${params.TopicArn}, subject="${subject}")`)
 
-  return await sns.publish(params).promise()
+  const response = await sns.publish(params).promise()
+  console.log(`notify: done(MessageId=${response.MessageId})`)
+
+  return response
 }
 
 exports.s3 = new AWS.S3({

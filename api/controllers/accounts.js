@@ -10,13 +10,13 @@ Created: ${d.toLocaleString('en-US', { timeZone: 'America/New_York' })}
 Name: ${params.name}
 Email: ${params.email}
 Affiliation: ${params.affiliation_name}
-Abbreviated Affiliation: ${params.affiliation_code}
+Abbreviation: ${params.affiliation_code}
 `
 }
 
 const postAccounts = async (req, res, next) => {
   try {
-    notify('New Account Request', newAccountMessage(req.body))
+    await notify('New Account Request', newAccountMessage(req.body))
   } catch (err) {
     console.log(err)
     throw createError(500, 'Failed to request account (server error)')
