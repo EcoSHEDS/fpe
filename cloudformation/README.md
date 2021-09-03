@@ -2,7 +2,8 @@
 
 ```sh
 # load env variables (created from env.template.sh)
-source .env.local.sh
+source .env.dev.local.sh
+source .env.prod.local.sh
 
 # create deployment bucket (must be done in separate stack so nested stacks can be packaged)
 ./create-s3.sh deployment ${STACK_NAME} ${DEPLOYMENT_BUCKET}
@@ -14,10 +15,10 @@ source .env.local.sh
 ./create-s3.sh website ${STACK_NAME} ${WEBSITE_BUCKET}
 
 # create database (kept separate to avoid accidental deletion)
-./create-db.sh ${STACK_NAME} parameters/db.local.json
+./create-db.sh ${STACK_NAME} parameters/db.${ENV}.local.json
 
 # create auth (kept separate to avoid accidental deletion)
-./create-auth.sh ${STACK_NAME} parameters/auth.local.json
+./create-auth.sh ${STACK_NAME} parameters/auth.${ENV}.local.json
 
 # validate
 ./validate.sh root
@@ -32,7 +33,7 @@ source .env.local.sh
 # aws cloudformation package --template-file root.json --use-json --output-template-file root-packaged.json --s3-bucket ${DEPLOYMENT_BUCKET} --s3-prefix cloudformation
 
 # create (use packaged template)
-./create.sh ${STACK_NAME} parameters/root.local.json
+./create.sh ${STACK_NAME} parameters/root.${ENV}.local.json
 # aws cloudformation create-stack --stack-name ${STACK_NAME} --template-body file://root-packaged.json --parameters file://root-parameters/root.json --capabilities CAPABILITY_NAMED_IAM
 
 # add trigger to auth
