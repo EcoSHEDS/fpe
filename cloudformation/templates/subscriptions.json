@@ -1,0 +1,38 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Notification subscriptions",
+  "Parameters": {
+    "topicArn": {
+      "Description": "SNS Topic ARN",
+      "Type": "String"
+    }
+  },
+  "Resources": {
+    "Subscription1": {
+      "Type": "AWS::SNS::Subscription",
+      "Properties": {
+        "Endpoint" : "jdwalker@contractor.usgs.gov",
+        "Protocol" : "email",
+        "TopicArn" : { "Ref" : "topicArn" }
+      }
+    },
+    "Subscription2": {
+      "Type": "AWS::SNS::Subscription",
+      "Properties": {
+        "Endpoint" : "jeff@walkerenvres.com",
+        "Protocol" : "email",
+        "TopicArn" : { "Ref" : "topicArn" }
+      }
+    },
+    "Subscription3": {
+      "Type": "AWS::SNS::Subscription",
+      "Properties": {
+        "Endpoint" : "bletcher@usgs.gov",
+        "Protocol" : "email",
+        "TopicArn" : { "Ref" : "topicArn" }
+      }
+    }
+  },
+  "Outputs": {
+  }
+}

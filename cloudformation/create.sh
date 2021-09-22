@@ -1,8 +1,7 @@
 #!/bin/bash
 # create root stack
-# usage: ./create.sh <stack name> <parameters file>
+# usage: ./create.sh <parameters file>
 
-STACK_NAME=$1
-PARAMETERS_FILE=$2
+PARAMETERS_FILE=$1
 
-aws cloudformation create-stack --stack-name ${STACK_NAME} --template-body file://templates/root-packaged.json --parameters file://${PARAMETERS_FILE} --capabilities CAPABILITY_NAMED_IAM
+aws cloudformation create-stack --stack-name ${STACK_NAME} --template-body file://templates/root-packaged.json --parameters file://${PARAMETERS_FILE} --capabilities CAPABILITY_NAMED_IAM ${OPT_ROLE_ARN}

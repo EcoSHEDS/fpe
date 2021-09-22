@@ -1,7 +1,5 @@
 #!/bin/bash
 # package nested stack templates and upload to S3
-# usage: ./package.sh <deployment bucket name>
-
-DEPLOYMENT_BUCKET=$1
+# usage: ./package.sh
 
 aws cloudformation package --template-file templates/root.json --use-json --output-template-file templates/root-packaged.json --s3-bucket ${DEPLOYMENT_BUCKET} --s3-prefix cloudformation

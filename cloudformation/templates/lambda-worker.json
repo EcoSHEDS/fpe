@@ -26,6 +26,10 @@
     "storageBucketName": {
       "Description": "Name of storage bucket",
       "Type": "String"
+    },
+    "userPoolId": {
+      "Description": "User pool ID",
+      "Type": "String"
     }
   },
   "Conditions": {
@@ -79,7 +83,8 @@
           "Variables": {
             "ENV": { "Ref": "env" },
             "REGION": { "Ref": "AWS::Region" },
-            "BUCKET": { "Ref": "storageBucketName" }
+            "BUCKET": { "Ref": "storageBucketName" },
+            "USERPOOL_ID": { "Ref": "userPoolId" }
           }
         },
         "Role": {
@@ -187,6 +192,37 @@
                 { "Fn::Sub": "arn:aws:s3:::${storageBucketName}" },
                 { "Fn::Sub": "arn:aws:s3:::${storageBucketName}/*" }
               ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "cognito-idp:ListUsersInGroup",
+                "cognito-idp:AdminUserGlobalSignOut",
+                "cognito-idp:AdminEnableUser",
+                "cognito-idp:AdminDisableUser",
+                "cognito-idp:AdminRemoveUserFromGroup",
+                "cognito-idp:AdminAddUserToGroup",
+                "cognito-idp:AdminListGroupsForUser",
+                "cognito-idp:AdminGetUser",
+                "cognito-idp:AdminConfirmSignUp",
+                "cognito-idp:AdminDeleteUser",
+                "cognito-idp:AdminCreateUser",
+                "cognito-idp:ListUsers",
+                "cognito-idp:ListGroups"
+              ],
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:cognito-idp:",
+                    { "Ref": "AWS::Region" },
+                    ":",
+                    { "Ref": "AWS::AccountId" },
+                    ":userpool/",
+                    { "Ref": "userPoolId" }
+                  ]
+                ]
+              }
             }
           ]
         }

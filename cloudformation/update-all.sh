@@ -1,11 +1,8 @@
 #!/bin/bash
 # update all templates
-# usage: ./update-all.sh <stack name> <deployment bucket>
+# usage: ./update-all.sh
 
 set -eu
-
-STACK_NAME=$1
-DEPLOYMENT_BUCKET=$2
 
 ./package-lambda.sh api ${DEPLOYMENT_BUCKET}
 ./package-lambda.sh trigger ${DEPLOYMENT_BUCKET}

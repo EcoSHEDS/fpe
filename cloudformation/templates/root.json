@@ -144,7 +144,8 @@
           "permissionsBoundaryName": { "Ref": "permissionsBoundaryName" },
           "vpcId": { "Ref": "vpcId" },
           "subnetIds": { "Ref": "privateSubnetIds" },
-          "storageBucketName": { "Ref": "storageBucketName" }
+          "storageBucketName": { "Ref": "storageBucketName" },
+          "userPoolId": { "Ref": "userPoolId" }
         }
       }
     }
