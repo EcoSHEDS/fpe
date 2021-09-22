@@ -5,6 +5,11 @@ const s3 = new AWS.S3({
   region: process.env.REGION
 })
 
+const cognitoIdentityServiceProvider = new AWS.CognitoIdentityServiceProvider({
+  region: process.env.REGION
+})
+const userPoolId = process.env.USERPOOL_ID
+
 const listS3Objects = async (event, token) => {
   console.log(`listS3Objects(prefix='${event.prefix}',token=${!!token})`)
   const response = await s3.listObjectsV2({
@@ -54,14 +59,53 @@ const deleteS3Objects = async (event) => {
   }
 }
 
+async function createAdminUser ({ email, name }) {
+  const params = {
+    UserPoolId: userPoolId,
+    Username: email,
+    DesiredDeliveryMediums: ['EMAIL'],
+    UserAttributes: [
+      {
+        Name: 'name',
+        Value: name
+      },
+      {
+        Name: 'email',
+        Value: email
+      },
+      {
+        Name: 'email_verified',
+        Value: 'true'
+      }
+    ]
+  }
+  try {
+    const createUserResponse = await cognitoIdentityServiceProvider.adminCreateUser(params).promise()
+    console.log(`user created (id=${createUserResponse.User.Username})`)
+    console.log(createUserResponse)
+    await cognitoIdentityServiceProvider.adminAddUserToGroup({
+      GroupName: 'admins',
+      UserPoolId: userPoolId,
+      Username: createUserResponse.User.Username
+    }).promise()
+    console.log(`user (id=${createUserResponse.User.Username}) added to admins`)
+  } catch (err) {
+    console.log('failed to create admin user')
+    console.log(err)
+  }
+}
+
 const processEvent = async (event) => {
   console.log(`processing event (${event.method})`)
-  if (event.method === 'deleteS3Objects') {
-    return await deleteS3Objects(event)
-  } else if (event.method === 'listS3Objects') {
-    return await listS3Objects(event)
-  } else {
-    throw new Error(`Missing or unsupported event method ("${event.method}")`)
+  switch (event.method) {
+    case 'deleteS3Objects':
+      return await deleteS3Objects(event)
+    case 'listS3Objects':
+      return await listS3Objects(event)
+    case 'createAdminUser':
+      return await createAdminUser(event)
+    default:
+      throw new Error(`Missing or unsupported event method ("${event.method}")`)
   }
 }
 
