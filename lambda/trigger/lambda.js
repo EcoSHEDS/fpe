@@ -14,7 +14,7 @@ User ID: ${event.userName}`
 }
 
 exports.handler = async (event) => {
-  console.log(`publishing notification(triggerSource=${event.triggerSource || 'unknown'})`)
+  console.log(`trigger(triggerSource=${event.triggerSource || 'unknown'})`)
 
   if (event.triggerSource !== 'PostConfirmation_ConfirmSignUp') {
     // ignore PostConfirmation_ConfirmForgotPassword events
