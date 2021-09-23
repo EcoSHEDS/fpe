@@ -47,6 +47,8 @@ app.use('*', (req, res, next) => {
 
 app.use((err, req, res, next) => {
   const status = err.status || 500
+  console.log('server error')
+  console.log(err)
   res.status(status)
   const payload = {
     status,
