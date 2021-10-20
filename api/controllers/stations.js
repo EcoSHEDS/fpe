@@ -22,7 +22,7 @@ const getStations = async (req, res, next) => {
     .select('stations.*', 'user.affiliation_code', 'user.affiliation_name', 't.summary')
     .leftJoinRelated('user')
     .leftJoin(
-      knex.raw('(select t.station_id, json_build_object(\'values\', t.values, \'images\', t.images) as summary from f_stations_summary() t where t.images is not null) as t'),
+      knex.raw('(select t.station_id, json_build_object(\'values\', t.values, \'images\', t.images) as summary from f_stations_summary() t) as t'),
       'stations.id',
       't.station_id'
     )
