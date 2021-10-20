@@ -47,7 +47,6 @@ download_affiliation <- function (affiliation_code) {
     )
 
   db_images <- db_imagesets %>%
-    select(user_id, affiliation_code, station_id, station_name = name) %>%
     select(affiliation_code, station_id, station_name, imageset_id, imageset_uuid) %>%
     left_join(
       tbl(con, "images") %>%
