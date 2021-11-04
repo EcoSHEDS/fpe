@@ -10,6 +10,10 @@ const attachImage = async (req, res, next) => {
   return next()
 }
 
+const getImage = async (req, res, next) => {
+  return res.status(200).json(res.locals.image)
+}
+
 const getImages = async (req, res, next) => {
   const rows = await res.locals.imageset.$relatedQuery('images')
     .modify('defaultOrderBy')
@@ -56,6 +60,7 @@ const deleteImageFiles = async (image) => {
 module.exports = {
   attachImage,
   getImages,
+  getImage,
   postImage,
   deleteImage
 }
