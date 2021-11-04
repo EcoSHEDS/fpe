@@ -7,7 +7,7 @@ function attachUser (req, res, next) {
   const claims = req.apiGateway.event.requestContext.authorizer.claims
   const groups = claims['cognito:groups'] ? claims['cognito:groups'].split(',') : []
   const isAdmin = groups.includes('admins')
-  res.locals.user = {
+  req.auth = {
     id: claims.sub,
     isAdmin,
     claims
@@ -16,7 +16,7 @@ function attachUser (req, res, next) {
 }
 
 function requireAdmin (req, res, next) {
-  if (!res.locals.user || !res.locals.user.isAdmin) {
+  if (!req.auth || !req.auth.isAdmin) {
     return next(createError(401, 'Unauthorized'))
   }
   next()
@@ -29,17 +29,41 @@ const requireStationOwnerOrAdmin = (req, res, next) => {
   }
 
   // no user
-  if (!res.locals.user) {
+  if (!req.auth) {
     return next(createError(401, 'Unauthorized'))
   }
 
   // local override
-  if (res.locals.user.isLocal) {
+  if (req.auth.isLocal) {
     return next()
   }
 
   // user is not owner
-  if (res.locals.station.user_id !== res.locals.user.id && !res.locals.user.isAdmin) {
+  if (res.locals.station.user_id !== req.auth.id && !req.auth.isAdmin) {
+    return next(createError(401, 'Unauthorized'))
+  }
+
+  next()
+}
+
+const requireUserOwnerOrAdmin = (req, res, next) => {
+  // no station
+  if (!res.locals.user) {
+    return next(createError(404, 'User not found'))
+  }
+
+  // no user
+  if (!req.auth) {
+    return next(createError(401, 'Unauthorized'))
+  }
+
+  // local override
+  if (req.auth.isLocal) {
+    return next()
+  }
+
+  // user is not owner
+  if (res.locals.user.user_id !== req.auth.id && !req.auth.isAdmin) {
     return next(createError(401, 'Unauthorized'))
   }
 
@@ -49,5 +73,6 @@ const requireStationOwnerOrAdmin = (req, res, next) => {
 module.exports = {
   attachUser,
   requireAdmin,
-  requireStationOwnerOrAdmin
+  requireStationOwnerOrAdmin,
+  requireUserOwnerOrAdmin
 }

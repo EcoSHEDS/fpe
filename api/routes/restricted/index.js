@@ -7,7 +7,7 @@ const router = express.Router()
 router.use(attachUser)
 
 router.get('/', function (req, res, next) {
-  res.status(200).json({ message: 'Welcome to the restricted FPE API', user: res.locals.user })
+  res.status(200).json({ message: 'Welcome to the restricted FPE API', auth: req.auth })
 })
 
 router.use('/admin', require('./admin'))

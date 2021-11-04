@@ -33,7 +33,7 @@ const getStations = async (req, res, next) => {
 
 const postStations = async (req, res, next) => {
   const existing = await Station.query()
-    .where('user_id', res.locals.user.id)
+    .where('user_id', req.auth.id)
     .where('name', req.body.name)
   if (existing.length > 0) {
     return res.status(400).json({
@@ -56,7 +56,7 @@ const getStation = async (req, res, next) => {
 const putStation = async (req, res, next) => {
   if (req.body.name) {
     const existing = await Station.query()
-      .where('user_id', res.locals.user.id)
+      .where('user_id', req.auth.id)
       .where('name', req.body.name)
     if (existing.length > 0 && existing[0].id !== res.locals.station.id) {
       return res.status(400).json({
