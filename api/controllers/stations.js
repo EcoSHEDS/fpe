@@ -17,7 +17,7 @@ const attachStation = async (req, res, next) => {
   return next()
 }
 
-const getStations = async (req, res, next) => {
+const getPublicStations = async (req, res, next) => {
   const rows = await Station.query()
     .select('stations.*', 'user.affiliation_code', 'user.affiliation_name', 't.summary')
     .leftJoinRelated('user')
@@ -28,6 +28,19 @@ const getStations = async (req, res, next) => {
     )
     .where(req.query)
     .andWhere('private', false)
+  return res.status(200).json(rows)
+}
+
+const getAllStations = async (req, res, next) => {
+  const rows = await Station.query()
+    .select('stations.*', 'user.affiliation_code', 'user.affiliation_name', 't.summary')
+    .leftJoinRelated('user')
+    .leftJoin(
+      knex.raw('(select t.station_id, json_build_object(\'values\', t.values, \'images\', t.images) as summary from f_stations_summary() t) as t'),
+      'stations.id',
+      't.station_id'
+    )
+    .where(req.query)
   return res.status(200).json(rows)
 }
 
@@ -116,7 +129,8 @@ const getStationValues = async (req, res, next) => {
 }
 
 module.exports = {
-  getStations,
+  getPublicStations,
+  getAllStations,
   postStations,
 
   attachStation,

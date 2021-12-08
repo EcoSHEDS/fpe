@@ -12,5 +12,6 @@ router.get('/', function (req, res, next) {
 
 router.use('/account-requests', require('./accountRequests'))
 router.use('/users', require('./users'))
+router.use('/stations', require('./stations'))
 
 module.exports = router

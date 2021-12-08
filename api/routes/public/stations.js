@@ -3,7 +3,7 @@ const asyncHandler = require('express-async-handler')
 
 const {
   attachStation,
-  getStations,
+  getPublicStations,
   getStation,
   getStationDaily,
   getStationImages,
@@ -28,7 +28,7 @@ const {
 var router = express.Router()
 
 router.route('/')
-  .get(asyncHandler(getStations))
+  .get(asyncHandler(getPublicStations))
 
 router.route('/:stationId')
   .all(asyncHandler(attachStation))
