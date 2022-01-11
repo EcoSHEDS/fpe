@@ -4,4 +4,4 @@
 
 set -eu
 
-aws cloudformation deploy --stack-name ${STACK_NAME}-subscriptions --template-file templates/subscriptions.json
+aws cloudformation deploy --stack-name ${STACK_NAME}-subscriptions --template-file templates/subscriptions.${ENV}.local.json

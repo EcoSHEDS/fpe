@@ -223,11 +223,11 @@
           "ResourceRequirements": [
             {
               "Type": "MEMORY",
-              "Value": 1024
+              "Value": 3072
             },
             {
               "Type": "VCPU",
-              "Value": 0.25
+              "Value": 1
             }
           ],
           "Command": [

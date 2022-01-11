@@ -1,0 +1,22 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Notification subscriptions",
+  "Parameters": {
+    "topicArn": {
+      "Description": "SNS Topic ARN",
+      "Type": "String"
+    }
+  },
+  "Resources": {
+    "Subscription1": {
+      "Type": "AWS::SNS::Subscription",
+      "Properties": {
+        "Endpoint" : "<email address>",
+        "Protocol" : "email",
+        "TopicArn" : { "Ref" : "topicArn" }
+      }
+    }
+  },
+  "Outputs": {
+  }
+}

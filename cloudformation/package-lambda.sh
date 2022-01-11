@@ -4,4 +4,4 @@
 
 NAME=$1
 
-aws cloudformation package --template-file templates/lambda-${NAME}.json --use-json --output-template-file templates/lambda-${NAME}-packaged.json --s3-bucket ${DEPLOYMENT_BUCKET} --s3-prefix lambda-${NAME}
+aws cloudformation package --template-file templates/lambda-${NAME}.json --use-json --output-template-file templates/lambda-${NAME}.local.json --s3-bucket ${DEPLOYMENT_BUCKET} --s3-prefix lambda-${NAME}

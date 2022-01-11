@@ -5,6 +5,25 @@ class Series extends Base {
     return 'series'
   }
 
+  static get modifiers () {
+    return {
+      seriesSummary (builder) {
+        builder.select(
+          '*',
+          Series.relatedQuery('values')
+            .count()
+            .as('n'),
+          Series.relatedQuery('values')
+            .min('timestamp')
+            .as('start_timestamp'),
+          Series.relatedQuery('values')
+            .max('timestamp')
+            .as('end_timestamp')
+        )
+      }
+    }
+  }
+
   static get relationMappings () {
     const Dataset = require('./Dataset')
     const Variable = require('./Variable')

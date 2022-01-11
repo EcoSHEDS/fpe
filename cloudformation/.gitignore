@@ -1,5 +1,6 @@
-*-packaged.json
 parameters/*.local.json
+
+templates/*.local.json
 
 .env.local.sh
 .env.*.local.sh

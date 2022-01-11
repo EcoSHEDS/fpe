@@ -135,16 +135,11 @@ async function processDataset (id, dryRun) {
   if (!parsed.data || parsed.data.length === 0) throw new Error('No data found in dataset file')
 
   const config = dataset.config
-  console.log(`validating dataset config (id=${id})`, JSON.stringify(dataset.config))
+  console.log(`validating dataset config (id=${id})`)
   validateConfig(config, parsed.meta.fields)
 
   console.log(`creating series (id=${id}, nrows=${parsed.data.length}, nvars=${config.variables.length})`)
   const series = createSeries(parsed.data, config, station)
-
-  const utcOffset = config.timestamp.utcOffset
-  const dates = parsed.data.map(d => dayjs(d[config.timestamp.column]).utc(true).subtract(utcOffset, 'hour').valueOf())
-  const startTimestamp = (new Date(Math.min(...dates))).toISOString()
-  const endTimestamp = (new Date(Math.max(...dates))).toISOString()
 
   if (dryRun) {
     console.log(`finished (id=${id})`)
@@ -157,6 +152,14 @@ async function processDataset (id, dryRun) {
 
   console.log(`saving series (id=${id}, n=${series.length})`)
   await dataset.$relatedQuery('series').insertGraph(series)
+
+  console.log(`fetching series summary (id=${id})`)
+  const seriesSummary = await dataset.$relatedQuery('series').modify('seriesSummary')
+  if (seriesSummary.length === 0) {
+    throw new Error(`Failed to fetch series summary (id=${id})`)
+  }
+  const startTimestamp = seriesSummary[0].start_timestamp
+  const endTimestamp = seriesSummary[0].end_timestamp
 
   console.log(`updating dataset status (id=${id})`)
   await dataset.$query().patch({

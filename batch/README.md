@@ -20,6 +20,8 @@ SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install --arch=x64 --platform=linux sharp
 Set environmental variables
 
 ```sh
+source .env.<NODE_ENV>.local
+# or (manually)
 export REGION=
 export DB_SECRET_NAME=
 export NOTIFY_TOPIC=
@@ -38,6 +40,8 @@ node process.js dataset <id>
 ### Development
 
 ```bash
+export APP_NAME=fpe-beta
+export ENV=dev
 export NAME=${APP_NAME}-${ENV}-batch
 export AWS_ACCOUNT=
 export AWS_REGION=
@@ -48,6 +52,10 @@ aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS 
 
 # build image (turn off VPN!)
 docker build -t ${AWS_REPO} .
+
+# build image (Mac M1)
+# ref: https://stackoverflow.com/questions/67361936/exec-user-process-caused-exec-format-error-in-aws-fargate-service
+docker buildx build --platform=linux/amd64 -t ${AWS_REPO} .
 
 # push to docker hub (turn on VPN!)
 docker push ${AWS_REPO}
