@@ -39,6 +39,11 @@
       "Type": "String",
       "AllowedValues": ["true", "false"],
       "Default": "false"
+    },
+    "backupRetentionPeriod": {
+      "Description": "Backup Retention Period (days)",
+      "Type": "Number",
+      "Default": "1"
     }
   },
   "Resources": {
@@ -101,6 +106,7 @@
         "DBInstanceClass": { "Ref": "dbInstanceClass" },
         "AllowMajorVersionUpgrade": false,
         "AutoMinorVersionUpgrade": true,
+        "BackupRetentionPeriod": { "Ref": "backupRetentionPeriod" },
         "DBInstanceIdentifier": {
           "Fn::Join": [
             "-",
@@ -118,7 +124,7 @@
           "Ref": "DBSubnetGroup"
         },
         "Engine": "postgres",
-        "EngineVersion": 12.4,
+        "EngineVersion": 12.7,
         "MasterUsername": {
           "Fn::Join": [
             "",
