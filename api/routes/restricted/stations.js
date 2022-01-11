@@ -3,7 +3,7 @@ const asyncHandler = require('express-async-handler')
 
 const {
   attachStation,
-  getStations,
+  getPublicStations,
   getStation,
   postStations,
   putStation,
@@ -25,6 +25,7 @@ const {
   getImagesets,
   getImageset,
   postImagesets,
+  presignImageset,
   putImageset,
   deleteImageset,
   processImageset,
@@ -41,7 +42,7 @@ const { requireStationOwnerOrAdmin } = require('../../middleware/auth')
 var router = express.Router()
 
 router.route('/')
-  .get(asyncHandler(getStations))
+  .get(asyncHandler(getPublicStations))
   .post(asyncHandler(postStations))
 
 router.route('/:stationId')
@@ -83,6 +84,10 @@ router.route('/:stationId/imagesets/:imagesetId')
   .get(asyncHandler(getImageset))
   .put(requireStationOwnerOrAdmin, asyncHandler(putImageset))
   .delete(requireStationOwnerOrAdmin, asyncHandler(deleteImageset))
+
+router.route('/:stationId/imagesets/:imagesetId/presigned')
+  .all(asyncHandler(attachStation), asyncHandler(attachImageset))
+  .get(requireStationOwnerOrAdmin, asyncHandler(presignImageset))
 
 router.route('/:stationId/imagesets/:imagesetId/process')
   .all(asyncHandler(attachStation), asyncHandler(attachImageset))

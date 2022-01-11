@@ -36,15 +36,14 @@ const postImagesets = async (req, res, next) => {
     uuid: uuidv4()
   }
 
-  const presignedUrl = await createPresignedPostPromise({
-    Bucket: process.env.BUCKET,
-    Conditions: [
-      ['starts-with', '$key', `imagesets/${props.uuid}/images/`]
-    ],
-    Expires: 60 * 60 * 6 // 6 hours
-  })
-  console.log(presignedUrl)
-  presignedUrl.fields.key = `imagesets/${props.uuid}/images/`
+  // const presignedUrl = await createPresignedPostPromise({
+  //   Bucket: process.env.BUCKET,
+  //   Conditions: [
+  //     ['starts-with', '$key', `imagesets/${props.uuid}/images/`]
+  //   ],
+  //   Expires: 60 * 60 * 24 // 24 hours
+  // })
+  // presignedUrl.fields.key = `imagesets/${props.uuid}/images/`
 
   const rows = await Station.relatedQuery('imagesets')
     .for(res.locals.station.id)
@@ -52,8 +51,21 @@ const postImagesets = async (req, res, next) => {
     .returning('*')
 
   const row = rows[0]
-  row.presignedUrl = presignedUrl
+  // row.presignedUrl = presignedUrl
   return res.status(201).json(row)
+}
+
+const presignImageset = async (req, res, next) => {
+  const presignedUrl = await createPresignedPostPromise({
+    Bucket: process.env.BUCKET,
+    Conditions: [
+      ['starts-with', '$key', `imagesets/${res.locals.imageset.uuid}/images/`]
+    ],
+    Expires: 60 * 60 * 24 // 24 hours
+  })
+  presignedUrl.fields.key = `imagesets/${res.locals.imageset.uuid}/images/`
+
+  return res.status(201).json(presignedUrl)
 }
 
 const putImageset = async (req, res, next) => {
@@ -125,6 +137,7 @@ module.exports = {
   putImageset,
   deleteImageset,
   deleteImagesetFiles,
+  presignImageset,
   processImageset,
   listImagesetFiles
 }
