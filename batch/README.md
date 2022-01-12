@@ -40,7 +40,7 @@ node process.js dataset <id>
 ### Development
 
 ```bash
-export APP_NAME=fpe-beta
+export APP_NAME=fpe
 export ENV=dev
 export NAME=${APP_NAME}-${ENV}-batch
 export AWS_ACCOUNT=
