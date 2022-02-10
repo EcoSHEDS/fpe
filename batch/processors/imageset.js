@@ -57,7 +57,7 @@ async function processImage (image, utcOffset, timezone, dryRun) {
   }
 
   // check exif.CreateDate
-  if (!exif.tags.DateTimeOriginal || !exif.tags.CreateDate) {
+  if (!exif.tags.DateTimeOriginal && !exif.tags.CreateDate) {
     throw new Error(`Image file (${image.filename}) is missing timestamp (DateTimeOriginal or CreateDate) in EXIF data`)
   }
 
