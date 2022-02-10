@@ -57,8 +57,8 @@ async function processImage (image, utcOffset, timezone, dryRun) {
   }
 
   // check exif.CreateDate
-  if (!exif.tags.CreateDate) {
-    throw new Error(`Image file (${image.filename}) is missing timestamp (CreateDate) in EXIF data`)
+  if (!exif.tags.DateTimeOriginal || !exif.tags.CreateDate) {
+    throw new Error(`Image file (${image.filename}) is missing timestamp (DateTimeOriginal or CreateDate) in EXIF data`)
   }
 
   // create thumbnail
@@ -78,7 +78,8 @@ async function processImage (image, utcOffset, timezone, dryRun) {
 
   // update record
   console.log(`updating image record (image_id=${image.id})`)
-  const rawDate = new Date(exif.tags.CreateDate * 1000)
+  const exifDatetime = exif.tags.DateTimeOriginal || exif.tags.CreateDate
+  const rawDate = new Date(exifDatetime * 1000)
   const timestamp = dayjs(rawDate).subtract(utcOffset, 'hour')
   const payload = {
     ...exif.imageSize,
