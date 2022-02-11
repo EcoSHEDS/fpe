@@ -34,10 +34,11 @@ fetch_station <- function(con, station_id) {
 
 fetch_station_values <- function(con, station_id) {
   DBI::dbGetQuery(con, "
-select d.station_id, s.dataset_id, s.id as series_id, s.variable_id, v.timestamp, v.value, v.flag from
+select st.name as station_name, d.station_id, s.dataset_id, s.id as series_id, s.variable_id, v.timestamp, v.value, v.flag from
 datasets d
 left join series s on d.id = s.dataset_id
 left join values v on s.id = v.series_id
+left join stations st on st.id = d.station_id
 where d.station_id = $1
 and d.status = 'DONE'
 ", list(station_id)) %>%
@@ -46,9 +47,10 @@ and d.status = 'DONE'
 
 fetch_station_images <- function(con, station_id) {
   DBI::dbGetQuery(con, "
-select iset.station_id, i.imageset_id, i.id as image_id, i.timestamp, i.filename, i.full_url as url from
+select s.name as station_name, iset.station_id, i.imageset_id, i.id as image_id, i.timestamp, i.filename, i.full_url as url from
 imagesets iset
 left join images i on iset.id = i.imageset_id
+left join stations s on s.id = iset.station_id
 where iset.station_id = $1
 and i.status = 'DONE'
 ", list(station_id)) %>%
