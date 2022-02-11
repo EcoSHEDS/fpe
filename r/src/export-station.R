@@ -34,34 +34,35 @@ fetch_station <- function(con, station_id) {
 
 fetch_station_values <- function(con, station_id) {
   DBI::dbGetQuery(con, "
-select s.dataset_id, s.id as series_id, s.variable_id, v.timestamp, v.value, v.flag from
+select d.station_id, s.dataset_id, s.id as series_id, s.variable_id, v.timestamp, v.value, v.flag from
 datasets d
 left join series s on d.id = s.dataset_id
 left join values v on s.id = v.series_id
 where d.station_id = $1
+and d.status = 'DONE'
 ", list(station_id)) %>%
     as_tibble()
 }
 
 fetch_station_images <- function(con, station_id) {
   DBI::dbGetQuery(con, "
-select i.imageset_id, i.id as image_id, i.timestamp, i.filename, i.full_url as url from
+select iset.station_id, i.imageset_id, i.id as image_id, i.timestamp, i.filename, i.full_url as url from
 imagesets iset
 left join images i on iset.id = i.imageset_id
 where iset.station_id = $1
-and i.status='DONE'
+and i.status = 'DONE'
 ", list(station_id)) %>%
     as_tibble()
 }
 
-log_info("fetching: station (id={station_id})")
+log_info("fetching: station")
 station <- fetch_station(con, station_id)
 stopifnot(nrow(station) == 1)
 
-log_info("fetching: values (id={station_id})")
+log_info("fetching: values")
 values <- fetch_station_values(con, station_id)
 
-log_info("fetching: images (id={station_id})")
+log_info("fetching: images")
 images <- fetch_station_images(con, station_id)
 
 station_dir <- file.path(output_dir, station$name)
