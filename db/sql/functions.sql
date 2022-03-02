@@ -185,43 +185,36 @@ returns table (
 	images JSON
 )
 as $$
-	with t_values_daily as (
-		select count(*) as n_days from f_station_daily_values(_station_id)
-	), t_values as (
+	with t_values as (
 		select
-			json_agg(distinct ss.variable_id) as variables,
-		  	min(v.timestamp) as start,
-		  	max(v.timestamp) as end
+			json_agg(distinct ds.variable_id) as variables,
+			sum(d.n_rows) as n_rows,
+			min((d.start_timestamp at time zone s.timezone)::date) as start_date,
+			max((d.end_timestamp at time zone s.timezone)::date) as end_date
 		from stations s
 		left join datasets d
 		on s.id=d.station_id
-		left join series ss
-		on d.id=ss.dataset_id
-		left join values v
-		on ss.id=v.series_id
+		left join series ds
+		on d.id=ds.dataset_id
 		where s.id=_station_id
-		  and v.flag is null
-		  and d.status='DONE'
+			and d.status='DONE'
 	), t_values_json as (
 		select
-			json_build_object('n_days', vd.n_days, 'start', v.start, 'end', v.end, 'variables', v.variables) as values
-		from t_values_daily vd, t_values v
+			json_build_object('n_rows', coalesce(v.n_rows, 0), 'start_date', v.start_date, 'end_date', v.end_date, 'variables', v.variables) as values
+		from t_values v
 	), t_images as (
 		select
-			count(*) as n_images,
-			min(i.timestamp) as start,
-			max(i.timestamp) as end
+			sum(ims.n_images) as n_images,
+			min((ims.start_timestamp at time zone s.timezone)::date) as start_date,
+			max((ims.end_timestamp at time zone s.timezone)::date) as end_date
 		from stations s
-		left join imagesets ss
-		on s.id=ss.station_id
-		left join images i
-		on ss.id=i.imageset_id
-		where s.id=_station_id
-		  and ss.status='DONE'
-		  and i.status='DONE'
+		left join imagesets ims
+		on s.id=ims.station_id
+		where ims.status='DONE'
+		  and s.id=_station_id
 	), t_images_json as (
 		select
-			json_build_object('n_images', i.n_images, 'start', i.start, 'end', i.end) as images
+			json_build_object('n_images', coalesce(i.n_images, 0), 'start_date', i.start_date, 'end_date', i.end_date) as images
 		from t_images i
 	)
 	select v.*, i.* from t_values_json v, t_images_json i
@@ -239,42 +232,36 @@ as $$
 		select
 			s.id as station_id,
 			json_agg(distinct ss.variable_id) as variables,
-			count(distinct (v.timestamp at time zone s.timezone)::date) as n_days,
-		  	min(v.timestamp) as start,
-		  	max(v.timestamp) as end
+			sum(d.n_rows) as n_rows,
+			min((d.start_timestamp at time zone s.timezone)::date) as start_date,
+			max((d.start_timestamp at time zone s.timezone)::date) as end_date
 		from stations s
 		left join datasets d
 		on s.id=d.station_id
 		left join series ss
 		on d.id=ss.dataset_id
-		left join values v
-		on ss.id=v.series_id
-		where v.flag is null
-		  and d.status='DONE'
+		where d.status='DONE'
 		group by s.id
 	), t_values_json as (
 		select
 			v.station_id,
-			json_build_object('n_days', v.n_days, 'start', v.start, 'end', v.end, 'variables', v.variables) as values
+			json_build_object('n_rows', v.n_rows, 'start_date', v.start_date, 'end_date', v.end_date, 'variables', v.variables) as values
 		from t_values v
 	), t_images as (
 		select
 			s.id as station_id,
-			count(*) as n_images,
-			min(i.timestamp) as start,
-			max(i.timestamp) as end
+			sum(ims.n_images) as n_images,
+			min((ims.start_timestamp at time zone s.timezone)::date) as start_date,
+			max((ims.end_timestamp at time zone s.timezone)::date) as end_date
 		from stations s
-		left join imagesets ss
-		on s.id=ss.station_id
-		left join images i
-		on ss.id=i.imageset_id
-		where ss.status='DONE'
-		  and i.status='DONE'
+		left join imagesets ims
+		on s.id=ims.station_id
+		where ims.status='DONE'
 		group by s.id
 	), t_images_json as (
 		select
 			i.station_id,
-			json_build_object('n_images', i.n_images, 'start', i.start, 'end', i.end) as images
+			json_build_object('n_images', i.n_images, 'start_date', i.start_date, 'end_date', i.end_date) as images
 		from t_images i
 	)
 	select coalesce(v.station_id, i.station_id), v.values, i.images

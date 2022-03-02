@@ -141,10 +141,18 @@ async function processImageset (id, dryRun) {
     return imageset
   }
 
-  console.log(`updating imageset record (id=${imageset.id})`)
+  console.log(`computing imageset summary (id=${imageset.id})`)
+  const imageSummary = await imageset.$query()
+    .modify('imageSummary')
 
+  console.log(`updating imageset record (id=${imageset.id})`)
   imageset = await imageset.$query()
-    .patch({ status: 'DONE' })
+    .patch({
+      status: 'DONE',
+      start_timestamp: imageSummary.start_timestamp,
+      end_timestamp: imageSummary.end_timestamp,
+      n_images: imageSummary.n_images
+    })
     .returning('*')
 
   return imageset
