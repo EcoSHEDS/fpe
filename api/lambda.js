@@ -7,5 +7,6 @@ exports.handler = (event, context) => {
   if (process.env.ENV === 'dev') {
     console.log(`event: ${JSON.stringify(event)}`)
   }
+  console.log(`boot: ${(new Date()).toISOString()}`)
   awsServerlessExpress.proxy(server, event, context)
 }
