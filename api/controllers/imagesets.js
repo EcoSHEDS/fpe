@@ -6,7 +6,6 @@ const { Station, Imageset } = require('../db/models')
 
 const attachImageset = async (req, res, next) => {
   const row = await Imageset.query()
-    .modify('imageSummary')
     .withGraphFetched('images(defaultSelect,defaultOrderBy)')
     .findById(req.params.imagesetId)
 
@@ -20,7 +19,6 @@ const attachImageset = async (req, res, next) => {
 
 const getImagesets = async (req, res, next) => {
   const rows = await Imageset.query()
-    .modify('imageSummary')
     .where({ station_id: res.locals.station.id })
   return res.status(200).json(rows)
 }
