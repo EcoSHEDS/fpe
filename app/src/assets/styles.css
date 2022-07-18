@@ -1,0 +1,17 @@
+/* add row-cursor-pointer to v-data-table to change cursor to pointer */
+.v-data-table.row-cursor-pointer tr {
+  cursor: pointer;
+}
+
+/* highlight selected row in v-data-table */
+.v-data-table__selected {
+  background: #ddd !important;
+}
+
+/* remove box-shadow from stepper */
+.v-stepper {
+  box-shadow: none !important;
+}
+.v-stepper__header {
+  box-shadow: none !important;
+}
