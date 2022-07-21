@@ -1,7 +1,7 @@
-exports.Account = require('./Account')
 exports.Dataset = require('./Dataset')
 exports.Image = require('./Image')
 exports.Imageset = require('./Imageset')
+exports.Request = require('./Request')
 exports.Series = require('./Series')
 exports.Station = require('./Station')
 exports.User = require('./User')

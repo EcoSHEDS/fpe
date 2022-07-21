@@ -10,32 +10,34 @@
             </v-toolbar-title>
           </v-toolbar>
 
-          <v-tabs vertical v-model="tab" class="pr-4 pt-4">
-            <v-tab class="justify-start">
+          <v-tabs :vertical="$vuetify.breakpoint.mobile" grow v-model="tab" class="pt-4">
+            <v-tab>
               <v-icon left>
                 mdi-information-outline
               </v-icon>
               Background
             </v-tab>
-            <v-tab class="justify-start">
+            <v-tab>
               <v-icon left>
                 mdi-camera
               </v-icon>
               Equipment
             </v-tab>
-            <v-tab class="justify-start">
+            <v-tab>
               <v-icon left>
                 mdi-target
               </v-icon>
               Field Methods
             </v-tab>
-            <v-tab class="justify-start">
+            <v-tab>
               <v-icon left>
                 mdi-upload
               </v-icon>
               Photo Uploading
             </v-tab>
+          </v-tabs>
 
+          <v-tabs-items v-model="tab">
             <!-- BACKGROUND -->
             <v-tab-item>
               <v-card flat>
@@ -54,7 +56,7 @@
                       Provide a <span class="font-weight-bold">web-based platform</span> for making the images, other related data, and model predictions easy to access and explore.
                     </li>
                     <li>
-                       Provide an avenue for <span class="font-weight-bold">Citizen Science</span> engagement with the goal of better understanding water resources.
+                        Provide an avenue for <span class="font-weight-bold">Citizen Science</span> engagement with the goal of better understanding water resources.
                     </li>
                   </ol>
 
@@ -440,7 +442,7 @@
                 </v-card-text>
               </v-card>
             </v-tab-item>
-          </v-tabs>
+          </v-tabs-items>
         </v-card>
       </v-col>
     </v-row>

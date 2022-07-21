@@ -55,20 +55,34 @@
             label="Add to Admin Group"
           ></v-checkbox>
 
-          <v-alert
-            type="error"
-            text
-            colored-border
-            border="left"
-            class="body-2 mb-0"
-            v-if="error"
-          >
-            <div class="body-1 font-weight-bold">Server Error</div>
-            <div>{{ error }}</div>
-          </v-alert>
+          <Alert type="error" title="Server Error" v-if="error" class="mb-0">{{ error }}</Alert>
         </v-card-text>
 
         <v-divider></v-divider>
+
+        <v-card-text v-if="request">
+          <v-btn
+            color="warning"
+            outlined
+            block
+            @click="skipRequest"
+            class="mb-4"
+          >
+            <v-icon left>mdi-debug-step-over</v-icon>
+            Skip Request
+          </v-btn>
+          <v-btn
+            color="error"
+            outlined
+            block
+            @click="confirmDeleteRequest"
+          >
+            <v-icon left>mdi-delete</v-icon>
+            Delete Request
+          </v-btn>
+        </v-card-text>
+
+        <v-divider v-if="request"></v-divider>
 
         <v-card-actions class="px-4 py-4">
           <v-btn
@@ -91,14 +105,32 @@
         </v-card-actions>
       </v-form>
     </v-card>
+    <ConfirmDialog ref="confirmDeleteRequest">
+      <v-alert
+        type="error"
+        text
+        colored-border
+        border="left"
+        class="body-2 mb-0"
+      >
+        <div class="font-weight-bold body-1">Are you sure?</div>
+        <div>
+          This request will be permanently deleted. This action cannot be undone.
+        </div>
+      </v-alert>
+    </ConfirmDialog>
   </v-dialog>
 </template>
 
 <script>
 import { required, email } from 'vuelidate/lib/validators'
 
+import ConfirmDialog from '@/components/ConfirmDialog'
+import evt from '@/events'
+
 export default {
-  name: 'CreateUserDialog',
+  name: 'AdminCreateUser',
+  components: { ConfirmDialog },
   data () {
     return {
       dialog: false,
@@ -144,12 +176,22 @@ export default {
       },
       admin: {
         value: false
-      }
+      },
+      request: null
     }
   },
   methods: {
-    async open (id) {
+    async open (request) {
       this.dialog = true
+
+      this.clear()
+      if (request) {
+        this.name.value = request.name
+        this.email.value = request.email
+        this.affiliation.code.value = request.affiliation_code
+        this.affiliation.name.value = request.affiliation_name
+        this.request = request
+      }
 
       return new Promise((resolve, reject) => {
         this.resolve = resolve
@@ -165,38 +207,68 @@ export default {
       const payload = {
         name: this.name.value,
         email: this.email.value,
-        admin: this.admin.value,
         affiliation: {
           name: this.affiliation.name.value,
           code: this.affiliation.code.value
-        }
+        },
+        admin: this.admin.value
       }
 
       try {
         const response = await this.$http.admin.post('/users', payload)
         const user = response.data
+        if (this.request) {
+          await this.$http.admin.put(`/requests/${this.request.id}`, { pending: false })
+        }
         this.clear()
         this.resolve(user)
         this.dialog = false
+        evt.$emit('notify', 'success', 'User has been created')
       } catch (err) {
         console.error(err)
-        this.err = err.toString() || 'Unknown error occurred'
+        this.err = this.$errorMessage(err)
       } finally {
         this.loading = false
       }
     },
     clear () {
       this.error = null
-      this.$refs.form.resetValidation()
+      this.$refs.form && this.$refs.form.resetValidation()
       this.name.value = ''
       this.email.value = ''
       this.affiliation.name.value = ''
       this.affiliation.code.value = ''
       this.admin.value = false
+      this.request = null
     },
     close () {
       this.resolve(false)
       this.dialog = false
+    },
+    async skipRequest () {
+      try {
+        await this.$http.admin.put(`/requests/${this.request.id}`, { pending: false })
+        this.close()
+      } catch (err) {
+        this.err = this.$errorMessage(err)
+      }
+    },
+    async confirmDeleteRequest () {
+      const ok = await this.$refs.confirmDeleteRequest.open(
+        'Confirm Deletion',
+        { btnColor: 'error' }
+      )
+      if (ok) {
+        return await this.deleteRequest()
+      }
+    },
+    async deleteRequest () {
+      try {
+        await this.$http.admin.delete(`/requests/${this.request.id}`)
+        this.close()
+      } catch (err) {
+        this.err = this.$errorMessage(err)
+      }
     }
   }
 }

@@ -6,26 +6,30 @@ import store from '@/store'
 import router from '@/router'
 
 evt.$on('authState', async ({ state, redirect }) => {
-  if (state === 'signedOut') {
-    store.dispatch('setUser', null)
-    router.push(redirect || { name: 'logout' })
-  } else if (state === 'signIn') {
-    await getUser()
-    if (redirect) router.push(redirect)
-  } else if (state === 'signInRefresh') {
-    await getUser(true)
-    if (redirect) router.push(redirect)
-  } else if (state === 'confirmSignUp') {
-    router.push({ name: 'signupConfirm' })
+  // console.log('auth:authState', state)
+
+  switch (state) {
+    case 'signedOut':
+      store.dispatch('setUser', null)
+      store.dispatch('setAffiliation', null)
+      break
+    case 'signIn':
+      await getUser()
+      if (redirect) router.push(redirect)
+      break
+    case 'signInRefresh':
+      await getUser(true)
+      if (redirect) router.push(redirect)
+      break
   }
 })
 
-export async function getToken () {
+export async function getAuthToken () {
   const session = await Auth.currentSession()
   return session.getIdToken().getJwtToken()
 }
 
-export async function getAffiliation (userId) {
+export async function getUserAffiliation (userId) {
   try {
     const response = await Vue.prototype.$http.restricted.get(`/users/${userId}`)
     return response.data
@@ -34,24 +38,35 @@ export async function getAffiliation (userId) {
   }
 }
 
-export async function getUser (force) {
+export async function getUser (refresh) {
   try {
-    const user = await Auth.currentAuthenticatedUser({ bypassCache: !!force })
-    if (user && user.signInUserSession) {
-      const affiliation = await getAffiliation(user.username)
-      user.UserGroups = user.signInUserSession.accessToken.payload['cognito:groups'] || []
+    const user = await Auth.currentAuthenticatedUser({ bypassCache: !!refresh })
+    if (user) {
+      const affiliation = await getUserAffiliation(user.username)
+      if (user.signInUserSession) {
+        user.UserGroups = user.signInUserSession.accessToken.payload['cognito:groups'] || []
+      } else {
+        user.UserGroups = []
+      }
       user.isAdmin = user.UserGroups.includes('admins')
+
+      if (!refresh) {
+        evt.$emit('notify', 'success', `Logged in as ${user.attributes.email}`)
+      }
+
       store.dispatch('setUser', user)
       store.dispatch('setAffiliation', affiliation)
+
       return user
+    } else {
+      return null
     }
-    return null
   } catch (err) {
+    console.log(err)
     if (err.code && err.code === 'UserNotConfirmedException') {
       evt.$emit('authState', { state: 'confirmSignUp' })
     }
-    // console.log('getUser() failed', err)
-    store.dispatch('setUser', null)
+    evt.$emit('authState', { state: 'signedOut' })
     return null
   }
 }

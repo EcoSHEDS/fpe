@@ -52,7 +52,7 @@
 
           <v-divider></v-divider>
 
-          <v-list-item v-if="!user" :to="{ name: 'requestAccount' }" class="pr-8">
+          <v-list-item v-if="!user" :to="{ name: 'request' }" class="pr-8">
             <v-list-item-icon>
               <v-icon>mdi-account-plus</v-icon>
             </v-list-item-icon>
@@ -106,7 +106,7 @@
             </v-list-item-content>
           </v-list-item>
 
-          <v-list-item v-if="user" @click="logout" class="pr-8">
+          <v-list-item v-if="user" @click="logout" to="" exact class="pr-8">
             <v-list-item-icon>
               <v-icon>mdi-logout</v-icon>
             </v-list-item-icon>
@@ -193,7 +193,7 @@
             </v-list-item-content>
           </v-list-item>
 
-          <v-list-item @click="logout" class="pr-12">
+          <v-list-item @click="logout" to="" exact class="pr-12">
             <v-list-item-icon>
               <v-icon>mdi-logout</v-icon>
             </v-list-item-icon>
@@ -205,7 +205,7 @@
 
         <!-- NOT LOGGED IN -->
         <v-list v-else>
-          <v-list-item :to="{ name: 'requestAccount' }" class="pr-12">
+          <v-list-item :to="{ name: 'request' }" class="pr-12">
             <v-list-item-icon>
               <v-icon>mdi-account-plus</v-icon>
             </v-list-item-icon>
@@ -236,6 +236,24 @@
       </v-container>
     </v-main>
 
+    <v-snackbar
+      v-model="snackbar.show"
+      :timeout="snackbar.timeout"
+      :color="snackbar.color"
+      :top="true"
+      elevation="12"
+      style="margin-top:65px;z-index:5002"
+      :light="true"
+      outlined
+      text>
+      <span class="font-weight-bold">{{ snackbar.text }}</span>
+      <template v-slot:action="{ attrs }">
+        <v-btn :color="snackbar.color" icon text v-bind="attrs" @click="snackbar.show = false">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </template>
+    </v-snackbar>
+
     <UsgsFooter></UsgsFooter>
   </v-app>
 </template>
@@ -254,20 +272,38 @@ export default {
     UsgsFooter
   },
   data: () => ({
+    snackbar: {
+      show: false,
+      color: 'primary',
+      text: null,
+      timeout: 5000
+    }
   }),
   computed: {
     ...mapGetters(['user'])
   },
+  mounted () {
+    evt.$on('notify', this.notify)
+  },
+  beforeDestroy () {
+    evt.$off('notify', this.notify)
+  },
   methods: {
-    logout () {
-      this.$Amplify.Auth.signOut()
-        .then(() => {
-          return evt.$emit('authState', { state: 'signedOut' })
-        })
-        .catch((err) => {
-          console.log(err)
-          alert('Error occurred trying to log out')
-        })
+    notify (color, text) {
+      this.snackbar.color = color
+      this.snackbar.text = text
+      this.snackbar.show = true
+    },
+    async logout () {
+      try {
+        await this.$Amplify.Auth.signOut()
+        evt.$emit('notify', 'success', 'You have been logged out')
+        evt.$emit('authState', { state: 'signedOut' })
+        this.$router.push({ name: 'home' })
+      } catch (err) {
+        console.log(err)
+        evt.$emit('notify', 'error', 'Failed to log out')
+      }
     }
   }
 }

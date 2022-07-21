@@ -1,35 +1,11 @@
 <template>
   <v-card elevation="4">
-    <v-toolbar flat dense color="grey lighten-3">
+    <v-toolbar dense flat color="grey lighten-3">
       <span class="text-h5">Log In</span>
     </v-toolbar>
 
-    <v-form ref="form" @submit.prevent="submit" :disabled="loading || success">
-      <v-card-text class="body-2 pt-8">
-        <v-alert
-          type="success"
-          text
-          colored-border
-          border="left"
-          class="body-2 mb-8"
-          :value="!!$route.query.verified"
-        >
-          <div class="font-weight-bold body-1">
-            Your email has been verified. Please log in.
-          </div>
-        </v-alert>
-        <v-alert
-          type="success"
-          text
-          colored-border
-          border="left"
-          class="body-2 mb-8"
-          :value="!!$route.query.reset"
-        >
-          <div class="font-weight-bold body-1">
-            Your password has been reset. Please log in.
-          </div>
-        </v-alert>
+    <v-form ref="form" @submit.prevent="submit" :disabled="loading">
+      <v-card-text class="pt-8 pb-4 body-1 black--text">
         <v-text-field
           v-model="email.value"
           :rules="email.rules"
@@ -48,71 +24,35 @@
           type="password"
         ></v-text-field>
 
-        <div v-if="newNameRequired">
-          <div class="text-subtitle-1 mb-2 black--text">Enter your name</div>
-          <v-text-field
-            v-model="name.value"
-            :rules="name.rules"
-            label="Full Name"
-            required
-            outlined
-            validate-on-blur
-          ></v-text-field>
-        </div>
-
-        <div v-if="newPasswordRequired">
-          <div class="text-subtitle-1 mb-2 black--text">Enter your new password</div>
-          <v-text-field
-            v-model="newPassword.value"
-            :rules="newPassword.rules"
-            label="New Password"
-            required
-            outlined
-            validate-on-blur
-            type="password"
-          ></v-text-field>
-          <v-text-field
-            v-model="repeatNewPassword.value"
-            :rules="repeatNewPassword.rules"
-            label="Confirm New Password"
-            required
-            outlined
-            validate-on-blur
-            type="password"
-          ></v-text-field>
-        </div>
-
         <div>
           <router-link :to="{ name: 'resetPassword' }">Forgot your password?</router-link><br>
-          <router-link :to="{ name: 'requestAccount' }">Don't have an account?</router-link>
+          <router-link :to="{ name: 'request' }">Don't have an account?</router-link>
         </div>
 
-        <v-alert
-          type="error"
-          text
-          colored-border
-          border="left"
-          class="body-2 mb-0 mt-4"
-          :value="!!error"
-        >
-          <div class="body-1 font-weight-bold">Server Error</div>
-          <div>{{error}}</div>
-        </v-alert>
-        <v-alert
-          type="success"
-          text
-          colored-border
-          border="left"
-          class="body-2 mb-0 mt-4"
-          :value="success"
-        >
-          <div class="font-weight-bold body-1">
-            <span v-if="newPasswordRequired">Account Registration Complete</span><span v-else>Log In Successful</span>
-          </div>
-          <div>
-            Redirecting to <router-link :to="{ name: 'manage'}">Upload Photos and Data</router-link>.
-          </div>
-        </v-alert>
+        <Alert type="error" title="Login Failed" v-if="error" class="mb-0 mt-4">
+          <div>{{ error }}</div>
+
+          <v-btn
+            color="info"
+            block
+            large
+            :loading="resend.loading"
+            :disabled="resend.success"
+            @click="resendPassword"
+            class="mt-4"
+            v-if="resend.required"
+          ><v-icon left>mdi-lock-outline</v-icon> Request New Temporary Password</v-btn>
+        </Alert>
+
+        <Alert type="success" title="New Temporary Password Requested" v-if="resend.success" class="mb-0 mt-4">
+          <p>
+            We will send you a new password in the next 1-2 business days.
+          </p>
+          <p class="mb-0">
+            If you do not receive an email in the next couple days, please check your spam folder.
+          </p>
+        </Alert>
+        <Alert type="error" title="Failed to Request New Temporary Password" v-else-if="resend.error" class="mb-0 mt-4">{{ resend.error }}</Alert>
       </v-card-text>
 
       <v-divider></v-divider>
@@ -123,7 +63,7 @@
           color="primary"
           class="mr-4"
           :loading="loading"
-          :disabled="loading || success"
+          :disabled="resend.required"
         >submit</v-btn>
         <v-btn text @click="clear" :disabled="loading">clear</v-btn>
         <v-spacer></v-spacer>
@@ -134,8 +74,7 @@
 </template>
 
 <script>
-import { required, email, minLength, maxLength } from 'vuelidate/lib/validators'
-import { passwordStrength } from '@/lib/validators'
+import { required, email } from 'vuelidate/lib/validators'
 
 import evt from '@/events'
 
@@ -144,8 +83,13 @@ export default {
   data () {
     return {
       loading: false,
-      success: false,
       error: null,
+      resend: {
+        success: false,
+        expired: false,
+        loading: false,
+        error: null
+      },
       email: {
         value: '',
         rules: [
@@ -158,116 +102,98 @@ export default {
         rules: [
           v => required(v) || 'Password is required'
         ]
-      },
-      newNameRequired: false,
-      name: {
-        value: '',
-        rules: [
-          v => (this.newNameRequired && required(v)) || 'Name is required'
-        ]
-      },
-      newPasswordRequired: false,
-      newPassword: {
-        value: '',
-        rules: [
-          v => required(v) || 'New password is required',
-          v => minLength(8)(v) || 'Must be at least 8 characters',
-          v => maxLength(32)(v) || 'Cannot be more than 32 characters',
-          v => passwordStrength(v) || 'Must contain at least one lowercase letter, one uppercase letter and one number'
-        ]
-      },
-      repeatNewPassword: {
-        value: '',
-        rules: [
-          v => (v === this.newPassword.value) || 'Passwords do not match'
-        ]
       }
     }
   },
   methods: {
     async submit () {
-      if (this.newPasswordRequired) return this.submitNewPassword()
-
       this.error = null
+
       if (!this.$refs.form.validate()) return
 
       this.loading = true
-      this.$Amplify.Auth.signIn(this.email.value, this.password.value)
-        .then(user => {
-          if (user.challengeName === 'NEW_PASSWORD_REQUIRED') {
-            this.newPasswordRequired = true
-            if (user.challengeParam.requiredAttributes.includes('name')) {
-              this.newNameRequired = true
-            }
-            this.user = user
-          } else {
-            const redirect = this.$route.query.redirect
-              ? { path: this.$route.query.redirect }
-              : { name: 'manage' }
-            this.success = true
-            return evt.$emit('authState', {
-              state: 'signIn',
-              redirect
+      try {
+        const user = await this.$Amplify.Auth.signIn(this.email.value, this.password.value)
+
+        switch (user.challengeName) {
+          case 'NEW_PASSWORD_REQUIRED':
+            return this.$router.push({
+              name: 'setup',
+              params: {
+                user,
+                email: this.email.value
+              }
             })
-          }
+        }
+
+        const redirect = this.$route.query.redirect
+          ? { path: this.$route.query.redirect }
+          : { name: 'manage' }
+
+        return evt.$emit('authState', {
+          state: 'signIn',
+          redirect
         })
-        .catch((err) => {
-          console.error(err)
-          if (err.code && err.code === 'UserNotConfirmedException') {
-            evt.$emit('localUser', { username: this.email.value })
-            evt.$emit('authState', { state: 'confirmSignUp' })
-          } else {
-            this.error = err.message || err.toString()
-          }
-        })
-        .finally(() => {
-          this.loading = false
-        })
+      } catch (err) {
+        switch (err.code) {
+          case 'UserNotConfirmedException':
+            this.$router.push({ name: 'signupConfirm', params: { email: this.email.value } })
+            break
+          case 'PasswordResetRequiredException':
+            this.$router.push({ name: 'resetPassword', params: { email: this.email.value } })
+            break
+          case 'NotAuthorizedException':
+            if (err.message.startsWith('Temporary password has expired')) {
+              this.resend.required = true
+              this.error = 'Temporary password has expired. Please click the button below to request a new password.'
+            } else {
+              this.error = this.$errorMessage(err)
+            }
+            break
+          default:
+            this.error = this.$errorMessage(err)
+        }
+        return
+      } finally {
+        this.loading = false
+      }
     },
-    async submitNewPassword () {
-      this.error = null
+    async resendPassword () {
+      this.resend.success = false
+      this.resend.error = null
 
-      if (!this.$refs.form.validate()) return
-
-      const attributes = {}
-      if (this.newNameRequired) {
-        attributes.name = this.name.value
+      if (!this.email.value) {
+        this.resend.error = 'Email is required'
+        return
       }
 
-      this.loading = true
-      this.success = false
-      this.$Amplify.Auth.completeNewPassword(this.user, this.newPassword.value, attributes)
-        .then(user => {
-          const redirect = this.$route.query.redirect
-            ? { path: this.$route.query.redirect }
-            : { name: 'manage' }
-          this.success = true
-          return evt.$emit('authState', {
-            state: 'signIn',
-            redirect
-          })
-        })
-        .catch((err) => {
-          console.error(err)
-          this.error = err.message || err.toString()
-        })
-        .finally(() => {
-          this.loading = false
-        })
+      const payload = {
+        email: this.email.value,
+        resend: true
+      }
+
+      this.resend.loading = true
+      try {
+        await this.$http.public.post('/requests', payload)
+        this.resend.success = true
+      } catch (err) {
+        console.error(err)
+        this.resend.error = this.$errorMessage(err)
+      } finally {
+        this.resend.loading = false
+      }
     },
     clear () {
       this.loading = false
       this.error = null
-      this.success = false
       this.$refs.form.resetValidation()
 
-      this.newPasswordRequired = false
-      this.newNameRequired = false
+      this.resend.required = false
+      this.resend.loading = false
+      this.resend.error = null
 
       this.email.value = ''
       this.password.value = ''
-      this.newPassword.value = ''
-      this.repeatNewPassword.value = ''
     }
   }
 }

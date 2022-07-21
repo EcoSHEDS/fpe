@@ -22,33 +22,32 @@
               <div>This website is primarily designed for latop or desktop computers.</div>
             </v-alert>
 
-            <v-alert color="warning" colored-border border="left" :value="true" elevation="2">
-              <div class="text-h6 mb-2"><v-icon left large>mdi-alert</v-icon> Flow Photos Wanted!</div>
+            <v-alert color="warning" colored-border border="left" :value="true" elevation="2" class="pl-4">
+              <div class="text-h6 mb-2 pl-4"><v-icon left large color="warning">mdi-alert</v-icon> Flow Photos Wanted!</div>
 
-              <p>
+              <p class="pl-4">
                 We are currently looking for users interested in collecting and uploading timelapse photos of streams across the U.S. to support the development of deep learning models that will estimate flows from images.
               </p>
-              <p class="mb-0">
+              <p class="mb-0 pl-4">
                 If you are interested in contributing to this project, check out our <router-link :to="{ name: 'user-guide' }">User Guide</router-link>, which provides a Standard Operating Procedure (SOP) and other tips on collecting flow photos for FPE. If you have any questions, please <a href="mailto:gs-naar-lsc-ecosheds@doimspp.onmicrosoft.com">get in touch</a>.
               </p>
             </v-alert>
 
-            <p>
+            <p class="mt-8">
               The Flow Photo Explorer is an integrated database and machine learning platform for estimating streamflow from timelapse imagery. The goal of this project is to develop new approaches to monitoring hydrologic conditions in streams and rivers where flow data are historically sparse or non-existent.
             </p>
 
-            <v-img src="@/assets/img/fpe-diagram.png" alt="FPE diagram of images to machine learning models to estimated streamflow" class="ma-4"></v-img>
-
-            <p>
-              Check out the interactive <router-link :to="{ name: 'explorer' }">Photo Explorer</router-link> to view our current database of flow photos and data and explore how streams change over time (preliminary model results coming soon!).
-            </p>
+            <v-img src="@/assets/img/fpe-diagram.png" alt="FPE diagram of images to machine learning models to estimated streamflow" class="mx-4 my-8"></v-img>
 
             <div class="text-center my-10">
               <v-btn color="success" x-large :to="{ name: 'explorer' }">Start Exploring <v-icon>mdi-chevron-right</v-icon></v-btn>
             </div>
 
             <p>
-              <strong>Do you have flow photos to contribute?</strong> <router-link :to="{ name: 'requestAccount' }">Request an account</router-link> to upload your photos and data.<br>
+              Check out the interactive <router-link :to="{ name: 'explorer' }">Photo Explorer</router-link> to view our current database of flow photos and data and explore how streams change over time. Preliminary model results are coming soon.
+            </p>
+            <p>
+              <strong>Do you have flow photos to contribute?</strong> <router-link :to="{ name: 'request' }">Request an account</router-link> to upload your photos and data.<br>
               <strong>Already have an account?</strong> <router-link :to="{ name: 'login' }">Log in</router-link>.
             </p>
 

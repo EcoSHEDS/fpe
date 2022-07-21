@@ -24,7 +24,7 @@ async function attachAdminUser (req, res, next) {
   return next()
 }
 
-async function createCognitoUser (email, name) {
+async function createCognitoUser (email, name, resend) {
   const params = {
     UserPoolId: userPoolId,
     Username: email,
@@ -43,6 +43,9 @@ async function createCognitoUser (email, name) {
         Value: 'true'
       }
     ]
+  }
+  if (resend) {
+    params.MessageAction = 'RESEND'
   }
   const response = await cognitoIdentityServiceProvider.adminCreateUser(params).promise()
   return response.User
@@ -67,6 +70,18 @@ async function setAffiliation (id, affiliation) {
       affiliation_name: affiliation.name,
       affiliation_code: affiliation.code
     }).returning('*')
+  }
+}
+
+async function resendPassword (user) {
+  const email = user.attributes.email
+  const name = user.attributes.name
+
+  await createCognitoUser(email, name, true)
+  // console.log({email, name})
+
+  return {
+    message: 'Temporary password resent to user'
   }
 }
 
@@ -242,7 +257,7 @@ async function getUsers (req, res, next) {
 }
 
 async function fetchUser (id) {
-  console.log(`fetchUser(${id})`)
+  // console.log(`fetchUser(${id})`)
   const params = {
     UserPoolId: userPoolId,
     Username: id
@@ -261,7 +276,6 @@ async function fetchUser (id) {
 
 async function getUser (req, res, next) {
   const affiliation = await User.query().findById(res.locals.adminUser.id)
-  console.log(affiliation)
   res.status(200).json({ affiliation, ...res.locals.adminUser })
 }
 
@@ -279,10 +293,26 @@ async function putUser (req, res, next) {
     response = await setAffiliation(res.locals.adminUser.id, req.body.payload.affiliation)
   } else if (req.body.action === 'signOut') {
     response = await signOutUser(res.locals.adminUser.id)
+  } else if (req.body.action === 'resetPassword') {
+    response = await resetPassword(res.locals.adminUser.id)
+  } else if (req.body.action === 'resendPassword') {
+    response = await resendPassword(res.locals.adminUser)
   } else {
     throw createError(400, 'Invalid user action')
   }
   return res.status(200).json(response)
+}
+
+async function resetPassword (id) {
+  const params = {
+    UserPoolId: userPoolId,
+    Username: id
+  }
+
+  await cognitoIdentityServiceProvider.adminResetUserPassword(params).promise()
+  return {
+    message: `User (${id}) password has been reset`
+  }
 }
 
 async function signOutUser (id) {

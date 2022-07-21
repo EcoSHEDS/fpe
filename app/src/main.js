@@ -11,11 +11,17 @@ import './filters'
 import './plugins/amplify'
 import './plugins/axios'
 import './plugins/dayjs'
+import './plugins/error-message'
 import './plugins/highcharts'
 import './plugins/leaflet'
 import './plugins/vue-filter-pretty-bytes'
 
 import '@/assets/styles.css'
+
+import Alert from '@/components/Alert'
+import RefreshButton from '@/components/RefreshButton'
+Vue.component('Alert', Alert)
+Vue.component('RefreshButton', RefreshButton)
 
 Vue.config.productionTip = false
 

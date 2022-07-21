@@ -1,16 +1,7 @@
 <template>
+  <!-- eslint-disable vue/valid-v-slot -->
   <div>
-    <v-alert
-      type="error"
-      text
-      colored-border
-      border="left"
-      class="body-2 mb-0"
-      v-if="error"
-    >
-      <div class="body-1 font-weight-bold">Error Occurred</div>
-      <div>{{ error }}</div>
-    </v-alert>
+    <Alert type="error" title="Error Occurred" v-if="error" class="ma-4">{{ error }}</Alert>
 
     <v-data-table
       ref="table"
@@ -53,25 +44,20 @@
         <v-divider></v-divider>
       </template>
 
-      <!-- eslint-disable-next-line vue/valid-v-slot -->
       <template v-slot:item.created_at="{ item }">
         {{ item.created_at | timestampFormat('ll') }}
       </template>
-      <!-- eslint-disable-next-line vue/valid-v-slot -->
       <template v-slot:item.id="{ item }">
         {{ item.id.substr(1, 7) }}...
       </template>
-      <!-- eslint-disable-next-line vue/valid-v-slot -->
       <template v-slot:item.is_admin="{ item }">
         <v-icon v-if="item.is_admin" color="primary">mdi-check-circle</v-icon>
         <v-icon v-else color="gray">mdi-close-circle</v-icon>
       </template>
-      <!-- eslint-disable-next-line vue/valid-v-slot -->
       <template v-slot:item.enabled="{ item }">
         <v-icon v-if="item.enabled" color="primary">mdi-check-circle</v-icon>
         <v-icon v-else color="gray">mdi-close-circle</v-icon>
       </template>
-      <!-- eslint-disable-next-line vue/valid-v-slot -->
       <template v-slot:item.status="{ item }">
         <v-chip
           v-if="item.status==='CONFIRMED'"
@@ -92,19 +78,19 @@
       </template>
     </v-data-table>
 
-    <CreateUserDialog ref="createUserForm"></CreateUserDialog>
-    <EditUserDialog ref="editUserForm"></EditUserDialog>
+    <AdminCreateUser ref="createUserForm"></AdminCreateUser>
+    <AdminEditUser ref="editUserForm"></AdminEditUser>
   </div>
 </template>
 
 <script>
-import CreateUserDialog from '@/views/admin/CreateUserDialog'
-import EditUserDialog from '@/views/admin/EditUserDialog'
+import AdminCreateUser from '@/components/admin/AdminCreateUser'
+import AdminEditUser from '@/components/admin/AdminEditUser'
 export default {
-  name: 'Users',
+  name: 'AdminUsers',
   components: {
-    CreateUserDialog,
-    EditUserDialog
+    AdminCreateUser,
+    AdminEditUser
   },
   data: () => ({
     loading: false,

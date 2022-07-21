@@ -28,20 +28,8 @@ import NewImageset from '@/views/manage/new/NewImageset.vue'
 
 import NotFound from '@/views/NotFound.vue'
 
-import RootAuth from '@/views/auth/RootAuth.vue'
-import Account from '@/views/auth/Account.vue'
-import Login from '@/views/auth/Login.vue'
-import RequestAccount from '@/views/auth/RequestAccount.vue'
-import Signup from '@/views/auth/Signup.vue'
-import SignupConfirm from '@/views/auth/SignupConfirm.vue'
-import Logout from '@/views/auth/Logout.vue'
-import ChangePassword from '@/views/auth/ChangePassword.vue'
-import ResetPassword from '@/views/auth/ResetPassword.vue'
-
-import AdminRoot from '@/views/admin/Root.vue'
-import AdminAccountRequests from '@/views/admin/AccountRequests.vue'
-import AdminUsers from '@/views/admin/Users.vue'
-import AdminStations from '@/views/admin/Stations.vue'
+import AuthRoutes from '@/router/auth'
+import AdminRoutes from '@/router/admin'
 
 Vue.use(VueRouter)
 
@@ -137,80 +125,8 @@ const routes = [
       }
     ]
   },
-  {
-    path: '/auth',
-    name: 'auth',
-    component: RootAuth,
-    redirect: { name: 'login' },
-    children: [
-      {
-        path: 'request',
-        name: 'requestAccount',
-        component: RequestAccount
-      },
-      {
-        path: 'account',
-        name: 'account',
-        component: Account
-      },
-      {
-        path: 'login',
-        name: 'login',
-        component: Login
-      },
-      {
-        path: 'logout',
-        name: 'logout',
-        component: Logout
-      },
-      {
-        path: 'signup',
-        name: 'signup',
-        component: Signup
-      },
-      {
-        path: 'confirm',
-        name: 'signupConfirm',
-        component: SignupConfirm
-      },
-      {
-        path: 'change-password',
-        name: 'changePassword',
-        component: ChangePassword
-      },
-      {
-        path: 'reset-password',
-        name: 'resetPassword',
-        component: ResetPassword
-      }
-    ]
-  },
-  {
-    path: '/admin',
-    name: 'admin',
-    component: AdminRoot,
-    redirect: { name: 'adminAccountRequests' },
-    meta: {
-      requiresAdmin: true
-    },
-    children: [
-      {
-        path: 'account-requests',
-        name: 'adminAccountRequests',
-        component: AdminAccountRequests
-      },
-      {
-        path: 'users',
-        name: 'adminUsers',
-        component: AdminUsers
-      },
-      {
-        path: 'stations',
-        name: 'adminStations',
-        component: AdminStations
-      }
-    ]
-  },
+  AdminRoutes,
+  AuthRoutes,
   {
     path: '*',
     name: 'notfound',
@@ -231,7 +147,6 @@ router.beforeEach(async (to, from, next) => {
   if (to.matched.some(record => record.meta.requiresAuth)) {
     let user = store.getters.user
     if (!user) {
-      console.log('no user, trying again')
       user = await getUser()
     }
     if (!user) {

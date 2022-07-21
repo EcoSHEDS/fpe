@@ -1,11 +1,11 @@
 <template>
   <v-card elevation="4">
-    <v-toolbar flat dense color="grey lighten-3">
+    <v-toolbar dense flat color="grey lighten-3">
       <span class="text-h5">Change Password</span>
     </v-toolbar>
 
     <v-form ref="form" @submit.prevent="submit" :disabled="loading">
-      <v-card-text class="pt-8 pb-0">
+      <v-card-text class="py-4 body-1 black--text">
         <v-text-field
           v-model="oldPassword.value"
           :rules="oldPassword.rules"
@@ -30,33 +30,10 @@
           label="Confirm New Password"
           required
           outlined
-          validate-on-blur
           type="password"
-          class="mb-0"
         ></v-text-field>
 
-        <v-alert
-          type="error"
-          text
-          colored-border
-          border="left"
-          class="body-2 mb-0"
-          :value="!!error"
-        >
-          <div class="body-1 font-weight-bold">Server Error</div>
-          <div>{{error}}</div>
-        </v-alert>
-        <v-alert
-          type="success"
-          text
-          colored-border
-          border="left"
-          class="body-2 mb-0"
-          :value="success"
-        >
-          <div class="body-1 font-weight-bold">New Password Saved</div>
-          <div>Redirecting back to <router-link :to="{ name: 'account' }">Account Settings</router-link>...</div>
-        </v-alert>
+        <Alert type="error" title="Server Error" v-if="error">{{ error }}</Alert>
       </v-card-text>
 
       <v-divider></v-divider>
@@ -64,7 +41,6 @@
       <v-card-actions class="mx-2 py-4">
         <v-btn
           :loading="loading"
-          :disabled="loading"
           type="submit"
           class="mr-4"
           color="primary"
@@ -87,7 +63,6 @@ export default {
   data () {
     return {
       loading: false,
-      success: false,
       error: null,
       oldPassword: {
         value: '',
@@ -107,6 +82,7 @@ export default {
       repeatPassword: {
         value: '',
         rules: [
+          v => required(v) || 'New password is required',
           v => (v === this.newPassword.value) || 'Passwords do not match'
         ]
       }
@@ -125,27 +101,18 @@ export default {
           this.oldPassword.value,
           this.newPassword.value
         )
-        this.success = true
-        evt.$emit('authState', {
-          state: 'signIn',
-          redirect: {
-            name: 'account',
-            query: {
-              passwordChanged: true
-            }
-          }
-        })
-        this.clear()
+        evt.$emit('notify', 'success', 'Password has been changed')
+        evt.$emit('authState', { state: 'signInRefresh' })
+        this.$router.push({ name: 'account' })
       } catch (err) {
         console.error(err)
-        this.error = err.message || err.toString()
+        this.error = this.$errorMessage(err)
       } finally {
         this.loading = false
       }
     },
     clear () {
       this.loading = false
-      this.success = false
       this.error = null
 
       this.$refs.form.resetValidation()

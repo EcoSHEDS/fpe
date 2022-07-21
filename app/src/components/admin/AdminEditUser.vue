@@ -128,6 +128,56 @@
             <v-divider class="mb-0"></v-divider>
 
             <v-card-text>
+              <div v-if="user.status === 'FORCE_CHANGE_PASSWORD'">
+                <v-btn
+                  color="primary"
+                  block
+                  outlined
+                  :loading="loading.resendPassword"
+                  @click="resendPassword"
+                >
+                  <v-icon left>mdi-lock-outline</v-icon>Reset Temporary Password
+                </v-btn>
+
+                <div class="my-4"></div>
+              </div>
+              <div v-else>
+                <v-btn
+                  color="primary"
+                  block
+                  outlined
+                  :loading="loading.resetPassword"
+                  @click="resetPassword"
+                >
+                  <v-icon left>mdi-refresh</v-icon>Reset Password
+                </v-btn>
+
+                <div class="my-4"></div>
+              </div>
+
+              <v-btn
+                v-if="!user.is_admin"
+                color="success"
+                block
+                outlined
+                :loading="loading.admin"
+                @click="setAdminGroup(true)"
+              >
+                <v-icon left>mdi-badge-account</v-icon> Add to Admins
+              </v-btn>
+              <v-btn
+                v-else
+                color="warning"
+                block
+                outlined
+                :loading="loading.admin"
+                @click="setAdminGroup(false)"
+              >
+                <v-icon left>mdi-close</v-icon> Remove from Admins
+              </v-btn>
+
+              <div class="my-4"></div>
+
               <v-btn
                 v-if="!user.enabled"
                 color="success"
@@ -140,36 +190,13 @@
               </v-btn>
               <v-btn
                 v-else
-                color="warning"
+                color="error"
                 block
                 outlined
                 :loading="loading.enabled"
                 @click="setEnabled(false)"
               >
                 <v-icon left>mdi-close</v-icon> Disable User
-              </v-btn>
-
-              <div class="my-4"></div>
-
-              <v-btn
-                v-if="!user.is_admin"
-                color="success"
-                block
-                outlined
-                :loading="loading.admin"
-                @click="setAdminGroup(true)"
-              >
-                <v-icon left>mdi-check</v-icon> Add to Admins
-              </v-btn>
-              <v-btn
-                v-else
-                color="warning"
-                block
-                outlined
-                :loading="loading.admin"
-                @click="setAdminGroup(false)"
-              >
-                <v-icon left>mdi-close</v-icon> Remove from Admins
               </v-btn>
 
               <div class="my-4"></div>
@@ -218,7 +245,6 @@
                 ></v-text-field>
                 <v-btn
                   color="primary"
-                  outlined
                   :loading="loading.affiliation"
                   :disabled="loading.affiliation"
                   @click="changeAffiliation"
@@ -258,8 +284,9 @@
 
 <script>
 import ConfirmDialog from '@/components/ConfirmDialog'
+import evt from '@/events'
 export default {
-  name: 'EditUserDialog',
+  name: 'AdminEditUser',
   components: { ConfirmDialog },
   data () {
     return {
@@ -281,7 +308,9 @@ export default {
         enabled: false,
         admin: false,
         delete: false,
-        affiliation: false
+        affiliation: false,
+        resetPassword: false,
+        resendPassword: false
       },
       affiliation: {
         name: {
@@ -359,6 +388,7 @@ export default {
       const action = value ? 'addToAdmin' : 'removeFromAdmin'
       try {
         await this.$http.admin.put(`/users/${this.id}`, { action })
+        evt.$emit('notify', 'success', 'User has been updated')
         this.refresh()
       } catch (err) {
         console.error(err)
@@ -372,11 +402,42 @@ export default {
       const action = value ? 'enable' : 'disable'
       try {
         await this.$http.admin.put(`/users/${this.id}`, { action })
+        evt.$emit('notify', 'success', 'User has been updated')
         this.refresh()
       } catch (err) {
         console.error(err)
         this.loading.enabled = false
         this.error = err
+      }
+    },
+    async resetPassword () {
+      this.loading.resetPassword = true
+      this.modified = true
+      const action = 'resetPassword'
+      try {
+        await this.$http.admin.put(`/users/${this.id}`, { action })
+        evt.$emit('notify', 'success', 'User password has been reset')
+        this.refresh()
+      } catch (err) {
+        console.error(err)
+        this.error = err
+      } finally {
+        this.loading.resetPassword = false
+      }
+    },
+    async resendPassword () {
+      this.loading.resendPassword = true
+      this.modified = true
+      const action = 'resendPassword'
+      try {
+        await this.$http.admin.put(`/users/${this.id}`, { action })
+        evt.$emit('notify', 'success', 'Password has been resent')
+        this.refresh()
+      } catch (err) {
+        console.error(err)
+        this.error = err
+      } finally {
+        this.loading.resendPassword = false
       }
     },
     async changeAffiliation () {
@@ -392,6 +453,7 @@ export default {
       }
       try {
         await this.$http.admin.put(`/users/${this.id}`, { action, payload })
+        evt.$emit('notify', 'success', 'User affiliation has been updated')
         this.refresh()
       } catch (err) {
         console.error(err)
@@ -413,6 +475,7 @@ export default {
       this.loading.delete = true
       try {
         await this.$http.admin.delete(`/users/${this.id}`)
+        evt.$emit('notify', 'success', 'User has been deleted')
         this.resolve(true)
         this.dialog = false
       } catch (err) {
