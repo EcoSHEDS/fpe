@@ -5,9 +5,12 @@ const Joi = require('joi')
 const dayjs = require('dayjs')
 const timezone = require('dayjs/plugin/timezone')
 const utc = require('dayjs/plugin/utc')
+const localizedFormat = require('dayjs/plugin/localizedFormat')
+const { notify } = require('../aws')
 
 dayjs.extend(timezone)
 dayjs.extend(utc)
+dayjs.extend(localizedFormat)
 dayjs.tz.setDefault('UTC')
 
 const { Imageset } = require('../models')
@@ -15,6 +18,30 @@ const { Imageset } = require('../models')
 const s3 = new AWS.S3()
 
 const THUMB_WIDTH = 400
+
+async function notifyMessage (id) {
+  const imageset = await Imageset.query()
+    .modify('imageSummary')
+    .withGraphFetched('[station.user]')
+    .findById(id)
+
+  if (!imageset) return null
+
+  return `New photoset has been uploaded to FPE
+
+Imageset ID: ${imageset.id}
+Uploaded at: ${dayjs(imageset.created_at).tz('US/Eastern').format('lll')} (US/Eastern)
+Status: ${imageset.status}
+
+User ID: ${imageset.station.user.id}
+Affiliation: ${imageset.station.user.affiliation_code}
+Station: ${imageset.station.name}
+Station URL: https://www.usgs.gov/apps/ecosheds/fpe/#/explorer/${imageset.station.id}/
+
+# Images: ${imageset.n_images}
+Period: ${dayjs(imageset.start_timestamp).tz(imageset.station.timezone).format('ll')} to ${dayjs(imageset.end_timestamp).tz(imageset.station.timezone).format('ll')}
+`
+}
 
 function validateConfig (config) {
   const schema = Joi.object({
@@ -170,5 +197,9 @@ module.exports = async function (id, { dryRun }) {
         error_message: e.toString()
       })
       .findById(id)
+  }
+  const message = await notifyMessage(id)
+  if (message) {
+    await notify('New Photo Upload', message)
   }
 }
