@@ -148,6 +148,7 @@
 import ConfirmDialog from '@/components/ConfirmDialog'
 import StationForm from '@/components/forms/StationForm'
 import StationsMap from '@/components/StationsMap'
+import evt from '@/events'
 
 export default {
   name: 'ManageMetadata',
@@ -200,6 +201,7 @@ export default {
       this.deleter.error = null
       try {
         await this.$http.restricted.delete(`/stations/${this.station.id}`)
+        evt.$emit('notify', 'success', `Station (${this.station.name}) has been deleted`)
         this.deleter.loading = false
         this.$router.push({ name: 'manage' })
       } catch (err) {

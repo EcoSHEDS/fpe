@@ -116,6 +116,7 @@
 <script>
 import { mapGetters } from 'vuex'
 import { stationTimezones } from '@/lib/constants'
+import evt from '@/events'
 
 export default {
   name: 'StationForm',
@@ -218,8 +219,10 @@ export default {
         let response
         if (this.station) {
           response = await this.$http.restricted.put(`/stations/${this.station.id}`, payload)
+          evt.$emit('notify', 'success', `Station (${payload.name}) has been updated`)
         } else {
           response = await this.$http.restricted.post('/stations', payload)
+          evt.$emit('notify', 'success', `Station (${payload.name}) has been created`)
         }
 
         this.dialog = false
