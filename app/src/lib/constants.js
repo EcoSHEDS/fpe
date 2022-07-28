@@ -2,12 +2,140 @@ export const variables = [
   {
     id: 'FLOW_CFS',
     label: 'Flow',
-    units: 'cfs'
+    units: 'cfs',
+    unitOptions: [
+      {
+        id: 'CFS',
+        label: 'cfs (ft3/sec)',
+        scale: 1,
+        offset: 0
+      },
+      {
+        id: 'MPS',
+        label: 'cms (m3/sec)',
+        scale: Math.pow(0.3048, 3),
+        offset: 0
+      }
+    ]
   },
   {
     id: 'STAGE_FT',
     label: 'Stage',
-    units: 'ft'
+    units: 'ft',
+    unitOptions: [
+      {
+        id: 'FT',
+        label: 'ft',
+        scale: 1,
+        offset: 0
+      },
+      {
+        id: 'IN',
+        label: 'in',
+        scale: 1 / 12,
+        offset: 0
+      },
+      {
+        id: 'M',
+        label: 'm',
+        scale: 3.28084,
+        offset: 0
+      },
+      {
+        id: 'CM',
+        label: 'cm',
+        scale: 3.28084 / 100,
+        offset: 0
+      }
+    ]
+  },
+  {
+    id: 'PRESSURE_KPA',
+    label: 'Pressure',
+    units: 'kPa',
+    unitOptions: [
+      {
+        id: 'KPA',
+        label: 'kPa',
+        scale: 1,
+        offset: 0
+      },
+      {
+        id: 'PSI',
+        label: 'psi',
+        scale: 6.89476,
+        offset: 0
+      },
+      {
+        id: 'ATM',
+        label: 'atm',
+        scale: 101.32503982073,
+        offset: 0
+      },
+      {
+        id: 'BAR',
+        label: 'bar',
+        scale: 100.00003930000494279,
+        offset: 0
+      },
+      {
+        id: 'MBAR',
+        label: 'mbar',
+        scale: 0.1,
+        offset: 0
+      }
+    ]
+  },
+  {
+    id: 'SPCOND_USCM25',
+    label: 'Specific Conductivity',
+    units: 'uS/cm @ 25 degC',
+    unitOptions: [
+      {
+        id: 'USCM25',
+        label: 'uS/cm @ 25 degC',
+        scale: 1,
+        offset: 0
+      }
+    ]
+  },
+  {
+    id: 'WTEMP_C',
+    label: 'Water Temperature',
+    units: 'degC',
+    unitOptions: [
+      {
+        id: 'C',
+        label: 'degC',
+        scale: 1,
+        offset: 0
+      },
+      {
+        id: 'F',
+        label: 'degF',
+        scale: 5 / 9,
+        offset: -32
+      }
+    ]
+  },
+  {
+    id: 'ATEMP_C',
+    label: 'Air Temperature',
+    units: 'degC',
+    unitOptions: [
+      {
+        id: 'C',
+        label: 'degC',
+        scale: 1,
+        offset: 0
+      },
+      {
+        id: 'F',
+        label: 'degF',
+        scale: 5 / 9,
+        offset: -32
+      }
+    ]
   }
 ]
 

@@ -334,10 +334,16 @@
                       <div class="text-h6">Configure Value Column(s)</div>
                       <ul class="mt-2 body-2">
                         <li>
-                          <strong>Specify the column, units and (optional) flag column for the streamflow and/or stage values</strong>. You only need to include one of these variables, but can include both if available.
+                          <strong>Specify the column, units and flag column (optional) for each variable</strong>.
                         </li>
                         <li>
-                          <strong>A optional column of flags may be included</strong> for each variable (flow or stage). If no flags are included, we assume all data have undergone QAQC review and are reasonably accurate. Only include flags indicating erroneous or abnormal data. Any rows having a flag of any kind will be ignored. Conversely, rows without any flags are assumed to contain reasonably accurate data. If you include flags, please specify the meaning of each flag type in the <strong>Data Source and Methdology</strong> for this station.
+                          <strong>Multiple variables can be specified by clicking the "Add Variable" button.</strong>.
+                        </li>
+                        <li>
+                          <strong>To remove a varible click the "Close" button.</strong>.
+                        </li>
+                        <li>
+                          <strong>A optional column of flags may be included</strong> for each variable. If no flags are included, we assume all data have undergone QAQC review and are reasonably accurate. Only include flags indicating erroneous or abnormal data. Any rows having a flag of any kind will be ignored. Conversely, rows without any flags are assumed to contain reasonably accurate data. If you include flags, please specify the meaning of each flag type in the <strong>Data Source and Methdology</strong> for this station.
                         </li>
                       </ul>
 
@@ -356,84 +362,80 @@
                       </v-alert>
 
                       <v-container v-else class="mt-4">
-                        <v-row>
-                          <v-col cols="12" md="6">
-                            <div class="font-weight-bold mb-4">Flow</div>
-                            <v-select
-                              v-model="values.flow.column.selected"
-                              :items="valuesColumnOptions"
-                              :rules="values.flow.column.rules"
-                              outlined
-                              label="Select flow column"
-                              @change="validateValues"
-                              clearable
-                              hide-details
-                              class="my-4"
-                            ></v-select>
-                            <v-select
-                              v-model="values.flow.units.selected"
-                              :items="values.flow.units.options"
-                              :rules="values.flow.units.rules"
-                              item-text="label"
-                              outlined
-                              label="Select flow units"
-                              hint="Note: values will be converted to cfs (ft3/sec)."
-                              persistent-hint
-                              return-object
-                              clearable
-                              class="my-4"
-                            ></v-select>
-
-                            <v-select
-                              v-model="values.flow.flag.selected"
-                              :items="valuesColumnOptions"
-                              :rules="values.flow.flag.rules"
-                              outlined
-                              label="Select flow flag column (optional)"
-                              clearable
-                              hide-details
-                              class="my-4"
-                            ></v-select>
-                          </v-col>
-
-                          <v-col cols="12" md="6">
-                            <div class="font-weight-bold mb-2">Stage</div>
-                            <v-select
-                              v-model="values.stage.column.selected"
-                              :items="valuesColumnOptions"
-                              :rules="values.stage.column.rules"
-                              outlined
-                              label="Select stage columns"
-                              @change="validateValues"
-                              clearable
-                              hide-details
-                              class="my-4"
-                            ></v-select>
-                            <v-select
-                              v-model="values.stage.units.selected"
-                              :items="values.stage.units.options"
-                              :rules="values.stage.units.rules"
-                              item-text="label"
-                              outlined
-                              label="Select stage units"
-                              hint="Note: values will be converted to feet."
-                              persistent-hint
-                              return-object
-                              clearable
-                              class="my-4"
-                            ></v-select>
-                            <v-select
-                              v-model="values.stage.flag.selected"
-                              :items="valuesColumnOptions"
-                              :rules="values.stage.flag.rules"
-                              outlined
-                              label="Select stage flag column (optional)"
-                              clearable
-                              hide-details
-                              class="my-4"
-                            ></v-select>
+                        <v-row v-for="(variable, i) in values.variables" :key="i">
+                          <v-col cols="12">
+                            <div class="elevation-2 pa-4">
+                              <div class="text-h6 d-flex mb-8">
+                                Variable #{{i + 1}}
+                                <v-spacer></v-spacer>
+                                <v-btn icon small @click="removeVariable(i)" :disabled="i === 0" v-if="i > 0">
+                                  <v-icon>mdi-close</v-icon>
+                                </v-btn>
+                              </div>
+                              <v-row>
+                                <v-col cols="12" md="6">
+                                  <v-select
+                                    v-model="variable.column.selected"
+                                    :items="valuesColumnOptions"
+                                    :rules="variable.column.rules"
+                                    outlined
+                                    label="Select column"
+                                    @change="validateValues"
+                                    clearable
+                                  ></v-select>
+                                </v-col>
+                                <v-col cols="12" md="6">
+                                  <v-select
+                                    v-model="variable.variable.selected"
+                                    :items="variableOptions"
+                                    :rules="variable.variable.rules"
+                                    outlined
+                                    label="Select variable"
+                                    @change="validateValues"
+                                    item-text="label"
+                                    return-object
+                                    clearable
+                                  ></v-select>
+                                </v-col>
+                              </v-row>
+                              <v-row>
+                                <v-col cols="12" md="6">
+                                  <v-select
+                                    v-model="variable.units.selected"
+                                    :items="variable.variable.selected ? variable.variable.selected.unitOptions : []"
+                                    :rules="variable.units.rules"
+                                    item-text="label"
+                                    outlined
+                                    label="Select units"
+                                    :hint="variable.variable.selected ? `Note: values will be converted to ${variable.variable.selected.units}.`: null"
+                                    :persistent-hint="!!variable.variable.selected"
+                                    return-object
+                                    clearable
+                                  ></v-select>
+                                </v-col>
+                                <v-col cols="12" md="6">
+                                  <v-select
+                                    v-model="variable.flag.selected"
+                                    :items="valuesColumnOptions"
+                                    :rules="variable.flag.rules"
+                                    outlined
+                                    label="Select flag column (optional)"
+                                    clearable
+                                    hide-details
+                                  ></v-select>
+                                </v-col>
+                              </v-row>
+                            </div>
                           </v-col>
                         </v-row>
+                        <v-row>
+                          <v-col cols="12">
+                            <v-btn color="primary" block outlined @click="addVariable">
+                              <v-icon left>mdi-plus</v-icon> Add Variable
+                            </v-btn>
+                          </v-col>
+                        </v-row>
+                        <!-- <pre>{{ values.variables }}</pre> -->
                       </v-container>
 
                       <v-alert
@@ -647,7 +649,7 @@
 
 <script>
 import { parseFile } from '@/lib/parsers'
-import { utcOffsets } from '@/lib/constants'
+import { utcOffsets, variables } from '@/lib/constants'
 import { mapGetters } from 'vuex'
 import dayjs from 'dayjs'
 
@@ -657,16 +659,7 @@ export default {
     return {
       timeout: null,
       step: 1,
-      variables: [
-        {
-          id: 'FLOW_CFS',
-          label: 'Flow (cfs)'
-        },
-        {
-          id: 'STAGE_FT',
-          label: 'Stage (ft)'
-        }
-      ],
+      variableOptions: variables,
       file: {
         status: 'READY',
         loading: false,
@@ -709,68 +702,31 @@ export default {
       },
       values: {
         error: null,
-        flow: {
-          column: {
-            selected: null
-          },
-          flag: {
-            selected: null
-          },
-          units: {
-            selected: null,
-            options: [
-              {
-                id: 'CFS',
-                label: 'cfs (ft3/sec)',
-                scale: 1
-              },
-              {
-                id: 'MPS',
-                label: 'cms (m3/sec)',
-                scale: Math.pow(0.3048, 3)
-              }
-            ],
-            rules: [
-              v => !this.values.flow.column.selected || !!v || 'Units are required'
-            ]
+        variables: [
+          {
+            variable: {
+              selected: null,
+              rules: [
+                v => !!v || 'Variable is required'
+              ]
+            },
+            column: {
+              selected: null,
+              rules: [
+                v => !!v || 'Column is required'
+              ]
+            },
+            units: {
+              selected: null,
+              rules: [
+                v => !!v || 'Units are required'
+              ]
+            },
+            flag: {
+              selected: null
+            }
           }
-        },
-        stage: {
-          column: {
-            selected: null
-          },
-          flag: {
-            selected: null
-          },
-          units: {
-            selected: null,
-            options: [
-              {
-                id: 'FT',
-                label: 'ft',
-                scale: 1
-              },
-              {
-                id: 'IN',
-                label: 'in',
-                scale: 1 / 12
-              },
-              {
-                id: 'M',
-                label: 'm',
-                scale: 3.28084
-              },
-              {
-                id: 'CM',
-                label: 'cm',
-                scale: 3.28084 / 100
-              }
-            ],
-            rules: [
-              v => !this.values.stage.column.selected || !!v || 'Units are required'
-            ]
-          }
-        }
+        ]
       },
       metadata: {
         error: null,
@@ -933,29 +889,42 @@ export default {
     },
     resetValues () {
       this.values.error = null
-      this.values.flow.column.selected = null
-      this.values.flow.units.selected = null
-      this.values.stage.column.selected = null
-      this.values.stage.units.selected = null
+      this.values.variables.forEach(d => {
+        d.column.selected = null
+        d.units.selected = null
+      })
     },
     validateValues () {
       this.values.error = null
-      // if (this.values.flow.column.selected && !this.values.flow.units.selected) {
-      //   this.values.error = 'Streamflow units must be selected.'
-      //   return false
-      // }
-
-      // if (this.values.stage.column.selected && !this.values.stage.units.selected) {
-      //   this.values.error = 'Stage units must be selected.'
-      //   return false
-      // }
-
-      if (!this.values.flow.column.selected && !this.values.stage.column.selected) {
-        this.values.error = 'At least one of the streamflow or stage columns must be selected.'
-        return false
-      }
-
       return true
+    },
+    addVariable () {
+      this.values.variables.push({
+        variable: {
+          selected: null,
+          rules: [
+            v => !!v || 'Variable is required'
+          ]
+        },
+        column: {
+          selected: null,
+          rules: [
+            v => !!v || 'Column is required'
+          ]
+        },
+        units: {
+          selected: null,
+          rules: [
+            v => !!v || 'Units are required'
+          ]
+        },
+        flag: {
+          selected: null
+        }
+      })
+    },
+    removeVariable (i) {
+      this.values.variables.splice(i, 1)
     },
     nextValues () {
       this.values.error = null
@@ -1080,22 +1049,15 @@ export default {
         }
       }
 
-      if (this.values.flow.column.selected) {
+      this.values.variables.forEach(d => {
         payload.config.variables.push({
-          id: 'FLOW_CFS',
-          column: this.values.flow.column.selected,
-          scale: this.values.flow.units.selected.scale,
-          flag: this.values.flow.flag.selected
+          id: d.variable.selected.id,
+          column: d.column.selected,
+          scale: d.units.selected.scale,
+          offset: d.units.selected.offset,
+          flag: d.flag.selected
         })
-      }
-      if (this.values.stage.column.selected) {
-        payload.config.variables.push({
-          id: 'STAGE_FT',
-          column: this.values.stage.column.selected,
-          scale: this.values.stage.units.selected.scale,
-          flag: this.values.stage.flag.selected
-        })
-      }
+      })
 
       const response = await this.$http.restricted.post(
         `/stations/${this.stationId}/datasets`,

@@ -462,6 +462,8 @@ import ImageDialog from '@/components/ImageDialog'
 import ImagePreview from '@/components/ImagePreview'
 import StatusChip from '@/components/StatusChip'
 
+import evt from '@/events'
+
 export default {
   name: 'ManageImageset',
   mixins: [RefresherMixin],
@@ -641,6 +643,7 @@ export default {
       this.imageDeleter.loading = true
       try {
         await this.$http.restricted.delete(`/stations/${this.imageset.station_id}/imagesets/${this.imageset.id}/images/${image.id}`)
+        evt.$emit('notify', 'success', `Photo set (${this.imageset.id}) has been deleted`)
         this.refresh()
       } catch (err) {
         console.error(err)

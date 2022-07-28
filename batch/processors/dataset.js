@@ -24,10 +24,11 @@ function validateConfig (config, fields) {
     }),
     variables: Joi.array().items(
       Joi.object({
-        id: Joi.string().valid('FLOW_CFS', 'STAGE_FT'),
+        id: Joi.string().valid('FLOW_CFS', 'STAGE_FT', 'PRESSURE_KPA', 'SPCOND_USCM25', 'WTEMP_C', 'ATEMP_C'),
         column: fileColumn.required(),
         flag: Joi.string().empty('').allow(null).valid(...fields),
-        scale: Joi.number()
+        scale: Joi.number().default(1),
+        offset: Joi.number().default(0)
       })
     ).required().min(1)
   })
@@ -61,6 +62,7 @@ async function parseFile ({ s3: s3File }) {
 function createRowParser (timestamp, variable, timezone) {
   const utcOffset = timestamp.utcOffset
   const scale = variable.scale || 1
+  const offset = variable.offset || 0
 
   return (d, i) => {
     const rawTimestamp = timestamp.timeColumn
@@ -72,7 +74,7 @@ function createRowParser (timestamp, variable, timezone) {
     }
 
     const rawValue = d[variable.column]
-    const parsedValue = rawValue.length === 0 ? NaN : (Number(rawValue) * scale)
+    const parsedValue = rawValue.length === 0 ? NaN : ((Number(rawValue) + offset) * scale)
     const parsedFlag = variable.flag && d[variable.flag].length > 0 ? d[variable.flag] : null
 
     return {
