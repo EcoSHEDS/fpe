@@ -20,7 +20,6 @@
         ></v-progress-circular>
       </v-overlay>
     </div>
-
     <div v-else-if="error">
       <v-alert
         type="error"
@@ -37,8 +36,8 @@
       </v-alert>
     </div>
     <div v-else-if="station">
-      <div class="text-subtitle-2 text--secondary">{{ station.affiliation_name | truncate(70) }}</div>
-      <PreviewChart :station="station"></PreviewChart>
+      <div class="text-subtitle-2 text--secondary mb-2">{{ station.affiliation_name | truncate(70) }}</div>
+      <StationViewer :station="station"></StationViewer>
     </div>
     <div v-else>
       <v-alert
@@ -59,11 +58,11 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import PreviewChart from '@/components/charts/PreviewChart'
+import StationViewer from '@/components/explorer/StationViewer'
 export default {
-  name: 'StationPreview',
+  name: 'StationDetail',
   components: {
-    PreviewChart
+    StationViewer
   },
   props: {
     stationId: {

@@ -1,8 +1,8 @@
 <template>
-  <div style="position:relative" class="mt-2">
-    <v-row v-if="station.summary.images.n_images > 0 && station.provisional && !loading">
+  <div>
+    <v-row v-if="station.summary.images.count > 0 && station.provisional && !loading">
       <v-col class="my-0 pb-0">
-        <v-alert type="error" dense text colored-border border="left" class="mt-2 body-2">
+        <v-alert type="error" dense text colored-border border="left" class="body-2">
           <div class="font-weight-bold body-1">Station Contains Provisional Data</div>
           <div>
             <v-btn class="float-right" xs text color="default" @click="$refs.provisionalDialog.open()">Read More</v-btn>
@@ -19,7 +19,7 @@
         </InfoDialog>
       </v-col>
     </v-row>
-    <div v-if="station.summary.images.n_images === 0">
+    <div v-if="station.summary.images.count === 0">
       <v-alert
         type="error"
         text
@@ -31,9 +31,9 @@
         <div class="font-weight-bold body-1">This station does not have any photos</div>
       </v-alert>
     </div>
-    <div style="height:200px" v-else-if="loading">
+    <div style="height:200px;position:relative" v-else-if="loading">
       <v-overlay color="grey lighten-2" absolute class="text-center" v-if="loading">
-        <div class="text-h6 mb-8 grey--text">Loading photos...</div>
+        <div class="text-h6 mb-8 grey--text">Loading...</div>
         <v-progress-circular
           color="grey"
           indeterminate
@@ -43,7 +43,8 @@
       </v-overlay>
     </div>
     <div v-else>
-      <v-row align="stretch" style="min-height:210px;">
+      <!-- PHOTO VIEWER -->
+      <v-row align="stretch" style="">
         <v-col cols="12" md="7">
           <div class="text-center">
             <div
@@ -93,10 +94,10 @@
                 </tr>
                 <tr v-if="hover.value">
                   <td class="py-2 pl-0">
-                    <div class="text-subtitle-2 text--secondary">Daily Mean {{ variable.name }} (Observed)</div>
+                    <div class="text-subtitle-2 text--secondary">Daily Mean {{ variableLabel}} (Observed)</div>
                     <div class="font-weight-bold">
                       {{ hover.value.mean | d3Format('.3r') }}
-                      {{ variable.units }}
+                      {{ variable.selected ? variable.selected.units : '' }}
                     </div>
                   </td>
                 </tr>
@@ -123,6 +124,84 @@
           </div>
         </v-col>
       </v-row>
+      <!-- CHART -->
+      <v-row>
+        <v-col cols="12">
+          <v-row align="end" class="mb-0">
+            <v-col cols="6">
+              <div class="text-h6 font-weight-bold text--secondary">
+              Daily Photos
+                <v-tooltip bottom max-width="400px" style="z-index:5002">
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-btn
+                      x-small
+                      icon
+                      v-bind="attrs"
+                      v-on="on"
+                      class="mt-n1"
+                    >
+                      <v-icon small>mdi-help-circle</v-icon>
+                    </v-btn>
+                  </template>
+                  <div class="body-1">
+                    <p>
+                      Circles show when photos were collected. Only one photo is shown per day (closest to midday). Click 'Explore All Photos' button below to see sub-daily photos.
+                    </p>
+                    <p>
+                      Linechart (if shown) shows daily mean and range of observed variables.
+                    </p>
+                  </div>
+                </v-tooltip>
+              </div>
+            </v-col>
+            <v-col cols="6">
+              <v-select
+                v-show="variable.options.length > 0"
+                :items="variable.options"
+                v-model="variable.selected"
+                label="Variable"
+                hide-details
+                item-text="label"
+                return-object
+                dense
+                class="mb-2"
+              ></v-select>
+            </v-col>
+          </v-row>
+          <svg ref="svg"></svg>
+        </v-col>
+      </v-row>
+      <!-- IMAGE ERROR -->
+      <v-row v-if="!!imageError" class="mt-0">
+        <v-col>
+          <v-alert
+            type="error"
+            text
+            dense
+            colored-border
+            border="left"
+            class="body-2 mb-0 mt-0"
+          >
+            <div class="font-weight-bold body-1">Failed to Load Image</div>
+          </v-alert>
+        </v-col>
+      </v-row>
+      <!-- NO DATA -->
+      <v-row v-if="station.summary.values.count === 0" class="mt-0">
+        <v-col>
+          <v-alert
+            type="warning"
+            text
+            dense
+            colored-border
+            border="left"
+            class="body-2 mb-0 mt-0"
+          >
+            <div class="font-weight-bold body-1">This station does not have any observed data</div>
+          </v-alert>
+        </v-col>
+      </v-row>
+      <!-- PLAYER -->
       <v-row>
         <v-col cols="12" class="pt-0">
           <v-row class="mt-2">
@@ -158,72 +237,16 @@
             </v-col>
           </v-row>
         </v-col>
-        <v-col cols="12" class="pt-0">
-          <div class="d-flex">
-            <div class="text-subtitle-1 font-weight-bold text--secondary mb-2">
-              Preview Daily (Mid-Day) Photos
-              <v-tooltip bottom max-width="400px">
-                <template v-slot:activator="{ on, attrs }">
-                  <v-btn
-                    icon
-                    x-small
-                    v-bind="attrs"
-                    v-on="on"
-                    class="mt-n1"
-                  >
-                    <v-icon small>mdi-help-circle</v-icon>
-                  </v-btn>
-                </template>
-                <div class="body-1">
-                  <p>
-                    Circles show when photos were collected. Only one photo is shown per day (closest to midday). Click 'Explore All Photos' button below to see sub-daily photos.
-                  </p>
-                  <p>
-                    Linechart (if shown) shows daily mean and range of observed flow or stage (if flows are not available).
-                  </p>
-                </div>
-              </v-tooltip>
-            </div>
-          </div>
-          <svg ref="svg"></svg>
-        </v-col>
       </v-row>
-      <v-row v-if="!!imageError" class="mt-0">
-        <v-col>
-          <v-alert
-            type="error"
-            text
-            dense
-            colored-border
-            border="left"
-            class="body-2 mb-0 mt-0"
-          >
-            <div class="font-weight-bold body-1">Failed to Load Image</div>
-          </v-alert>
-        </v-col>
-      </v-row>
-      <v-row v-if="station.summary.values.n_rows === 0" class="mt-0">
-        <v-col>
-          <v-alert
-            type="warning"
-            text
-            dense
-            colored-border
-            border="left"
-            class="body-2 mb-0 mt-0"
-          >
-            <div class="font-weight-bold body-1">This station does not have any observed flow data</div>
-          </v-alert>
-        </v-col>
-      </v-row>
+      <!-- EXPLORE BUTTON -->
       <v-btn
         color="success"
         dark
         block
         large
-        :to="{ name: 'exploreStation', params: { stationId: station.id } }"
+        :to="{ name: 'explorerStation', params: { stationId: station.id } }"
         class="mt-4"
-        v-if="station.summary && station.summary.images && station.summary.images.n_images > 0"
+        :disabled="station.summary.images.count === 0"
       >
         <v-icon left>mdi-earth</v-icon> Explore All Photos
       </v-btn>
@@ -240,9 +263,10 @@ import ImageDialog from '@/components/ImageDialog'
 import InfoDialog from '@/components/InfoDialog'
 
 import { hasDailyValue, timeFormat } from '@/lib/utils'
+import { variables } from '@/lib/constants'
 
 export default {
-  name: 'PreviewChart',
+  name: 'StationViewer',
   components: {
     ImageDialog,
     InfoDialog
@@ -264,8 +288,10 @@ export default {
         bottom: 20,
         images: 2
       },
-      variableId: null,
-      variable: null,
+      variable: {
+        selected: null,
+        options: []
+      },
       hover: null,
       queue: [],
       drawing: false,
@@ -280,17 +306,26 @@ export default {
   },
   computed: {
     hasData () {
-      return this.station.summary.values && this.station.summary.values.n_rows > 0
+      return this.station.summary.values.count > 0
     },
     height () {
       return this.hasData ? 150 : 40
+    },
+    variableId () {
+      return this.variable.selected ? this.variable.selected.id : null
+    },
+    variableLabel () {
+      return this.variable.selected ? this.variable.selected.label : null
+    },
+    variableLabelUnits () {
+      return this.variable.selected ? `${this.variable.selected.label} (${this.variable.selected.units})` : null
     },
     minValue () {
       if (this.dailyValues.length === 0 || this.variableId === 'FLOW_CFS') return 0
       return d3.min(this.daily, d => d.values ? d.values[this.variableId].min : null)
     },
     maxValue () {
-      if (this.dailyValues.length === 0) return 0
+      if (this.dailyValues.length === 0 || !this.variableId) return 0
       return d3.max(this.dailyValues, d => d.values ? d.values[this.variableId].max : 0)
     },
     dailyValues () {
@@ -321,15 +356,22 @@ export default {
         .range([this.height - this.margin.bottom, this.margin.top])
     },
     dailyImages () {
-      return this.daily.filter(d => !!d.images)
+      return this.daily.filter(d => !!d.image)
     }
   },
   watch: {
+    station () {
+      this.init()
+    },
     hover () {
       this.renderHover()
+    },
+    'variable.selected' () {
+      this.render()
     }
   },
   async mounted () {
+    // console.log('StationViewer:mounted', this.station)
     await this.init()
   },
   beforeDestroy () {
@@ -341,23 +383,12 @@ export default {
       const data = await this.fetchDaily()
       this.daily = Object.freeze(data)
 
-      if (!this.station.summary.values.variables) {
-        this.variableId = null
-        this.variable = null
-      } else if (this.station.summary.values.variables.includes('FLOW_CFS')) {
-        this.variableId = 'FLOW_CFS'
-        this.variable = {
-          id: 'FLOW_CFS',
-          name: 'Flow',
-          units: 'cfs'
-        }
-      } else if (this.station.summary.values.variables.includes('STAGE_FT')) {
-        this.variableId = 'STAGE_FT'
-        this.variable = {
-          id: 'STAGE_FT',
-          name: 'Stage',
-          units: 'ft'
-        }
+      if (this.station.summary.values.count === 0) {
+        this.variable.options = []
+        this.variable.selected = null
+      } else {
+        this.variable.options = variables.filter(d => this.station.summary.values.variables.map(d => d.variable_id).includes(d.id))
+        this.variable.selected = this.variable.options.find(d => d.id === this.station.summary.values.variables[0].variable_id)
       }
 
       this.svg = d3.select(this.$refs.svg)
@@ -423,6 +454,26 @@ export default {
       this.ready = true
       this.render()
     },
+    async fetchDaily () {
+      this.loading = true
+      this.error = null
+
+      try {
+        const url = `/stations/${this.station.id}/daily`
+        const response = await this.$http.public.get(url)
+        const data = response.data
+        data.forEach(d => {
+          d.dateUtc = this.$date.utc(d.date)
+          d.dateLocal = this.$date.tz(d.date, this.station.utczone)
+        })
+        return data
+      } catch (err) {
+        console.error(err)
+        this.error = err.message || err.toString()
+      } finally {
+        this.loading = false
+      }
+    },
     onMousemove (event) {
       if (this.player.playing) return
       const mouseTimestampUtc = this.$date(this.x.invert(event.offsetX)).utc()
@@ -438,7 +489,7 @@ export default {
         return item
       }
       const hoveredItem = bisectDateUtc(this.dailyImages, mouseTimestampUtc)
-      const hoveredImage = hoveredItem.images.image
+      const hoveredImage = hoveredItem.image
       const hoveredValue = hasDailyValue(hoveredItem, this.variableId) ? hoveredItem.values[this.variableId] : null
       // this.g.focus.selectAll('circle.value')
       //   .data(hoveredValue ? [hoveredValue] : [])
@@ -638,7 +689,7 @@ export default {
         this.g.yAxis.call(yAxis)
       }
 
-      const imagesLabel = this.g.images.select('text.images')
+      const imagesLabel = this.g.yAxis.select('text.images')
       if (imagesLabel.empty()) {
         this.g.yAxis.append('text')
           .attr('class', 'images')
@@ -660,58 +711,59 @@ export default {
           .attr('font-size', 12)
       }
       this.g.yAxis.select('text.variable')
-        .text(this.variable ? `Observed Daily Mean ${this.variable.name} (${this.variable.units})` : '')
+        .text(`Observed Daily Mean ${this.variableLabelUnits}`)
+        .attr('visibility', !this.hasData ? 'hidden' : 'visible')
 
       this.g.yAxis.selectAll('g.tick')
-        .attr('visibility', !this.variableId ? 'hidden' : 'visible')
+        .attr('visibility', !this.hasData ? 'hidden' : 'visible')
       this.g.yAxis.selectAll('g.tick')
-        .attr('visibility', !this.variableId ? 'hidden' : 'visible')
+        .attr('visibility', !this.hasData ? 'hidden' : 'visible')
     },
     renderDaily () {
-      if (this.variableId) {
-        const valueChunks = []
-        this.dailyValues.forEach((d, i) => {
-          if (i === 0) {
+      // if (this.variable.selected) {
+      const valueChunks = []
+      this.dailyValues.forEach((d, i) => {
+        if (i === 0) {
+          valueChunks.push([d])
+        } else {
+          if (d.dateUtc.diff(this.dailyValues[i - 1].dateUtc, 'day') > 1) {
             valueChunks.push([d])
           } else {
-            if (d.dateUtc.diff(this.dailyValues[i - 1].dateUtc, 'day') > 1) {
-              valueChunks.push([d])
-            } else {
-              valueChunks[valueChunks.length - 1].push(d)
-            }
+            valueChunks[valueChunks.length - 1].push(d)
           }
-        })
+        }
+      })
 
-        const line = d3.line()
-          .defined(d => hasDailyValue(d, this.variableId))
-          .curve(d3.curveStep)
-          .x(d => this.x(d.dateUtc))
-          .y(d => this.y(d.values[this.variableId].mean))
+      const line = d3.line()
+        .defined(d => hasDailyValue(d, this.variableId))
+        .curve(d3.curveStep)
+        .x(d => this.x(d.dateUtc))
+        .y(d => this.y(d.values[this.variableId].mean))
 
-        const area = d3.area()
-          .defined(d => hasDailyValue(d, this.variableId))
-          .curve(d3.curveStep)
-          .x(d => this.x(d.dateUtc))
-          .y0(d => this.y(d.values[this.variableId].min))
-          .y1(d => this.y(d.values[this.variableId].max))
+      const area = d3.area()
+        .defined(d => hasDailyValue(d, this.variableId))
+        .curve(d3.curveStep)
+        .x(d => this.x(d.dateUtc))
+        .y0(d => this.y(d.values[this.variableId].min))
+        .y1(d => this.y(d.values[this.variableId].max))
 
-        this.g.values.selectAll('path.mean')
-          .data(valueChunks)
-          .join('path')
-          .attr('class', 'mean')
-          .attr('fill', 'none')
-          .attr('stroke', 'steelblue')
-          .attr('stroke-width', '2px')
-          .attr('d', line)
+      this.g.values.selectAll('path.mean')
+        .data(valueChunks)
+        .join('path')
+        .attr('class', 'mean')
+        .attr('fill', 'none')
+        .attr('stroke', 'steelblue')
+        .attr('stroke-width', '2px')
+        .attr('d', line)
 
-        this.g.values.selectAll('path.range')
-          .data(valueChunks)
-          .join('path')
-          .attr('class', 'range')
-          .attr('fill', 'gray')
-          .attr('opacity', 0.5)
-          .attr('d', area)
-      }
+      this.g.values.selectAll('path.range')
+        .data(valueChunks)
+        .join('path')
+        .attr('class', 'range')
+        .attr('fill', 'gray')
+        .attr('opacity', 0.5)
+        .attr('d', area)
+      // }
 
       this.g.images.selectAll('circle')
         .data(this.dailyImages)
@@ -724,26 +776,6 @@ export default {
         .attr('r', this.imageRadius)
 
       this.g.noImages.attr('visibility', this.dailyImages.length > 0 ? 'hidden' : 'visible')
-    },
-    async fetchDaily () {
-      this.loading = true
-      this.error = null
-
-      try {
-        const url = `/stations/${this.station.id}/daily`
-        const response = await this.$http.public.get(url)
-        const data = response.data
-        data.forEach(d => {
-          d.dateUtc = this.$date.utc(d.date)
-          d.dateLocal = this.$date.tz(d.date, this.station.utczone)
-        })
-        return data
-      } catch (err) {
-        console.error(err)
-        this.error = err.message || err.toString()
-      } finally {
-        this.loading = false
-      }
     },
     async showImage (image) {
       if (!image || !image.id) return
@@ -777,7 +809,7 @@ export default {
       const row = this.dailyImages[i]
       this.showHover({
         dateUtc: row.dateUtc,
-        image: row.images.image,
+        image: row.image,
         value: hasDailyValue(row, this.variableId) ? row.values[this.variableId] : null
       })
 

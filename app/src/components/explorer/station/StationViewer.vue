@@ -484,6 +484,7 @@
 
 <script>
 import { interpolateValuesAtTimestamp } from '@/lib/utils'
+import { variables } from '@/lib/constants'
 
 import ImageDialog from '@/components/ImageDialog'
 import InfoDialog from '@/components/InfoDialog'
@@ -530,9 +531,9 @@ export default {
       return this.station.summary.values && this.station.summary.values.n_rows > 0
     },
     variableOptions () {
-      const options = [
+      let options = [
         {
-          value: null,
+          id: null,
           label: 'None (Photos Only)',
           name: 'None',
           units: null
@@ -540,28 +541,17 @@ export default {
       ]
       if (!this.station || !this.station.summary.values || this.station.summary.values.n_rows === 0) {
         return options
-      }
-      if (this.station.summary.values.variables.includes('FLOW_CFS')) {
-        options.push({
-          value: 'FLOW_CFS',
-          label: 'Flow (cfs)',
-          name: 'Flow',
-          units: 'cfs'
-        })
-      }
-      if (this.station.summary.values.variables.includes('STAGE_FT')) {
-        options.push({
-          value: 'STAGE_FT',
-          label: 'Stage (ft)',
-          name: 'Stage',
-          units: 'ft'
-        })
+      } else {
+        options = [
+          ...options,
+          ...this.station.summary.values.variables.map(d => variables.find(v => v.id === d.variable_id))
+        ]
       }
       return options
     },
     variableId () {
-      if (!this.variable.selected || !this.variable.selected.value) return null
-      return this.variable.selected.value
+      if (!this.variable.selected || !this.variable.selected.id) return null
+      return this.variable.selected.id
     },
     focusUtc () {
       if (!this.focus) return this.focus
@@ -589,13 +579,13 @@ export default {
   },
   methods: {
     autoselectVariable () {
-      const values = this.variableOptions.map(d => d.value)
+      const values = this.variableOptions.map(d => d.id)
       if (values.includes('FLOW_CFS')) {
-        this.variable.selected = this.variableOptions.find(d => d.value === 'FLOW_CFS')
-      } else if (values.includes('STAGE_FT')) {
-        this.variable.selected = this.variableOptions.find(d => d.value === 'STAGE_FT')
+        this.variable.selected = this.variableOptions.find(d => d.id === 'FLOW_CFS')
+      } else if (values && values.length > 0) {
+        this.variable.selected = this.variableOptions.find(d => d.id === values[0])
       } else {
-        this.variable.selected = this.variableOptions.find(d => d.value === null)
+        this.variable.selected = this.variableOptions.find(d => d.id === null)
       }
     },
     async fetchDaily () {

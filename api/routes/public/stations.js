@@ -5,9 +5,11 @@ const {
   attachStation,
   getPublicStations,
   getStation,
-  getStationDaily,
   getStationImages,
-  getStationValues
+  getStationValues,
+  getStationDaily,
+  getStationDailyImages,
+  getStationDailyValues
 } = require('../../controllers/stations')
 const {
   attachDataset,
@@ -37,6 +39,14 @@ router.route('/:stationId')
 router.route('/:stationId/daily')
   .all(asyncHandler(attachStation))
   .get(asyncHandler(getStationDaily))
+
+router.route('/:stationId/daily/values')
+  .all(asyncHandler(attachStation))
+  .get(asyncHandler(getStationDailyValues))
+
+router.route('/:stationId/daily/images')
+  .all(asyncHandler(attachStation))
+  .get(asyncHandler(getStationDailyImages))
 
 router.route('/:stationId/images')
   .all(asyncHandler(attachStation))

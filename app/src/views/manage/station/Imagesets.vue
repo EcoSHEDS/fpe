@@ -145,15 +145,7 @@
             </template>
             <!-- eslint-disable-next-line vue/valid-v-slot -->
             <template v-slot:item.n_images="{ item }">
-              {{ (+item.n_images).toLocaleString() }}
-            </template>
-            <!-- eslint-disable-next-line vue/valid-v-slot -->
-            <template v-slot:item.actions="{ item }">
-              <v-icon
-                small
-                @click="deleteImageset(item)">
-                mdi-delete
-              </v-icon>
+              {{ item.n_images !== null ? (+item.n_images).toLocaleString() : '' }}
             </template>
             <!-- eslint-disable-next-line vue/valid-v-slot -->
             <template v-slot:item.status="{ item }">

@@ -365,13 +365,14 @@
                         <v-row v-for="(variable, i) in values.variables" :key="i">
                           <v-col cols="12">
                             <div class="elevation-2 pa-4">
-                              <div class="text-h6 d-flex mb-8">
+                              <div class="text-h6 d-flex mb-0">
                                 Variable #{{i + 1}}
                                 <v-spacer></v-spacer>
                                 <v-btn icon small @click="removeVariable(i)" :disabled="i === 0" v-if="i > 0">
                                   <v-icon>mdi-close</v-icon>
                                 </v-btn>
                               </div>
+                              <v-divider class="mb-4"></v-divider>
                               <v-row>
                                 <v-col cols="12" md="6">
                                   <v-select
@@ -407,7 +408,7 @@
                                     item-text="label"
                                     outlined
                                     label="Select units"
-                                    :hint="variable.variable.selected ? `Note: values will be converted to ${variable.variable.selected.units}.`: null"
+                                    :hint="variable.variable.selected && variable.variable.selected.unitOptions.length > 1 ? `Note: values will be converted to ${variable.variable.selected.units}.`: null"
                                     :persistent-hint="!!variable.variable.selected"
                                     return-object
                                     clearable
@@ -423,6 +424,11 @@
                                     clearable
                                     hide-details
                                   ></v-select>
+                                </v-col>
+                              </v-row>
+                              <v-row v-if="variable.variable.selected && variable.variable.selected.message">
+                                <v-col cols="12">
+                                  <Alert type="warning" class="font-weight-bold body-1 mb-0">{{ variable.variable.selected.message }}</Alert>
                                 </v-col>
                               </v-row>
                             </div>

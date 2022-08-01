@@ -53,6 +53,7 @@ export const variables = [
     id: 'PRESSURE_KPA',
     label: 'Pressure',
     units: 'kPa',
+    message: 'Pressure values must be already corrected for changes in atmospheric pressure',
     unitOptions: [
       {
         id: 'KPA',
@@ -90,6 +91,7 @@ export const variables = [
     id: 'SPCOND_USCM25',
     label: 'Specific Conductivity',
     units: 'uS/cm @ 25 degC',
+    message: 'Conductivity must be temperature-corrected to 25 degC',
     unitOptions: [
       {
         id: 'USCM25',
@@ -134,6 +136,19 @@ export const variables = [
         label: 'degF',
         scale: 5 / 9,
         offset: -32
+      }
+    ]
+  },
+  {
+    id: 'OTHER',
+    label: 'Other Variable',
+    units: 'unknown',
+    unitOptions: [
+      {
+        id: 'UNKNOWN',
+        label: 'unknown',
+        scale: 1,
+        offset: 0
       }
     ]
   }

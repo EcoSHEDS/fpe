@@ -48,25 +48,22 @@
               <!-- INFO -->
               <v-col cols="12" md="4">
                 <v-sheet elevation="2" rounded style="height:100%">
-                  <StationSummary :station="station"></StationSummary>
+                  <StationInfo :station="station"></StationInfo>
                 </v-sheet>
               </v-col>
 
               <!-- DATA -->
               <v-col cols="12" md="8">
                 <v-sheet elevation="2" rounded style="height:100%" class="pt-4">
-                  <v-alert
+                  <Alert
+                    v-if="station.summary.images.count === 0"
                     type="error"
-                    text
-                    colored-border
-                    border="left"
-                    class="body-2 mx-4"
-                    v-if="!station.summary || !station.summary.images || station.summary.images.n_images === 0"
+                    class="mx-4"
+                    title="No Photos Available"
                   >
-                    <div class="font-weight-bold body-1">No Photos Available</div>
-                    <div>This station does not have any photos. Please go back to the <router-link :to="{ name: 'explorer' }">stations map</router-link> and select a different station.</div>
-                  </v-alert>
-                  <StationCharts :station="station" v-else></StationCharts>
+                    This station does not have any photos. Please go back to the <router-link :to="{ name: 'explorer' }">stations map</router-link> and select a different station.
+                  </Alert>
+                  <StationViewer v-else :station="station"></StationViewer>
                 </v-sheet>
               </v-col>
             </v-row>
@@ -78,14 +75,14 @@
 </template>
 
 <script>
-import StationSummary from '@/components/explorer/StationSummary'
-import StationCharts from '@/components/explorer/StationCharts'
+import StationInfo from '@/components/explorer/station/StationInfo'
+import StationViewer from '@/components/explorer/station/StationViewer'
 
 export default {
   name: 'ExplorerStation',
   components: {
-    StationSummary,
-    StationCharts
+    StationInfo,
+    StationViewer
   },
   data: () => ({
     loading: true,
@@ -103,22 +100,6 @@ export default {
         const response = await this.$http.public.get(`/stations/${this.$route.params.stationId}`)
         this.station = response.data
         this.station.provisional = this.provisionalAffiliations.includes(this.station.affiliation_code)
-        this.station.stats = {
-          data: {
-            days: (Math.random() < 0.5) * Math.floor(Math.random() * 10000),
-            start: null,
-            end: null
-          },
-          images: {
-            count: Math.floor(Math.random() * 10000),
-            start: 'Aug 1, 2019',
-            end: 'Sep 30, 2020'
-          }
-        }
-        if (this.station.stats.data.days > 0) {
-          this.station.stats.data.start = 'Aug 1, 2019'
-          this.station.stats.data.end = 'Sep 30, 2020'
-        }
       } catch (err) {
         console.error(err)
         this.error = err.message || err.toString()

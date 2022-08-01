@@ -98,7 +98,7 @@ function createSeries (data, { timestamp, variables }, { timezone }) {
   return series
 }
 
-async function processDataset (id, dryRun) {
+async function processDataset (id, { dryRun }) {
   if (dryRun) console.log('dryRun: on')
   console.log(`processing dataset (id=${id})`)
 
@@ -175,17 +175,53 @@ async function processDataset (id, dryRun) {
   return await Dataset.query().findById(id).withGraphFetched('series')
 }
 
-module.exports = async function (id, { dryRun }) {
-  try {
-    await processDataset(id, dryRun)
-  } catch (e) {
-    console.log(`failed (id=${id}): ${e.message || e.toString()}`)
-    console.error(e)
-    await Dataset.query()
-      .patch({
+async function processDatasets (ids, options) {
+  let datasets = []
+  if (options.all) {
+    datasets = await Dataset.query().where('status', 'CREATED')
+  } else {
+    datasets = await Dataset.query().findByIds(ids.map(id => +id))
+  }
+
+  if (datasets.length === 0) {
+    throw new Error('No datasets found')
+  }
+
+  const success = []
+  const failed = []
+  for (let i = 0; i < datasets.length; i++) {
+    const dataset = datasets[i]
+
+    try {
+      await processDataset(dataset.id, options)
+      success.push(dataset)
+    } catch (e) {
+      await dataset.$query().patch({
         status: 'FAILED',
         error_message: e.message || e.toString()
       })
-      .findById(id)
+      failed.push({
+        error: e,
+        dataset
+      })
+    }
+  }
+
+  return { success, failed }
+}
+
+module.exports = async function (ids, options) {
+  try {
+    const { success, failed } = await processDatasets(ids, options)
+    console.log(`finished: success=${success.length} failed=${failed.length}`)
+    success.forEach(d => {
+      console.log(`success: ${d.id}`)
+    })
+    failed.forEach(d => {
+      console.log(`failed: ${d.id} (error=${d.error.message || d.error.toString()})`)
+    })
+  } catch (e) {
+    console.log(`failed: ${e.message || e.toString()}`)
+    throw e
   }
 }

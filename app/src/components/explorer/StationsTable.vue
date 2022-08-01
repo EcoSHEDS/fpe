@@ -83,22 +83,22 @@
       {{ item.name | truncate(40) }}
     </template>
     <!-- eslint-disable-next-line vue/valid-v-slot -->
-    <template v-slot:item.summary.images.n_images="{ item }">
-      <span v-if="item.summary && item.summary.images && item.summary.images.n_images > 0">
-        {{ item.summary.images.n_images.toLocaleString() }}
+    <template v-slot:item.images.count="{ item }">
+      <span v-if="item.images.count > 0">
+        {{ item.images.count.toLocaleString() }}
       </span>
       <span v-else>0</span>
     </template>
     <!-- eslint-disable-next-line vue/valid-v-slot -->
-    <template v-slot:item.summary.images.period="{ item }">
-      <span v-if="item.summary && item.summary.images && item.summary.images.n_images > 0">
-        {{ item.summary.images.start_date | timestampFormat('ll') }} &#8211;
-        {{ item.summary.images.end_date | timestampFormat('ll') }}
+    <template v-slot:item.images.period="{ item }">
+      <span v-if="item.images.count > 0">
+        {{ item.images.start_date | timestampFormat('ll') }} &#8211;
+        {{ item.images.end_date | timestampFormat('ll') }}
       </span>
     </template>
     <!-- eslint-disable-next-line vue/valid-v-slot -->
-    <template v-slot:item.hasValues="{ item }">
-      <v-icon v-if="item.hasValues">mdi-check-circle</v-icon>
+    <template v-slot:item.variables="{ item }">
+      <v-icon v-if="item.variables.length > 0">mdi-check-circle</v-icon>
       <v-icon v-else>mdi-circle-outline</v-icon>
     </template>
     <!-- eslint-disable-next-line vue/valid-v-slot -->
@@ -137,20 +137,20 @@ export default {
         },
         {
           text: '# Photos',
-          value: 'summary.images.n_images',
+          value: 'images.count',
           align: 'center',
           width: 120
         },
         {
           text: 'Period',
-          value: 'summary.images.period',
+          value: 'images.period',
           align: 'center',
           sortable: false,
           width: 250
         },
         {
           text: 'Has Obs. Data',
-          value: 'hasValues',
+          value: 'variables',
           align: 'center',
           sortable: true,
           width: 140
@@ -184,8 +184,8 @@ export default {
       const filtered = this.stations
         .filter(d => (!this.filters.affiliation || d.affiliation_code === this.filters.affiliation))
         .filter(d => (!this.filters.search || d.name.toLowerCase().includes(this.filters.search.toLowerCase())))
-        .filter(d => (!this.filters.hasImages || (d.summary && d.summary.images && d.summary.images.n_images > 0)))
-        .filter(d => (!this.filters.hasValues || (d.summary && d.summary.values && d.summary.values.n_rows > 0)))
+        .filter(d => (!this.filters.hasImages || (d.images.count > 0)))
+        .filter(d => (!this.filters.hasValues || (d.variables.length > 0)))
         .filter(d => (!this.filters.userOnly || (this.user && d.user_id === this.user.username)))
       this.$emit('filter', filtered)
     },

@@ -6,40 +6,40 @@ const { deleteDatasetFiles } = require('./datasets')
 const { deleteImagesetFiles } = require('./imagesets')
 const { Station } = require('../db/models')
 
+const stationsQuery = Station.query()
+  .select('stations.*', 'user.affiliation_code', 'user.affiliation_name', 'i.images', 'v.variables')
+  .leftJoinRelated('user')
+  .leftJoin(
+    knex.raw('stations_summary_images as i'),
+    'stations.id',
+    'i.station_id'
+  )
+  .leftJoin(
+    knex.raw('stations_summary_variables as v'),
+    'stations.id',
+    'v.station_id'
+  )
+
 const attachStation = async (req, res, next) => {
   const row = await Station.query()
     .findById(req.params.stationId)
     .select('stations.*', 'user.affiliation_code', 'user.affiliation_name')
     .leftJoinRelated('user')
-    .withGraphFetched('[datasets, imagesets]')
+    // .withGraphFetched('[datasets, imagesets]')
   if (!row) throw createError(404, `Station (id = ${req.params.stationId}) not found`)
   res.locals.station = row
   return next()
 }
 
 const getPublicStations = async (req, res, next) => {
-  const rows = await Station.query()
-    .select('stations.*', 'user.affiliation_code', 'user.affiliation_name', 't.summary')
-    .leftJoinRelated('user')
-    .leftJoin(
-      knex.raw('(select t.station_id, json_build_object(\'values\', t.values, \'images\', t.images) as summary from f_stations_summary() t) as t'),
-      'stations.id',
-      't.station_id'
-    )
+  const rows = await stationsQuery
     .where(req.query)
     .andWhere('private', false)
   return res.status(200).json(rows)
 }
 
 const getAllStations = async (req, res, next) => {
-  const rows = await Station.query()
-    .select('stations.*', 'user.affiliation_code', 'user.affiliation_name', 't.summary')
-    .leftJoinRelated('user')
-    .leftJoin(
-      knex.raw('(select t.station_id, json_build_object(\'values\', t.values, \'images\', t.images) as summary from f_stations_summary() t) as t'),
-      'stations.id',
-      't.station_id'
-    )
+  const rows = await stationsQuery
     .where(req.query)
   return res.status(200).json(rows)
 }
@@ -62,6 +62,8 @@ const getStation = async (req, res, next) => {
     'select * from f_station_summary(?)',
     [res.locals.station.id]
   )
+  delete res.locals.station.datasets
+  delete res.locals.station.imagesets
   res.locals.station.summary = results.rows[0]
   return res.status(200).json(res.locals.station)
 }
@@ -110,6 +112,26 @@ const getStationDaily = async (req, res, next) => {
   return res.status(200).json(rows)
 }
 
+const getStationDailyValues = async (req, res, next) => {
+  const variableId = req.query.variableId
+  if (!variableId) throw createError(400, 'Query parameter \'variableId\' missing')
+  const result = await knex.raw(
+    'select * from f_station_daily_values(?, ?)',
+    [res.locals.station.id, variableId]
+  )
+  const rows = result.rows
+  return res.status(200).json(rows)
+}
+
+const getStationDailyImages = async (req, res, next) => {
+  const result = await knex.raw(
+    'select * from f_station_daily_images(?)',
+    [res.locals.station.id]
+  )
+  const rows = result.rows
+  return res.status(200).json(rows)
+}
+
 const getStationImages = async (req, res, next) => {
   const result = await knex.raw(
     'select * from f_station_images(?,?,?)',
@@ -138,7 +160,10 @@ module.exports = {
   putStation,
   deleteStation,
 
-  getStationDaily,
   getStationImages,
-  getStationValues
+  getStationValues,
+
+  getStationDaily,
+  getStationDailyValues,
+  getStationDailyImages
 }

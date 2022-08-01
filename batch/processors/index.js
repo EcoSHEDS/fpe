@@ -1,2 +1,2 @@
 exports.processImageset = require('./imageset')
-exports.processDataset = require('./dataset')
+exports.processDatasets = require('./dataset')

@@ -6,7 +6,7 @@
 
           <v-toolbar flat dense color="grey lighten-3">
             <v-toolbar-title class="text-h5">
-              Photo Explorer | <span class="text-subtitle-1">Find a Station</span>
+              Photo Explorer | <span class="text-subtitle-1">Stations Map</span>
             </v-toolbar-title>
           </v-toolbar>
 
@@ -28,7 +28,7 @@
               <v-col cols="12" md="6">
                 <v-sheet elevation="2" rounded class="pa-2">
                   <div v-if="loading" class="text-center grey lighten-2 py-8">
-                    <div class="text-h5 mb-8 grey--text">Loading stations...</div>
+                    <div class="text-h5 mb-8">Loading stations...</div>
                     <v-progress-circular
                       color="grey"
                       indeterminate
@@ -36,39 +36,15 @@
                       width="4"
                     ></v-progress-circular>
                   </div>
-                  <div v-else-if="error">
-                    <v-alert
-                      type="error"
-                      text
-                      colored-border
-                      border="left"
-                      class="body-2 mb-0"
-                    >
-                      <div class="font-weight-bold body-1">Failed to Get Stations</div>
-                      <div>{{ error }}</div>
-                    </v-alert>
-                  </div>
-                  <StationPreview
+                  <Alert v-else-if="error" type="error" class="mb-0" title="Failed to Get Stations">{{ error }}</Alert>
+                  <StationDetail
                     v-else-if="stations.selected"
                     :station-id="stations.selected.id"
                     @close="select"
-                  ></StationPreview>
-                  <div v-else>
-                    <v-container v-if="!stations.selected">
-                      <v-alert
-                        type="info"
-                        text
-                        colored-border
-                        border="left"
-                        class="body-2 mb-0"
-                        :icon="$vuetify.breakpoint.mobile ? 'mdi-chevron-up-circle' : 'mdi-chevron-left-circle'"
-                      >
-                        <div class="body-1">
-                          Select a station on the map or from the table below
-                        </div>
-                      </v-alert>
-                    </v-container>
-                  </div>
+                  ></StationDetail>
+                  <Alert v-else type="info" class="mb-0">
+                    <div class="body-1">Select a station on the map or from the table below</div>
+                  </Alert>
                 </v-sheet>
               </v-col>
             </v-row>
@@ -99,16 +75,16 @@
 import { ascending } from 'd3'
 import { mapGetters } from 'vuex'
 
-import StationsMap from '@/components/StationsMap'
-import StationsTable from '@/components/StationsTable'
-import StationPreview from '@/components/StationPreview'
+import StationsMap from '@/components/explorer/StationsMap'
+import StationsTable from '@/components/explorer/StationsTable'
+import StationDetail from '@/components/explorer/StationDetail'
 
 export default {
-  name: 'ExplorerMap',
+  name: 'explorer',
   components: {
     StationsMap,
     StationsTable,
-    StationPreview
+    StationDetail
   },
   data: () => ({
     loading: true,
@@ -144,11 +120,6 @@ export default {
           stations = response.data
         }
         this.stations.all = stations.sort((a, b) => ascending(a.id, b.id))
-
-        this.stations.all.forEach(d => {
-          d.hasImages = d.summary && d.summary.images && d.summary.images.n_images > 0
-          d.hasValues = d.summary && d.summary.values && d.summary.values.n_rows > 0
-        })
         this.stations.filtered = this.stations.all
       } catch (err) {
         console.error(err)

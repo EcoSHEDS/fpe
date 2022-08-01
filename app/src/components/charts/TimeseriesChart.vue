@@ -32,8 +32,8 @@ export default {
   },
   computed: {
     variableId () {
-      if (!this.variable || !this.variable.value) return null
-      return this.variable.value
+      if (!this.variable || !this.variable.id) return null
+      return this.variable.id
     },
     minValue () {
       if (this.dailyValues.length === 0 || !this.variableId || this.variableId === 'FLOW_CFS') return 0
@@ -56,7 +56,7 @@ export default {
       return dateExtent
     },
     dailyImages () {
-      return this.daily.filter(d => !!d.images)
+      return this.daily.filter(d => !!d.image)
     },
     focusUtc () {
       if (!this.focus) return this.focus
@@ -71,7 +71,7 @@ export default {
       return this.focusDaily.filter(d => d.values && d.values[this.variableId])
     },
     focusDailyImages () {
-      return this.focusDaily.filter(d => !!d.images)
+      return this.focusDaily.filter(d => !!d.image)
     },
     hasValues () {
       return this.mode === 'daily'
@@ -212,7 +212,7 @@ export default {
           return item
         }
         const hoveredItem = bisectDateUtc(this.focusDailyImages, mouseTimestampUtc)
-        const hoveredImage = hoveredItem.images.image
+        const hoveredImage = hoveredItem.image
         const hoveredValue = hasDailyValue(hoveredItem, this.variableId) ? hoveredItem.values[this.variableId] : null
 
         this.emitHover({

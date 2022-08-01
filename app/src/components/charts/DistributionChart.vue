@@ -59,8 +59,8 @@ export default {
   },
   computed: {
     variableId () {
-      if (!this.variable || !this.variable.value) return null
-      return this.variable.value
+      if (!this.variable || !this.variable.id) return null
+      return this.variable.id
     },
     focusUtc () {
       if (!this.focus) return this.focus
@@ -121,7 +121,7 @@ export default {
           .map(d => ({
             date: d.date,
             dateUtc: d.dateUtc,
-            image: d.images.image,
+            image: d.image,
             value: d.values[this.variableId],
             p: d.p
           }))
@@ -354,7 +354,7 @@ export default {
       this.g.xAxis.select('text.label')
         .text(
           this.distributionValues.length > 0
-            ? `${this.mode === 'daily' ? 'Daily Mean Observed ' : 'Observed '}${this.variable.label}`
+            ? `${this.mode === 'daily' ? 'Daily Mean Observed ' : 'Observed '}${this.variable.label} (${this.variable.units})`
             : ''
         )
 

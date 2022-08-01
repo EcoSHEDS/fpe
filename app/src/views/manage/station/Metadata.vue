@@ -147,7 +147,7 @@
 <script>
 import ConfirmDialog from '@/components/ConfirmDialog'
 import StationForm from '@/components/forms/StationForm'
-import StationsMap from '@/components/StationsMap'
+import StationsMap from '@/components/explorer/StationsMap'
 import evt from '@/events'
 
 export default {

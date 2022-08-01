@@ -44,7 +44,7 @@
       Photos Summary
     </div>
     <v-divider></v-divider>
-    <div class="body-2 ma-2 font-weight-bold" v-if="!station.summary.images || station.summary.images.n_images == 0">
+    <div class="body-2 ma-2 font-weight-bold" v-if="!station.summary.images || station.summary.images.count == 0">
       No Photos Available
     </div>
     <div v-else>
@@ -63,7 +63,7 @@
             <td class="text-right grey--text text--darken-2">
               # Photos
             </td>
-            <td class="font-weight-bold">{{ station.summary.images.n_images.toLocaleString() }}</td>
+            <td class="font-weight-bold">{{ station.summary.images.count.toLocaleString() }}</td>
           </tr>
           <tr>
             <td class="text-right grey--text text--darken-2">
@@ -138,7 +138,7 @@
       Dataset Summary
     </div>
     <v-divider></v-divider>
-    <div class="body-2 ma-2 font-weight-bold" v-if="!station.summary.values || station.summary.values.n_rows == 0">
+    <div class="body-2 ma-2 font-weight-bold" v-if="station.summary.values.count == 0">
       No Data Available
     </div>
     <div v-else>
@@ -157,7 +157,7 @@
             <td class="text-right grey--text text--darken-2">
               Variables
             </td>
-            <td class="font-weight-bold">{{ station.summary.values.variables.join(', ') }}</td>
+            <td class="font-weight-bold">{{ station.summary.values.variables.map(d => d.variable_id).join(', ') }}</td>
           </tr>
           <tr>
             <td class="text-right grey--text text--darken-2">
@@ -248,10 +248,10 @@
 <script>
 import { mapGetters } from 'vuex'
 
-import StationsMap from '@/components/StationsMap'
+import StationsMap from '@/components/explorer/StationsMap'
 
 export default {
-  name: 'StationSummary',
+  name: 'StationInfo',
   props: ['station'],
   components: {
     StationsMap

@@ -24,8 +24,8 @@ export default {
   },
   computed: {
     variableId () {
-      if (!this.variable || !this.variable.value) return null
-      return this.variable.value
+      if (!this.variable || !this.variable.id) return null
+      return this.variable.id
     },
     maxValue () {
       if (!this.values.length === 0 || !this.variableId) return 0
@@ -48,7 +48,7 @@ export default {
         .range([this.height - this.margin.bottom, this.margin.top])
     },
     dailyImages () {
-      return this.daily ? this.daily.filter(d => !!d.images) : []
+      return this.daily ? this.daily.filter(d => !!d.image) : []
     },
     imagePeriods () {
       if (!this.daily || this.daily.length === 0) return []
@@ -224,7 +224,7 @@ export default {
             .attr('fill', 'currentColor')
         }
         this.g.yAxis.select('text.variable')
-          .text(this.variable.value ? `Obs. Daily Mean ${this.variable.label}` : '')
+          .text(this.variableId ? `Obs. Daily Mean ${this.variable.label} (${this.variable.units})` : '')
 
         this.g.yAxis.call(yAxis)
       } else {

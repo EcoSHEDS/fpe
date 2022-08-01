@@ -9,7 +9,7 @@ export function hasDailyValue (d, variableId) {
 }
 
 export function hasDailyImage (d) {
-  return d.images && d.images.image
+  return !!d.image
 }
 
 const timestampBisector = d3.bisector(d => d.timestamp).left
