@@ -60,7 +60,10 @@ export default {
     },
     focusUtc () {
       if (!this.focus) return this.focus
-      return this.focus.map(d => this.$date.tz(d, this.station.timezone).utc(true))
+      const focusDates = this.focus.map(d => this.$date(d))
+      const utcOffsets = focusDates.map(d => d.tz(this.station.timezone).utcOffset() / 60)
+      const focusUtcDates = [focusDates[0].add(utcOffsets[0], 'hour'), focusDates[1].add(utcOffsets[1], 'hour')]
+      return focusUtcDates
     },
     focusDaily () {
       if (!this.daily || !this.focusUtc) return []
@@ -154,7 +157,8 @@ export default {
           .attr('clip-path', `url(#${this.clipId})`),
         images: this.svg.append('g')
           .attr('transform', 'translate(0,2)')
-          .attr('class', 'images'),
+          .attr('class', 'images')
+          .attr('clip-path', `url(#${this.clipId})`),
         focus: this.svg.append('g')
           .attr('class', 'focus'),
         noImages: this.svg.append('g')
@@ -378,16 +382,17 @@ export default {
             .attr('dy', '0.3em')
             .text(d => d.text)
 
-          // this.g.legend
-          //   .append('text')
-          //   .attr('font-size', 12)
-          //   .attr('font-family', 'sans-serif')
-          //   .attr('text-anchor', 'start')
-          //   .attr('fill', 'currentColor')
-          //   .attr('x', values[1] + 5)
-          //   .attr('y', -40)
-          //   .attr('dy', '0.3em')
-          //   .text('Daily')
+          this.g.legend
+            .append('text')
+            .attr('font-size', 12)
+            .attr('font-family', 'sans-serif')
+            .attr('text-anchor', 'start')
+            .attr('text-decoration', 'underline')
+            .attr('fill', 'currentColor')
+            .attr('x', 10)
+            .attr('y', -40)
+            .attr('dy', '0.3em')
+            .text('Obs. Daily')
         } else if (this.mode === 'instantaneous') {
           this.g.legend.selectAll('path.instantaneous')
             .data([values])
@@ -399,7 +404,7 @@ export default {
             .attr('d', line)
 
           this.g.legend.selectAll('text')
-            .data([{ value: 0, text: this.variable.name }])
+            .data([{ value: -7, text: 'Obs.' }, { value: 7, text: 'Value' }])
             .join('text')
             .attr('font-size', 12)
             .attr('font-family', 'sans-serif')
@@ -419,11 +424,11 @@ export default {
         .tickFormat(timeFormat)
       this.g.xAxis.call(xAxis)
 
-      const imagesLabel = this.g.images.select('text.images')
+      const imagesLabel = this.g.yAxis.select('text.images')
       if (imagesLabel.empty()) {
-        this.g.images.append('text')
+        this.g.yAxis.append('text')
           .attr('class', 'images')
-          .attr('transform', `translate(0,${this.imageRadius - 1})`)
+          .attr('transform', `translate(${-this.margin.left},${this.imageRadius - 1})`)
           .attr('fill', 'currentColor')
           .attr('dy', '0.5em')
           .attr('font-size', 12)
@@ -449,7 +454,7 @@ export default {
         }
 
         this.g.yAxis.select('text.variable')
-          .text(`Obs. ${this.mode === 'daily' ? 'Daily ' : ''}${this.variable.label}`)
+          .text(`${this.mode === 'daily' ? 'Daily' : 'Instantaneous'} ${this.variable.label}` + (this.variable.id === 'OTHER' ? '' : ` (${this.variable.units})`))
       } else {
         this.g.yAxis.attr('display', 'none')
       }

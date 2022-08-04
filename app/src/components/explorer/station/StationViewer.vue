@@ -109,16 +109,16 @@
                   </tr>
                   <tr v-if="hover.value">
                     <td class="py-2 pl-0">
-                      <div class="text-subtitle-2 text--secondary">Daily Mean (Range) of Obs. {{ variable.selected.name }}</div>
+                      <div class="text-subtitle-2 text--secondary">Daily Mean (Range) of Obs. {{ variable.selected.label }}</div>
                       <div class="font-weight-bold">
-                        {{ hover.value.mean | d3Format('.3r') }} ({{ hover.value.min | d3Format('.3r') }} - {{ hover.value.max | d3Format('.3r') }}) {{ variable.selected.units }}
+                        {{ hover.value.mean | d3Format('.3r') }} ({{ hover.value.min | d3Format('.3r') }} - {{ hover.value.max | d3Format('.3r') }}) {{ variable.selected.id === 'OTHER' ? '' : variable.selected.units }}
                       </div>
                     </td>
                   </tr>
                   <tr v-if="isFinite(hover.p)">
                     <td class="py-2 pl-0">
                       <div class="text-subtitle-2 text--secondary">
-                        Percentile of Daily Mean {{ variable.selected.name }}
+                        Percentile of Daily Mean {{ variable.selected.label }}
                       </div>
                       <div class="font-weight-bold">
                         {{ hover.p * 100 | d3Format('.3r') }}%
@@ -139,16 +139,16 @@
                   </tr>
                   <tr v-if="hover.value">
                     <td class="py-2 pl-0">
-                      <div class="text-subtitle-2 text--secondary">Instantaneous {{ variable.selected.name }} (Observed)</div>
+                      <div class="text-subtitle-2 text--secondary">Instantaneous {{ variable.selected.label }} (Observed)</div>
                       <div class="font-weight-bold">
-                        {{ hover.value | d3Format('.3r') }} {{ variable.selected.units }}
+                        {{ hover.value | d3Format('.3r') }} {{ variable.selected.id === 'OTHER' ? '' : variable.selected.units }}
                       </div>
                     </td>
                   </tr>
                   <tr v-if="isFinite(hover.p)">
                     <td class="py-2 pl-0">
                       <div class="text-subtitle-2 text--secondary">
-                        Percentile of Instantaneous {{ variable.selected.name }}
+                        Percentile of Instantaneous {{ variable.selected.label }}
                       </div>
                       <div class="font-weight-bold">
                         {{ hover.p * 100 | d3Format('.3r') }}%
@@ -437,7 +437,7 @@
 
         <v-divider class="my-2"></v-divider>
         <div class="text-subtitle-1 font-weight-bold text--secondary mt-2 d-flex">
-          <span>Time Period</span>
+          <span>Select a Time Period</span>
           <v-spacer></v-spacer>
           <div>
             <span class="font-weight-regular">Selected:</span>
@@ -455,7 +455,7 @@
                 x-small
                 v-bind="attrs"
                 v-on="on"
-                class="mb-1"
+                class="mt-1"
               >
                 <v-icon small>mdi-help-circle</v-icon>
               </v-btn>
@@ -531,7 +531,7 @@ export default {
       return this.station.summary.values && this.station.summary.values.n_rows > 0
     },
     variableOptions () {
-      let options = [
+      const options = [
         {
           id: null,
           label: 'None (Photos Only)',
@@ -542,10 +542,12 @@ export default {
       if (!this.station || !this.station.summary.values || this.station.summary.values.n_rows === 0) {
         return options
       } else {
-        options = [
-          ...options,
-          ...this.station.summary.values.variables.map(d => variables.find(v => v.id === d.variable_id))
-        ]
+        const stationVariableIds = this.station.summary.values.variables.map(d => d.variable_id)
+        variables.forEach(v => {
+          if (stationVariableIds.includes(v.id)) {
+            options.push(v)
+          }
+        })
       }
       return options
     },
@@ -720,14 +722,17 @@ export default {
       const url = `/stations/${this.$route.params.stationId}/images`
       const response = await this.$http.public.get(url, {
         params: {
-          start: this.$date(focus[0]).subtract(1, 'day').toISOString(),
-          end: this.$date(focus[1]).add(1, 'day').toISOString()
+          // start: this.$date(focus[0]).subtract(1, 'day').toISOString(),
+          // end: this.$date(focus[1]).add(1, 'day').toISOString()
+          start: this.$date(focus[0]).toISOString(),
+          end: this.$date(focus[1]).toISOString()
         }
       })
       const images = response.data
       images.forEach(d => {
+        d.timestampRaw = d.timestamp
         d.timestamp = this.$date(d.timestamp).tz(this.station.timezone)
-        d.timestampUtc = this.$date.utc(d.timestamp.format().substr(0, 19))
+        d.timestampUtc = this.$date(d.timestampRaw).add(d.timestamp.utcOffset() / 60, 'hour').toDate()
       })
       return images.filter(d => d.timestamp.isBetween(focus[0], focus[1], null, '[]'))
     },
@@ -743,12 +748,11 @@ export default {
       })
       const values = response.data
       values.forEach((d, i) => {
+        d.timestampRaw = d.timestamp
         d.timestamp = this.$date(d.timestamp).tz(this.station.timezone)
-        d.timestampUtc = this.$date.utc(d.timestamp.format().substr(0, 19))
+        d.timestampUtc = this.$date(d.timestampRaw).add(d.timestamp.utcOffset() / 60, 'hour')
       })
-      const start = this.$date(focus[0]).startOf('hour')
-      const end = this.$date(focus[1]).endOf('hour')
-      return values.filter(d => d.timestamp.isBetween(start, end, null, '[]'))
+      return values
     },
     async showImage (image) {
       if (!image || !image.id) return

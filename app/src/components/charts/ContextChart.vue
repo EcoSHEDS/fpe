@@ -148,14 +148,15 @@ export default {
     createBrush (init) {
       const that = this
       function brushended ({ selection }) {
-        const rangeUtc = selection ? selection.map(that.x.invert, that.x) : that.x.domain()
+        const rangeLocal = selection ? selection.map(that.x.invert, that.x) : that.x.domain()
 
         d3.select(this)
           .selectAll('path.handle--custom')
           .attr('display', d => selection ? null : 'none')
 
-        const rangeLocal = rangeUtc.map(d => that.$date.utc(d).tz(that.station.timezone, true))
-        that.$emit('brush', rangeLocal.map(d => d.toDate()))
+        const utcOffsets = rangeLocal.map(d => that.$date.tz(d, that.station.timezone).utcOffset() / 60)
+        const rangeUtc = rangeLocal.map((d, i) => that.$date(d).subtract(utcOffsets[i], 'hour'))
+        that.$emit('brush', rangeUtc.map(d => d.toDate()))
 
         that.brushSelection = selection
       }
@@ -224,7 +225,7 @@ export default {
             .attr('fill', 'currentColor')
         }
         this.g.yAxis.select('text.variable')
-          .text(this.variableId ? `Obs. Daily Mean ${this.variable.label} (${this.variable.units})` : '')
+          .text(this.variableId ? `Daily Mean ${this.variable.label}` + (this.variableId === 'OTHER' ? '' : ` (${this.variable.units})`) : '')
 
         this.g.yAxis.call(yAxis)
       } else {
@@ -250,8 +251,6 @@ export default {
         'transform',
         `translate(0,${this.height - this.margin.bottom})`
       )
-      // this.g.input.select('rect')
-      //   .attr('height', this.height - this.margin.bottom)
 
       this.createBrush()
       this.renderAxes()

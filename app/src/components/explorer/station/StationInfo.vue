@@ -31,6 +31,14 @@
         </tr>
         <tr>
           <td class="text-right grey--text text--darken-2">
+            Timezone
+          </td>
+          <td class="font-weight-bold">
+            {{ station.timezone }}
+          </td>
+        </tr>
+        <tr>
+          <td class="text-right grey--text text--darken-2">
             Affiliation
           </td>
           <td class="font-weight-bold">{{ station.affiliation_name }}</td>

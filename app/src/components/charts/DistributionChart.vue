@@ -72,7 +72,7 @@ export default {
       if (this.variableId === 'FLOW_CFS') {
         extent[0] = extent[0] * 0.9
         extent[1] = extent[1] * 1.1
-      } else if (this.variableId === 'STAGE_FT') {
+      } else {
         extent[0] = extent[0] - 0.05 * (extent[1] - extent[0])
         extent[1] = extent[1] + 0.05 * (extent[1] - extent[0])
       }
