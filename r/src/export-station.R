@@ -9,7 +9,7 @@ library(logger)
 
 args <- commandArgs(trailingOnly = TRUE)
 station_id <- parse_number(args[1])
-output_dir <- args[2]
+output_dir <- path.expand(args[2])
 
 log_info("station_id: {station_id}")
 log_info("output_dir: {output_dir}")
@@ -19,7 +19,7 @@ stopifnot(dir.exists(output_dir))
 config <- config::get()
 
 con <- DBI::dbConnect(
-  RPostgreSQL::PostgreSQL(),
+  RPostgres::Postgres(),
   host = config$db$host,
   port = config$db$port,
   dbname = config$db$database,
@@ -86,3 +86,33 @@ if (nrow(images) > 0) {
 } else {
   log_warn("no images")
 }
+
+
+# flow images -------------------------------------------------------------
+
+flow_values <- values %>%
+  filter(variable_id == "FLOW_CFS")
+
+interp_flow_values <- approxfun(flow_values$timestamp, y = flow_values$value)
+
+images_flow <- images %>%
+  mutate(
+    flow_cfs = interp_flow_values(timestamp)
+  ) %>%
+  arrange(timestamp) %>%
+  filter(!is.na(flow_cfs))
+
+p <- flow_values %>%
+  ggplot(aes(timestamp, value)) +
+  geom_line() +
+  geom_point(
+    data = images_flow,
+    aes(y = flow_cfs),
+    size = 0.25, color = "deepskyblue"
+  )
+ggsave(file.path(station_dir, "flow-images.png"), p, width = 8, height = 4)
+
+images_flow %>%
+  write_csv(file.path(station_dir, "flow-images.csv"), na = "")
+
+file.copy(file.path(station_dir, "flow-images.csv"), file.path(output_dir, paste0(station$name, ".csv")), overwrite = TRUE)

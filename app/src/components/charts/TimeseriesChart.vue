@@ -580,7 +580,7 @@ export default {
         this.emitHover({
           mode: this.mode,
           dateUtc: row.dateUtc,
-          image: row.images.image,
+          image: row.image,
           value: hasDailyValue(row, this.variableId) ? row.values[this.variableId] : null
         })
       } else if (this.mode === 'instantaneous') {

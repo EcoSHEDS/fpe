@@ -92,18 +92,20 @@
                     </div>
                   </td>
                 </tr>
-                <tr v-if="hover.value">
+                <tr v-if="variable.selected">
                   <td class="py-2 pl-0">
-                    <div class="text-subtitle-2 text--secondary">Daily Mean {{ variableLabel}} (Observed)</div>
-                    <div class="font-weight-bold">
+                    <div class="text-subtitle-2 text--secondary">Obs. Daily Mean {{ variableLabel }}</div>
+                    <div v-if="hover.value" class="font-weight-bold">
                       {{ hover.value.mean | d3Format('.3r') }}
-                      {{ variable.selected ? variable.selected.units : '' }}
+                      {{ variable.selected.id !== 'OTHER' ? variable.selected.units : '' }}
+                    </div>
+                    <div v-else class="font-weight-bold">
+                      N/A
                     </div>
                   </td>
                 </tr>
               </tbody>
             </v-simple-table>
-            <v-divider></v-divider>
           </div>
           <div v-else>
             <v-alert
@@ -125,10 +127,11 @@
         </v-col>
       </v-row>
       <!-- CHART -->
+      <v-divider class="mt-2 mb-4"></v-divider>
       <v-row>
         <v-col cols="12">
           <v-row align="end" class="mb-0">
-            <v-col cols="6">
+            <v-col cols="7">
               <div class="text-h6 font-weight-bold text--secondary">
               Daily Photos
                 <v-tooltip bottom max-width="400px" style="z-index:5002">
@@ -154,7 +157,7 @@
                 </v-tooltip>
               </div>
             </v-col>
-            <v-col cols="6">
+            <v-col cols="5">
               <v-select
                 v-show="variable.options.length > 0"
                 :items="variable.options"
@@ -318,11 +321,13 @@ export default {
       return this.variable.selected ? this.variable.selected.label : null
     },
     variableLabelUnits () {
-      return this.variable.selected ? `${this.variable.selected.label} (${this.variable.selected.units})` : null
+      if (!this.variable.selected) return ''
+      if (this.variable.selected.id === 'OTHER') return this.variable.selected.label
+      return `${this.variable.selected.label} (${this.variable.selected.units})`
     },
     minValue () {
       if (this.dailyValues.length === 0 || this.variableId === 'FLOW_CFS') return 0
-      return d3.min(this.daily, d => d.values ? d.values[this.variableId].min : null)
+      return d3.min(this.dailyValues, d => d.values ? d.values[this.variableId].min : null)
     },
     maxValue () {
       if (this.dailyValues.length === 0 || !this.variableId) return 0
@@ -673,6 +678,18 @@ export default {
           .attr('y', d => d.value)
           .attr('dy', '0.3em')
           .text(d => d.text)
+
+        this.g.legend
+          .append('text')
+          .attr('font-size', 12)
+          .attr('font-family', 'sans-serif')
+          .attr('text-anchor', 'start')
+          .attr('text-decoration', 'underline')
+          .attr('fill', 'currentColor')
+          .attr('x', 10)
+          .attr('y', -40)
+          .attr('dy', '0.3em')
+          .text('Obs. Daily')
       }
     },
     renderAxes () {
@@ -711,7 +728,7 @@ export default {
           .attr('font-size', 12)
       }
       this.g.yAxis.select('text.variable')
-        .text(`Observed Daily Mean ${this.variableLabelUnits}`)
+        .text(`Observed Daily Mean ${this.variableLabel}`)
         .attr('visibility', !this.hasData ? 'hidden' : 'visible')
 
       this.g.yAxis.selectAll('g.tick')

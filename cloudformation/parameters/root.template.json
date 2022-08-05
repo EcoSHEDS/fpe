@@ -20,11 +20,7 @@
     "ParameterValue": ""
   },
   {
-    "ParameterKey": "privateSubnetIds",
-    "ParameterValue": ""
-  },
-  {
-    "ParameterKey": "publicSubnetIds",
+    "ParameterKey": "subnetIds",
     "ParameterValue": ""
   },
   {

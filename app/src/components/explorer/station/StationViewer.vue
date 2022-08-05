@@ -107,11 +107,15 @@
                       </div>
                     </td>
                   </tr>
-                  <tr v-if="hover.value">
+                  <tr v-if="variable.selected">
                     <td class="py-2 pl-0">
-                      <div class="text-subtitle-2 text--secondary">Daily Mean (Range) of Obs. {{ variable.selected.label }}</div>
-                      <div class="font-weight-bold">
-                        {{ hover.value.mean | d3Format('.3r') }} ({{ hover.value.min | d3Format('.3r') }} - {{ hover.value.max | d3Format('.3r') }}) {{ variable.selected.id === 'OTHER' ? '' : variable.selected.units }}
+                      <div class="text-subtitle-2 text--secondary">Obs. Daily Mean {{ variable.selected.label }} (Min - Max)</div>
+                      <div v-if="hover.value" class="font-weight-bold">
+                        {{ hover.value.mean | d3Format('.3r') }} {{ variable.selected.id === 'OTHER' ? '' : variable.selected.units }}
+                        ({{ hover.value.min | d3Format('.3r') }} - {{ hover.value.max | d3Format('.3r') }} {{ variable.selected.id === 'OTHER' ? '' : variable.selected.units }})
+                      </div>
+                      <div v-else class="font-weight-bold">
+                        N/A
                       </div>
                     </td>
                   </tr>
@@ -493,7 +497,7 @@ import TimeseriesChart from '@/components/charts/TimeseriesChart'
 import DistributionChart from '@/components/charts/DistributionChart'
 
 export default {
-  name: 'StationCharts',
+  name: 'StationViewer',
   props: ['station'],
   components: {
     ImageDialog,
