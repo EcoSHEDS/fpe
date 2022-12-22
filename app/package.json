@@ -19,7 +19,7 @@
     "dayjs": "^1.10.8",
     "debounce": "^1.2.1",
     "exif-parser": "^0.1.12",
-    "highcharts": "^8.2.0",
+    "highcharts": "^9.0.0",
     "highcharts-vue": "^1.4.0",
     "leaflet": "^1.7.1",
     "papaparse": "^5.3.1",
