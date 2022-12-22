@@ -14,6 +14,7 @@ import './plugins/dayjs'
 import './plugins/error-message'
 import './plugins/highcharts'
 import './plugins/leaflet'
+import './plugins/usgs'
 import './plugins/vue-filter-pretty-bytes'
 
 import '@/assets/styles.css'

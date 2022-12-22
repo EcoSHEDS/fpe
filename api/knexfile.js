@@ -1,5 +1,10 @@
 const { secretsmanager } = require('./aws')
 
+// override date parser to prevent fields of type `date` from being converted to JS Date()
+// https://github.com/brianc/node-postgres/issues/1844
+const types = require('pg').types
+types.setTypeParser(types.builtins.DATE, (val) => val)
+
 async function getCreds () {
   const secret = await secretsmanager
     .getSecretValue({

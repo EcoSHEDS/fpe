@@ -4,7 +4,7 @@ import * as rax from 'retry-axios'
 
 import { getAuthToken } from '@/lib/auth'
 
-const externalAxios = axios.create()
+export const externalAxios = axios.create()
 
 const publicAxios = axios.create({
   baseURL: `${process.env.VUE_APP_API_URL}/public`

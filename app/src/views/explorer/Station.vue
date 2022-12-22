@@ -54,7 +54,7 @@
 
               <!-- DATA -->
               <v-col cols="12" md="8">
-                <v-sheet elevation="2" rounded style="height:100%" class="pt-4">
+                <v-sheet elevation="2" rounded class="pt-4">
                   <Alert
                     v-if="station.summary.images.count === 0"
                     type="error"
@@ -63,7 +63,7 @@
                   >
                     This station does not have any photos. Please go back to the <router-link :to="{ name: 'explorer' }">stations map</router-link> and select a different station.
                   </Alert>
-                  <StationViewer v-else :station="station"></StationViewer>
+                  <NewStationViewer v-else :station="station"></NewStationViewer>
                 </v-sheet>
               </v-col>
             </v-row>
@@ -76,13 +76,13 @@
 
 <script>
 import StationInfo from '@/components/explorer/station/StationInfo'
-import StationViewer from '@/components/explorer/station/StationViewer'
+import NewStationViewer from '@/components/explorer/station/NewStationViewer'
 
 export default {
   name: 'ExplorerStation',
   components: {
     StationInfo,
-    StationViewer
+    NewStationViewer
   },
   data: () => ({
     loading: true,
