@@ -22,8 +22,8 @@
               <div>This website is primarily designed for latop or desktop computers.</div>
             </v-alert>
 
-            <v-alert color="warning" colored-border border="left" :value="true" elevation="2" class="pl-4">
-              <div class="text-h6 mb-2 pl-4"><v-icon left large color="warning">mdi-alert</v-icon> Flow Photos Wanted!</div>
+            <v-alert color="primary" colored-border border="left" :value="true" elevation="2" class="pl-4">
+              <div class="text-h6 mb-2 pl-4"><v-icon left large color="primary">mdi-alert</v-icon> Flow Photos Wanted!</div>
 
               <p class="pl-4">
                 We are currently looking for users interested in collecting and uploading timelapse photos of streams across the U.S. to support the development of deep learning models that will estimate flows from images.
@@ -44,12 +44,27 @@
             </div>
 
             <p>
-              Check out the interactive <router-link :to="{ name: 'explorer' }">Photo Explorer</router-link> to view our current database of flow photos and data and explore how streams change over time. Preliminary model results are coming soon.
+              Check out the interactive <router-link :to="{ name: 'explorer' }">Photo Explorer</router-link> to view our current database of flow photos and data and explore how streams change over time. Model integration is currently under development and expected to be ready by summer 2023.
             </p>
+
             <p>
               <strong>Do you have flow photos to contribute?</strong> <router-link :to="{ name: 'request' }">Request an account</router-link> to upload your photos and data.<br>
               <strong>Already have an account?</strong> <router-link :to="{ name: 'login' }">Log in</router-link>.
             </p>
+
+            <v-row>
+              <v-col cols="12" md="7">
+                <p>
+                  <strong>Interested in the deep learning models?</strong> Results from our preliminary models can be found in the following publication (<a href="mailto:gs-naar-lsc-ecosheds@doimspp.onmicrosoft.com">contact us</a> for a copy). A presentation by our collaborator and model developer, Dr. Amrita Gupta, can also be found at the link below.
+                </p>
+                <p class="font-italic">
+                  Gupta, A., Chang, T., Walker, J., and B. Letcher (2022). Towards Continuous Streamflow Monitoring with Time-Lapse Cameras and Deep Learning. In ACM SIGCAS/SIGCHI Conference on Computing and Sustainable Societies (COMPASS) (COMPASS '22). Association for Computing Machinery, New York, NY, USA, 353–363. <a href="https://doi.org/10.1145/3530190.3534805">https://doi.org/10.1145/3530190.3534805</a>
+                </p>
+              </v-col>
+              <v-col cols="12" md="5">
+                <v-img src="@/assets/img/gupta2022-fig4.png" alt="Figure 4 of Gupta et al (2022) showing good agreement between observed and predicted streamflow"></v-img>
+              </v-col>
+            </v-row>
 
             <v-divider class="my-4"></v-divider>
 
@@ -64,13 +79,16 @@
               <li>The second is a <span class="font-weight-bold">ranking model</span> that is trained using human annotations of pairwise image comparisons (i.e., a user is repeatedly asked which of two images has more flow). The model then learns how to sort the images from lowest to highest flow, which provides a relative measure of streamflow (i.e., rank percentile). This relative streamflow output can then be converted to estimated flow rates using an assumed flow distribution. The major benefit of this model is that it does not require any observed flow or stage data for training.</li>
             </ol>
 
-            <p>Other types of models including detecting flow/no flow, or the presence of ice are also being explored. More about these models is coming soon!</p>
+            <p>See the link to the paper above for more information and the initial results from these models. In addition, other types of models including detecting flow/no flow, or the presence of ice are also being explored. More model details coming soon!</p>
 
             <v-divider class="my-4"></v-divider>
 
             <div class="text-h6">About the Project</div>
             <p>
               The Flow Photo Explorer project is a collaboration between U.S. Environmental Protection Agency, U.S. Geological Survey, Walker Environmental Research, Conservation Science Partners, and many contributing partners. Funding was provided by U.S. Environmental Protection Agency and National Geographic Society. See <router-link :to="{ name: 'about' }">About</router-link> for more information.
+            </p>
+            <p>
+              <strong>Questions?</strong> You can reach us at <a href="mailto:gs-naar-lsc-ecosheds@doimspp.onmicrosoft.com">gs-naar-lsc-ecosheds@doimspp.onmicrosoft.com</a>.
             </p>
           </v-card-text>
         </v-card>
