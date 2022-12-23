@@ -153,8 +153,6 @@ export default {
           default:
             this.error = this.$errorMessage(err)
         }
-        return
-      } finally {
         this.loading = false
       }
     },
