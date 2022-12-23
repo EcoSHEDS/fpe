@@ -225,7 +225,7 @@
                   v-model="affiliation.code.value"
                   label="Abbreviation"
                   counter
-                  maxlength="16"
+                  maxlength="32"
                   hint="e.g. MADEP"
                   outlined
                   dense

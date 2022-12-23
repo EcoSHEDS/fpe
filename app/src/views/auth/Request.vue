@@ -38,6 +38,7 @@
           outlined
           validate-on-blur
         ></v-text-field>
+        <p class="secondary--text font-italic body-2">If part of a large agency/organization (e.g., USGS), please include your local branch/office (e.g., EESC) to differentiate your photos from others in your agency.</p>
         <v-text-field
           v-model="affiliationName.value"
           :rules="affiliationName.rules"
@@ -45,7 +46,7 @@
           counter
           outlined
           maxlength="128"
-          hint="The full name of your organization (e.g. U.S. Geological Survey)."
+          hint="Full name of your organization (e.g. U.S. Geological Survey, Eastern Ecological Science Center)."
           validate-on-blur
         ></v-text-field>
         <v-text-field
@@ -54,8 +55,8 @@
           label="Affiliation (Abbreviation)"
           counter
           outlined
-          maxlength="16"
-          hint="A short abbreviation for your organization (e.g. USGS)."
+          maxlength="32"
+          hint="Short abbreviation for your organization (e.g. USGS EESC)."
           validate-on-blur
         ></v-text-field>
         <v-textarea
@@ -139,7 +140,7 @@ export default {
         rules: [
           v => !!v || 'Abbreviated affiliation is required',
           v => (!!v && v.trim().length >= 2) || 'Abbreviated affiliation must be at least 2 characters',
-          v => (!!v && v.length <= 16) || 'Abbreviated affiliation cannot exceed 16 characters'
+          v => (!!v && v.length <= 32) || 'Abbreviated affiliation cannot exceed 32 characters'
         ]
       },
       description: {

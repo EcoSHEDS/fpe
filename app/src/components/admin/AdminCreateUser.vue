@@ -37,7 +37,7 @@
             hint="e.g. MADEP"
             counter
             outlined
-            maxlength="16"
+            maxlength="32"
             validate-on-blur
           ></v-text-field>
           <v-text-field
@@ -170,7 +170,7 @@ export default {
           rules: [
             v => !!v || 'Abbreviated affiliation is required',
             v => (!!v && v.trim().length >= 2) || 'Abbreviated affiliation must be at least 2 characters',
-            v => (!!v && v.length <= 16) || 'Abbreviated affiliation cannot exceed 16 characters'
+            v => (!!v && v.length <= 32) || 'Abbreviated affiliation cannot exceed 32 characters'
           ]
         }
       },
