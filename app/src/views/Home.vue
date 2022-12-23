@@ -72,14 +72,14 @@
 
             <p><span class="font-weight-bold">Phase I (complete)</span>: a database and cloud-based data pipeline was developed for storing, managing, and accessing timelapse imagery of streams and rivers along with associated flow and stage data. The system allows registered users to upload and manage their own photos and (optionally) flow data at multiple locations. The images and flow data are accessible through the <router-link :to="{ name: 'explorer' }">Photo Explorer</router-link>, which provides an interactive and exploratory interface for viewing the timelapse imagery coupled with observed flow data. The images and flow data in the FPE database will serve as the primary data source for developing and training the machine learning models in Phase II.</p>
 
-            <p><span class="font-weight-bold">Phase II (ongoing)</span>: the photos and data uploaded to FPE are currently being used to develop deep learning models to predict flow from timelapse imagery. Two types of models are currently being developed:
+            <p><span class="font-weight-bold">Phase II (ongoing)</span>: the photos and data uploaded to FPE are currently being used to develop deep learning models to predict flow from timelapse imagery. Two types of models are currently being developed (see <a href="https://doi.org/10.1145/3530190.3534805">Gupta et al., 2022</a> for details):
 
             <ol class="my-4">
               <li>The first is a classical <span class="font-weight-bold">regression model</span> that is trained using both images and observed (or estimated) flows. This model will predict the flow rate directly from an image. However, it requires observed flow data for training, which negates (to some degree) the purpose of using timelapse imagery in the first place.</li>
               <li>The second is a <span class="font-weight-bold">ranking model</span> that is trained using human annotations of pairwise image comparisons (i.e., a user is repeatedly asked which of two images has more flow). The model then learns how to sort the images from lowest to highest flow, which provides a relative measure of streamflow (i.e., rank percentile). This relative streamflow output can then be converted to estimated flow rates using an assumed flow distribution. The major benefit of this model is that it does not require any observed flow or stage data for training.</li>
             </ol>
 
-            <p>See the link to the paper above for more information and the initial results from these models. In addition, other types of models including detecting flow/no flow, or the presence of ice are also being explored. More model details coming soon!</p>
+            <p>In addition, other types of models including detecting flow/no flow, or the presence of ice are also being explored. More model details coming soon!</p>
 
             <v-divider class="my-4"></v-divider>
 
