@@ -110,7 +110,18 @@
                   </tr>
                 </tbody>
               </v-simple-table>
-              <div class="d-flex">
+              <div>
+                <v-btn
+                  v-if="user && user.isAdmin"
+                  color="warning"
+                  class="mt-4"
+                  outlined
+                  block
+                  :loading="loadingProcessing"
+                  @click="processImageset"
+                >
+                  <v-icon left>mdi-refresh</v-icon> Re-Process Photo Set
+                </v-btn>
                 <v-btn
                   color="error"
                   class="mt-4"
@@ -463,6 +474,7 @@ import ImagePreview from '@/components/ImagePreview'
 import StatusChip from '@/components/StatusChip'
 
 import evt from '@/events'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'ManageImageset',
@@ -482,6 +494,7 @@ export default {
         loading: false,
         error: null
       },
+      loadingProcessing: false,
       imageDeleter: {
         loading: false,
         error: null
@@ -501,6 +514,7 @@ export default {
     }
   },
   computed: {
+    ...mapGetters(['user']),
     station () {
       return this.$parent.station
     },
@@ -668,6 +682,22 @@ export default {
         this.iterator.endDate = this.$date(this.imageset.end_timestamp)
           .tz(this.station.timezone)
           .format('YYYY-MM-DD')
+      }
+    },
+    async processImageset () {
+      if (!this.imageset) return
+
+      try {
+        this.loadingProcessing = true
+        await this.$http.restricted.post(
+          `/stations/${this.imageset.station_id}/imagesets/${this.imageset.id}/process`,
+          null
+        )
+        await this.refresh()
+      } catch (err) {
+        console.error(err)
+      } finally {
+        this.loadingProcessing = false
       }
     }
   }
