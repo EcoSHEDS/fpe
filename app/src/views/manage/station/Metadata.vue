@@ -81,9 +81,27 @@
                 <td
                   class="text-right grey--text text--darken-2"
                   style="width:100px">
+                  NWIS ID
+                </td>
+                <td class="font-weight-bold">
+                  <a
+                    v-if="station.nwis_id"
+                    :href="`https://waterdata.usgs.gov/nwis/inventory/?site_no=${station.nwis_id}&agency_cd=USGS`"
+                    target="_blank"
+                  >
+                    {{ station.nwis_id }}
+                  </a>
+                </td>
+              </tr>
+              <tr>
+                <td
+                  class="text-right grey--text text--darken-2"
+                  style="width:100px">
                   Private
                 </td>
-                <td class="font-weight-bold">{{ station.private }}</td>
+                <td class="font-weight-bold">
+                  <v-simple-checkbox :value="station.private"></v-simple-checkbox>
+                </td>
               </tr>
             </tbody>
           </v-simple-table>

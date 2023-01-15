@@ -6,7 +6,7 @@
 import * as d3 from 'd3'
 import debounce from 'debounce'
 
-import { hasDailyValue, timeFormat } from '@/lib/utils'
+import { timeFormat } from '@/lib/utils'
 
 export default {
   name: 'TimeseriesChart',
@@ -36,17 +36,27 @@ export default {
       return this.variable.id
     },
     minValue () {
-      if (this.dailyValues.length === 0 || !this.variableId || this.variableId === 'FLOW_CFS') return 0
-      return d3.min(this.dailyValues, d => d.values ? d.values[this.variableId].min : null)
+      if ((this.daily.values.length + this.daily.nwis.length === 0) || !this.variableId || this.variableId === 'FLOW_CFS') return 0
+      const values = [
+        this.daily.values.map(d => d.min),
+        this.daily.nwis.map(d => d.mean)
+      ].flat()
+      return d3.min(values)
     },
     maxValue () {
-      if (this.dailyValues.length === 0 || !this.variableId) return 0
-      return d3.max(this.dailyValues, d => d.values ? d.values[this.variableId].max : 0)
+      if ((this.daily.values.length + this.daily.nwis.length === 0) || !this.variableId) return 0
+      const valuesMax = d3.max(this.dailyValues, d => d.max)
+      const nwisMax = d3.max(this.dailyNwis, d => d.mean)
+      return d3.max([valuesMax, nwisMax])
     },
     dailyValues () {
       if (!this.daily || !this.variableId) return []
-      return this.daily
-        .filter(d => hasDailyValue(d, this.variableId))
+      return this.daily.values
+        .filter(d => d.dateUtc.isBetween(this.dateExtent[0].subtract(1, 'day'), this.dateExtent[1], null, '[]'))
+    },
+    dailyNwis () {
+      if (!this.daily || !this.variableId) return []
+      return this.daily.nwis
         .filter(d => d.dateUtc.isBetween(this.dateExtent[0].subtract(1, 'day'), this.dateExtent[1], null, '[]'))
     },
     dateExtent () {
@@ -56,7 +66,7 @@ export default {
       return dateExtent
     },
     dailyImages () {
-      return this.daily.filter(d => !!d.image)
+      return this.daily.images.filter(d => !!d.image)
     },
     focusUtc () {
       if (!this.focus) return this.focus
@@ -65,21 +75,26 @@ export default {
       const focusUtcDates = [focusDates[0].add(utcOffsets[0], 'hour'), focusDates[1].add(utcOffsets[1], 'hour')]
       return focusUtcDates
     },
-    focusDaily () {
-      if (!this.daily || !this.focusUtc) return []
-      return this.daily.filter(d => d.dateUtc.isBetween(this.focusUtc[0], this.focusUtc[1], null, '[]'))
-    },
     focusDailyValues () {
       if (!this.variableId) return []
-      return this.focusDaily.filter(d => d.values && d.values[this.variableId])
+      return this.daily.values.filter(d => d.dateUtc.isBetween(this.focusUtc[0], this.focusUtc[1], null, '[]'))
+    },
+    focusDailyNwis () {
+      if (!this.variableId) return []
+      return this.daily.nwis.filter(d => d.dateUtc.isBetween(this.focusUtc[0], this.focusUtc[1], null, '[]'))
     },
     focusDailyImages () {
-      return this.focusDaily.filter(d => !!d.image)
+      return this.daily.images.filter(d => !!d.image).filter(d => d.dateUtc.isBetween(this.focusUtc[0], this.focusUtc[1], null, '[]'))
     },
     hasValues () {
       return this.mode === 'daily'
         ? this.focusDailyValues.length > 0
         : this.instantaneous && this.instantaneous.values.length > 0
+    },
+    hasNwis () {
+      return this.mode === 'daily'
+        ? this.focusDailyNwis.length > 0
+        : this.instantaneous && this.instantaneous.nwis.length > 0
     },
     height () {
       return this.variableId ? 200 : 50
@@ -149,7 +164,7 @@ export default {
         legend: this.svg.append('g')
           .attr(
             'transform',
-            `translate(${this.width - this.margin.right + 10},${this.margin.top + (this.height - this.margin.top - this.margin.bottom) / 2})`
+            `translate(${this.width - this.margin.right + 10},60)`
           )
           .attr('class', 'legend'),
         values: this.svg.append('g')
@@ -215,15 +230,20 @@ export default {
           const item = (dateUtc - a.dateUtc) > (b.dateUtc - dateUtc) ? b : a
           return item
         }
-        const hoveredItem = bisectDateUtc(this.focusDailyImages, mouseTimestampUtc)
-        const hoveredImage = hoveredItem.image
-        const hoveredValue = hasDailyValue(hoveredItem, this.variableId) ? hoveredItem.values[this.variableId] : null
+        const hoveredImageItem = bisectDateUtc(this.focusDailyImages, mouseTimestampUtc)
+        const hoveredImage = hoveredImageItem.image
 
+        const hoveredValueItem = this.daily.values.find(d => d.date === hoveredImageItem.date)
+        const hoveredValue = hoveredValueItem
+
+        const hoveredNwisItem = this.daily.nwis.find(d => d.date === hoveredImageItem.date)
+        const hoveredNwis = hoveredNwisItem
         this.emitHover({
           mode: this.mode,
-          dateUtc: hoveredItem.dateUtc,
+          dateUtc: hoveredImageItem.dateUtc,
           image: hoveredImage,
-          value: hoveredValue
+          value: hoveredValue,
+          nwis: hoveredNwis
         })
       } else if (this.mode === 'instantaneous') {
         if (this.instantaneous.images.length === 0) return this.emitHover()
@@ -242,28 +262,42 @@ export default {
           mode: this.mode,
           timestampUtc: hoveredImage.timestampUtc,
           image: hoveredImage,
-          value: hoveredImage.value
+          value: hoveredImage.value,
+          nwis: hoveredImage.nwis
         })
       }
     },
     emitHover: debounce(function (hover) {
+      // console.log('$emit(hover)', hover)
       this.$emit('hover', hover)
     }, 10),
     renderHover () {
       if (!this.hover) {
         this.g.focus.selectAll('circle').remove()
       } else if (this.mode === 'daily') {
-        const { image, value, dateUtc } = this.hover
-        this.g.focus.selectAll('circle.value')
-          .data(value ? [value] : [])
-          .join('circle')
-          .attr('class', 'value')
-          .attr('fill', 'none')
-          .attr('stroke', 'orangered')
-          .attr('stroke-width', '2px')
-          .attr('cx', this.x(dateUtc))
-          .attr('cy', d => this.y(d.mean))
-          .attr('r', this.imageRadius)
+        const { image, value, nwis, dateUtc } = this.hover
+        if (this.variable && this.variable.id) {
+          this.g.focus.selectAll('circle.value')
+            .data(value ? [value] : [])
+            .join('circle')
+            .attr('class', 'value')
+            .attr('fill', 'none')
+            .attr('stroke', 'orangered')
+            .attr('stroke-width', '2px')
+            .attr('cx', this.x(dateUtc))
+            .attr('cy', d => this.y(d.mean))
+            .attr('r', this.imageRadius)
+          this.g.focus.selectAll('circle.nwis')
+            .data(nwis ? [nwis] : [])
+            .join('circle')
+            .attr('class', 'nwis')
+            .attr('fill', 'none')
+            .attr('stroke', 'orangered')
+            .attr('stroke-width', '2px')
+            .attr('cx', this.x(dateUtc))
+            .attr('cy', d => this.y(d.mean))
+            .attr('r', this.imageRadius)
+        }
         this.g.focus.selectAll('circle.image')
           .data([image], d => d.id)
           .join('circle')
@@ -275,17 +309,29 @@ export default {
           .attr('cy', this.imageRadius + 2)
           .attr('r', this.imageRadius)
       } else if (this.mode === 'instantaneous') {
-        const { image, value, timestampUtc } = this.hover
-        this.g.focus.selectAll('circle.value')
-          .data(value ? [value] : [])
-          .join('circle')
-          .attr('class', 'value')
-          .attr('fill', 'none')
-          .attr('stroke', 'orangered')
-          .attr('stroke-width', '2px')
-          .attr('cx', this.x(timestampUtc))
-          .attr('cy', this.y(value))
-          .attr('r', 5)
+        const { image, value, nwis, timestampUtc } = this.hover
+        if (this.variable && this.variable.id) {
+          this.g.focus.selectAll('circle.value')
+            .data(value ? [value] : [])
+            .join('circle')
+            .attr('class', 'value')
+            .attr('fill', 'none')
+            .attr('stroke', 'orangered')
+            .attr('stroke-width', '2px')
+            .attr('cx', this.x(timestampUtc))
+            .attr('cy', d => this.y(d))
+            .attr('r', 5)
+          this.g.focus.selectAll('circle.nwis')
+            .data(nwis ? [nwis] : [])
+            .join('circle')
+            .attr('class', 'nwis')
+            .attr('fill', 'none')
+            .attr('stroke', 'orangered')
+            .attr('stroke-width', '2px')
+            .attr('cx', this.x(timestampUtc))
+            .attr('cy', d => this.y(d))
+            .attr('r', 5)
+        }
         this.g.focus.selectAll('circle.image')
           .data([image], d => d.id)
           .join('circle')
@@ -320,7 +366,7 @@ export default {
       )
       this.g.legend.attr(
         'transform',
-        `translate(${this.width - this.margin.right + 10},${this.margin.top + (this.height - this.margin.top - this.margin.bottom) / 2})`
+        `translate(${this.width - this.margin.right + 10},60)`
       )
       this.g.noValues
         .attr('transform', `translate(${this.margin.left + (this.width - this.margin.left - this.margin.right) / 2},${this.height / 2})`)
@@ -351,69 +397,148 @@ export default {
           .y1(d => 20)
 
         const values = [10, 25]
+        let nwisOffset = 0
 
         if (this.mode === 'daily') {
-          this.g.legend.selectAll('path.mean')
-            .data([values])
-            .join('path')
-            .attr('class', 'mean')
-            .attr('fill', 'none')
-            .attr('stroke', 'steelblue')
-            .attr('stroke-width', '2px')
-            .attr('d', line)
+          if (this.daily.values && this.daily.values.length > 0) {
+            nwisOffset = 60
+            this.g.legend.selectAll('path.mean.values')
+              .data([values])
+              .join('path')
+              .attr('class', 'mean')
+              .attr('class', 'values')
+              .attr('fill', 'none')
+              .attr('stroke', 'steelblue')
+              .attr('stroke-width', '2px')
+              .attr('d', line)
 
-          this.g.legend.selectAll('path.range')
-            .data([values])
-            .join('path')
-            .attr('class', 'range')
-            .attr('fill', 'gray')
-            .attr('opacity', 0.25)
-            .attr('d', area)
+            this.g.legend.selectAll('path.range.values')
+              .data([values])
+              .join('path')
+              .attr('class', 'range')
+              .attr('class', 'values')
+              .attr('fill', 'gray')
+              .attr('opacity', 0.25)
+              .attr('d', area)
 
-          this.g.legend.selectAll('text')
-            .data([{ value: -20, text: 'Max' }, { value: 0, text: 'Mean' }, { value: 20, text: 'Min' }])
-            .join('text')
-            .attr('font-size', 12)
-            .attr('font-family', 'sans-serif')
-            .attr('text-anchor', 'start')
-            .attr('fill', 'currentColor')
-            .attr('x', values[1] + 5)
-            .attr('y', d => d.value)
-            .attr('dy', '0.3em')
-            .text(d => d.text)
+            this.g.legend.selectAll('text')
+              .data([{ value: -20, text: 'Max' }, { value: 0, text: 'Mean' }, { value: 20, text: 'Min' }])
+              .join('text')
+              .attr('font-size', 12)
+              .attr('font-family', 'sans-serif')
+              .attr('text-anchor', 'start')
+              .attr('fill', 'currentColor')
+              .attr('x', values[1] + 5)
+              .attr('y', d => d.value)
+              .attr('dy', '0.3em')
+              .text(d => d.text)
 
-          this.g.legend
-            .append('text')
-            .attr('font-size', 12)
-            .attr('font-family', 'sans-serif')
-            .attr('text-anchor', 'start')
-            .attr('text-decoration', 'underline')
-            .attr('fill', 'currentColor')
-            .attr('x', 10)
-            .attr('y', -40)
-            .attr('dy', '0.3em')
-            .text('Obs. Daily')
+            this.g.legend
+              .append('text')
+              .attr('font-size', 12)
+              .attr('font-family', 'sans-serif')
+              .attr('text-anchor', 'start')
+              .attr('text-decoration', 'underline')
+              .attr('fill', 'currentColor')
+              .attr('x', 10)
+              .attr('y', -40)
+              .attr('dy', '0.3em')
+              .text('Obs. Daily')
+          }
+
+          if (this.daily.nwis && this.daily.nwis.length > 0) {
+            this.g.legend.selectAll('path.mean.nwis')
+              .data([values])
+              .join('path')
+              .attr('class', 'mean')
+              .attr('class', 'nwis')
+              .attr('fill', 'none')
+              .attr('stroke', 'deepskyblue')
+              .attr('stroke-width', '2px')
+              .attr('d', line)
+              .attr('transform', `translate(0,${nwisOffset + 20})`)
+
+            this.g.legend
+              .append('text')
+              .attr('class', 'nwis')
+              .attr('font-size', 12)
+              .attr('font-family', 'sans-serif')
+              .attr('text-anchor', 'start')
+              .attr('text-decoration', 'underline')
+              .attr('fill', 'currentColor')
+              .attr('x', 10)
+              .attr('y', nwisOffset)
+              .attr('dy', '0.3em')
+              .text('NWIS')
+            this.g.legend
+              .append('text')
+              .attr('class', 'nwis')
+              .attr('font-size', 12)
+              .attr('font-family', 'sans-serif')
+              .attr('text-anchor', 'start')
+              .attr('fill', 'currentColor')
+              .attr('x', 30)
+              .attr('y', nwisOffset + 20)
+              .attr('dy', '0.3em')
+              .text('Mean')
+          } else {
+            this.g.legend.selectAll('path.mean.nwis').remove()
+            this.g.legend.selectAll('text.nwis').remove()
+          }
         } else if (this.mode === 'instantaneous') {
-          this.g.legend.selectAll('path.instantaneous')
-            .data([values])
-            .join('path')
-            .attr('class', 'instantaneous')
-            .attr('fill', 'none')
-            .attr('stroke', 'steelblue')
-            .attr('stroke-width', '2px')
-            .attr('d', line)
+          let nwisOffset = 0
+          if (this.instantaneous.values && this.instantaneous.values.length > 0) {
+            nwisOffset = 40
+            this.g.legend.selectAll('path.instantaneous.values')
+              .data([values])
+              .join('path')
+              .attr('class', 'instantaneous')
+              .attr('class', 'values')
+              .attr('fill', 'none')
+              .attr('stroke', 'steelblue')
+              .attr('stroke-width', '2px')
+              .attr('d', line)
 
-          this.g.legend.selectAll('text')
-            .data([{ value: -7, text: 'Obs.' }, { value: 7, text: 'Value' }])
-            .join('text')
-            .attr('font-size', 12)
-            .attr('font-family', 'sans-serif')
-            .attr('text-anchor', 'start')
-            .attr('fill', 'currentColor')
-            .attr('x', values[1] + 5)
-            .attr('y', d => d.value)
-            .attr('dy', '0.3em')
-            .text(d => d.text)
+            this.g.legend.selectAll('text')
+              .data([{ value: -7, text: 'Obs.' }, { value: 7, text: 'Value' }])
+              .join('text')
+              .attr('font-size', 12)
+              .attr('font-family', 'sans-serif')
+              .attr('text-anchor', 'start')
+              .attr('fill', 'currentColor')
+              .attr('x', values[1] + 5)
+              .attr('y', d => d.value)
+              .attr('dy', '0.3em')
+              .text(d => d.text)
+          }
+
+          if (this.instantaneous.nwis && this.instantaneous.nwis.length > 0) {
+            this.g.legend.selectAll('path.instantaneous.nwis')
+              .data([values])
+              .join('path')
+              .attr('class', 'instantaneous')
+              .attr('class', 'nwis')
+              .attr('fill', 'none')
+              .attr('stroke', 'deepskyblue')
+              .attr('stroke-width', '2px')
+              .attr('d', line)
+              .attr('transform', `translate(0,${nwisOffset})`)
+
+            this.g.legend
+              .append('text')
+              .attr('class', 'nwis')
+              .attr('font-size', 12)
+              .attr('font-family', 'sans-serif')
+              .attr('text-anchor', 'start')
+              .attr('fill', 'currentColor')
+              .attr('x', 30)
+              .attr('y', nwisOffset)
+              .attr('dy', '0.3em')
+              .text('NWIS')
+          } else {
+            this.g.legend.selectAll('path.mean.nwis').remove()
+            this.g.legend.selectAll('text.nwis').remove()
+          }
         }
       }
     },
@@ -460,20 +585,22 @@ export default {
       }
     },
     renderDaily () {
+      this.renderDailyImages()
+      this.renderDailyValues()
+    },
+    renderDailyValues () {
+      const line = d3.line()
+        .curve(d3.curveStep)
+        .x(d => this.x(d.dateUtc))
+        .y(d => this.y(d.mean))
+
+      const area = d3.area()
+        .curve(d3.curveStep)
+        .x(d => this.x(d.dateUtc))
+        .y0(d => this.y(d.min))
+        .y1(d => this.y(d.max))
+
       if (this.hasValues) {
-        const line = d3.line()
-          .defined(d => hasDailyValue(d, this.variableId))
-          .curve(d3.curveStep)
-          .x(d => this.x(d.dateUtc))
-          .y(d => this.y(d.values[this.variableId].mean))
-
-        const area = d3.area()
-          .defined(d => hasDailyValue(d, this.variableId))
-          .curve(d3.curveStep)
-          .x(d => this.x(d.dateUtc))
-          .y0(d => this.y(d.values[this.variableId].min))
-          .y1(d => this.y(d.values[this.variableId].max))
-
         const valueChunks = []
         this.focusDailyValues.forEach((d, i) => {
           if (i === 0) {
@@ -487,24 +614,54 @@ export default {
           }
         })
 
-        this.g.values.selectAll('path.mean')
+        this.g.values.selectAll('path.mean.values')
           .data(valueChunks)
           .join('path')
           .attr('class', 'mean')
+          .attr('class', 'values')
           .attr('fill', 'none')
           .attr('stroke', 'steelblue')
           .attr('stroke-width', '2px')
           .attr('d', line)
 
-        this.g.values.selectAll('path.range')
+        this.g.values.selectAll('path.range.values')
           .data(valueChunks)
           .join('path')
           .attr('class', 'range')
+          .attr('class', 'values')
           .attr('fill', 'gray')
           .attr('opacity', 0.5)
           .attr('d', area)
       }
 
+      if (this.hasNwis) {
+        const nwisChunks = []
+        this.focusDailyNwis.forEach((d, i) => {
+          if (i === 0) {
+            nwisChunks.push([d])
+          } else {
+            if (d.dateUtc.diff(this.focusDailyNwis[i - 1].dateUtc, 'day') > 1) {
+              nwisChunks.push([d])
+            } else {
+              nwisChunks[nwisChunks.length - 1].push(d)
+            }
+          }
+        })
+
+        this.g.values.selectAll('path.mean.nwis')
+          .data(nwisChunks)
+          .join('path')
+          .attr('class', 'mean')
+          .attr('class', 'nwis')
+          .attr('fill', 'none')
+          .attr('stroke', 'deepskyblue')
+          .attr('stroke-width', '2px')
+          .attr('d', line)
+      }
+
+      this.g.noValues.attr('visibility', !this.variableId || this.hasValues || this.hasNwis ? 'hidden' : 'visible')
+    },
+    renderDailyImages () {
       this.g.images.selectAll('circle')
         .data(this.focusDailyImages)
         .join('circle')
@@ -514,12 +671,15 @@ export default {
         .attr('cy', this.imageRadius)
         .attr('r', this.imageRadius)
 
-      this.g.noValues.attr('visibility', !this.variableId || this.focusDailyValues.length > 0 ? 'hidden' : 'visible')
       this.g.noImages.attr('visibility', this.focusDailyImages.length > 0 ? 'hidden' : 'visible')
     },
     renderInstantaneous () {
-      const { values, images } = this.instantaneous
-
+      this.renderInstantaneousImages()
+      this.renderInstantaneousValues()
+    },
+    renderInstantaneousValues () {
+      if (!this.instantaneous) return
+      const values = this.instantaneous.values
       const valueChunks = []
       values.forEach((d, i) => {
         if (i === 0) {
@@ -532,21 +692,50 @@ export default {
           }
         }
       })
+      const nwis = this.instantaneous.nwis
+      const nwisChunks = []
+      nwis.forEach((d, i) => {
+        if (i === 0) {
+          nwisChunks.push([d])
+        } else {
+          if (d.timestampUtc.diff(nwis[i - 1].timestampUtc, 'hour') > 1) {
+            nwisChunks.push([d])
+          } else {
+            nwisChunks[nwisChunks.length - 1].push(d)
+          }
+        }
+      })
 
       const line = d3.line()
         .defined(d => !isNaN(d.value))
         .x(d => this.x(d.timestampUtc))
         .y(d => this.y(d.value))
 
-      this.g.values.selectAll('path.value')
+      this.g.values.selectAll('path.raw.value')
         .data(valueChunks)
         .join('path')
+        .attr('class', 'raw')
         .attr('class', 'value')
         .attr('fill', 'none')
         .attr('stroke', 'steelblue')
         .attr('stroke-width', '2px')
         .attr('d', line)
 
+      this.g.values.selectAll('path.raw.nwis')
+        .data(nwisChunks)
+        .join('path')
+        .attr('class', 'raw')
+        .attr('class', 'nwis')
+        .attr('fill', 'none')
+        .attr('stroke', 'deepskyblue')
+        .attr('stroke-width', '2px')
+        .attr('d', line)
+
+      this.g.noValues.attr('visibility', !this.variableId || valueChunks.length > 0 || nwisChunks.length > 0 ? 'hidden' : 'visible')
+    },
+    renderInstantaneousImages () {
+      if (!this.instantaneous) return
+      const images = this.instantaneous.images
       this.g.images.selectAll('circle.image')
         .data(images)
         .join('circle')
@@ -556,8 +745,6 @@ export default {
         .attr('cx', d => this.x(d.timestampUtc))
         .attr('cy', this.imageRadius)
         .attr('r', this.imageRadius)
-
-      this.g.noValues.attr('visibility', !this.variableId || valueChunks.length > 0 ? 'hidden' : 'visible')
       this.g.noImages.attr('visibility', images.length > 0 ? 'hidden' : 'visible')
     },
     startAutoplay () {
@@ -576,12 +763,15 @@ export default {
     playFrame (i) {
       this.player.i = i
       if (this.mode === 'daily') {
-        const row = this.focusDailyImages[i]
+        const dailyImage = this.focusDailyImages[i]
+        const dailyValue = this.daily.values.find(d => d.date === dailyImage.date)
+        const dailyNwis = this.daily.nwis.find(d => d.date === dailyImage.date)
         this.emitHover({
           mode: this.mode,
-          dateUtc: row.dateUtc,
-          image: row.image,
-          value: hasDailyValue(row, this.variableId) ? row.values[this.variableId] : null
+          dateUtc: dailyImage.dateUtc,
+          image: dailyImage.image,
+          value: dailyValue,
+          nwis: dailyNwis
         })
       } else if (this.mode === 'instantaneous') {
         const image = this.instantaneous.images[i]
@@ -589,7 +779,8 @@ export default {
           mode: this.mode,
           timestampUtc: image.timestampUtc,
           image: image,
-          value: image.value
+          value: image.value,
+          nwis: image.nwis
         })
       }
 

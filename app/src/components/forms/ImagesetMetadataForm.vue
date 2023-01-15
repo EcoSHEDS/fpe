@@ -47,7 +47,7 @@
             validate-on-blur
             outlined
             counter
-            maxlength="100"
+            maxlength="128"
             :disabled="useAffiliation.value"
           ></v-text-field>
 
@@ -124,17 +124,12 @@ export default {
         value: '',
         rules: [
           v => !!v || 'Organization name is required',
-          v => (!!v && v.trim().length >= 4) || 'Organization name must be at least 4 characters',
-          v => (!!v && v.trim().length <= 100) || 'Organization name cannot exceed 100 characters'
+          v => !v || v.length <= 128 || 'Organization name cannot exceed 128 characters'
         ]
       },
       methodology: {
         value: '',
-        rules: [
-          v => !!v || 'Methodology is required',
-          v => (!!v && v.trim().length >= 4) || 'Methodology must be at least 4 characters',
-          v => (!!v && v.trim().length <= 5000) || 'Methodology cannot exceed 5000 characters'
-        ]
+        rules: []
       },
       citation: {
         value: '',

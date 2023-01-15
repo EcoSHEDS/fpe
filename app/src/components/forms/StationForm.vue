@@ -22,11 +22,10 @@
             label="Station Name"
             counter
             maxlength="50"
-            hint="A short name or site code for this station (e.g. Brown's Brook or BB001)"
+            hint="Short name or code (e.g. Brown's Brook or BB001)"
             persistent-hint
             validate-on-blur
             outlined
-            @blur="name.value = name.value.trim()"
           ></v-text-field>
           <v-text-field
             v-model="description.value"
@@ -34,11 +33,10 @@
             label="Description"
             counter
             maxlength="128"
-            hint="Description of where this station is located (e.g. Brown's Brook at Rt 1 crossing near Auburn)"
+            hint="Description of station location (e.g. Brown's Brook at Rt 1 crossing near Auburn)"
             persistent-hint
             validate-on-blur
             outlined
-            @blur="description.value = description.value.trim()"
           ></v-text-field>
           <v-row>
             <v-col cols="6">
@@ -73,8 +71,16 @@
             label="Time Zone"
             validate-on-blur
             outlined
-            hide-details
           ></v-select>
+          <v-text-field
+            v-model="nwisId.value"
+            :rules="nwisId.rules"
+            label="USGS NWIS Station ID"
+            hint="ID of an existing USGS NWIS station (e.g. 01171090)"
+            persistent-hint
+            validate-on-blur
+            outlined
+          ></v-text-field>
           <v-checkbox
             v-model="private_.value"
             label="Private"
@@ -91,7 +97,7 @@
             border="left"
             class="body-2 mb-0 mt-8"
             v-if="error">
-            <div class="body-1 font-weight-bold">Failed to Create Station</div>
+            <div class="body-1 font-weight-bold">Failed to Save Station</div>
             <div>{{ error }}</div>
           </v-alert>
         </v-card-text>
@@ -116,6 +122,7 @@
 <script>
 import { mapGetters } from 'vuex'
 import { stationTimezones } from '@/lib/constants'
+import nwis from '@/lib/nwis'
 import evt from '@/events'
 
 export default {
@@ -172,6 +179,10 @@ export default {
           v => !!v || 'Timezone is required'
         ]
       },
+      nwisId: {
+        value: '',
+        rules: []
+      },
       private_: {
         value: false,
         rules: []
@@ -192,6 +203,7 @@ export default {
         this.latitude.value = this.station.latitude
         this.longitude.value = this.station.longitude
         this.timezone.value = this.station.timezone
+        this.nwisId.value = this.station.nwis_id
         this.private_.value = this.station.private
       }
       return new Promise((resolve, reject) => {
@@ -205,17 +217,22 @@ export default {
       if (!this.$refs.stationForm.validate()) return
 
       this.loading = true
-      const payload = {
-        user_id: this.user.username,
-        name: this.name.value,
-        description: this.description.value,
-        latitude: this.latitude.value,
-        longitude: this.longitude.value,
-        timezone: this.timezone.value,
-        private: this.private_.value
-      }
-
       try {
+        const payload = {
+          user_id: this.user.username,
+          name: this.name.value,
+          description: this.description.value,
+          latitude: this.latitude.value,
+          longitude: this.longitude.value,
+          timezone: this.timezone.value,
+          private: this.private_.value
+        }
+
+        if (this.nwisId.value) {
+          await nwis.getStation(this.nwisId.value.trim())
+        }
+        payload.nwis_id = this.nwisId.value ? this.nwisId.value.trim() : this.nwisId.value
+
         let response
         if (this.station) {
           response = await this.$http.restricted.put(`/stations/${this.station.id}`, payload)
@@ -249,6 +266,7 @@ export default {
         this.latitude.value = this.station.latitude
         this.longitude.value = this.station.longitude
         this.timezone.value = this.station.timezone
+        this.nwisId.value = this.station.nwis_id
         this.private_.value = this.station.private
       } else {
         this.name.value = null
@@ -256,6 +274,7 @@ export default {
         this.latitude.value = null
         this.longitude.value = null
         this.timezone.value = null
+        this.nwisId.value = null
         this.private_.value = false
       }
     },

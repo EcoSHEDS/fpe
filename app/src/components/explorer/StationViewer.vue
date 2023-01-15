@@ -1,24 +1,5 @@
 <template>
   <div>
-    <v-row v-if="station.summary.images.count > 0 && station.provisional && !loading">
-      <v-col class="my-0 pb-0">
-        <v-alert type="error" dense text colored-border border="left" class="body-2">
-          <div class="font-weight-bold body-1">Station Contains Provisional Data</div>
-          <div>
-            <v-btn class="float-right" xs text color="default" @click="$refs.provisionalDialog.open()">Read More</v-btn>
-            Data are provisional and subject to revision until they have been thoroughly reviewed and received final approval.
-          </div>
-        </v-alert>
-
-        <InfoDialog title="Provisional Data Statement" ref="provisionalDialog">
-          <p>Data are provisional and subject to revision until they have been thoroughly reviewed and received final approval. Current condition data relayed by satellite or other telemetry are automatically screened to not display improbable values until they can be verified.</p>
-
-          <p>Provisional data may be inaccurate due to instrument malfunctions or physical changes at the measurement site. Subsequent review based on field inspections and measurements may result in significant revisions to the data.</p>
-
-          <p class="mb-0">Data users are cautioned to consider carefully the provisional nature of the information before using it for decisions that concern personal or public safety or the conduct of business that involves substantial monetary or operational consequences. Information concerning the accuracy and appropriate uses of these data or concerning other hydrologic data may be obtained from the USGS.</p>
-        </InfoDialog>
-      </v-col>
-    </v-row>
     <div v-if="station.summary.images.count === 0">
       <v-alert
         type="error"
@@ -31,8 +12,8 @@
         <div class="font-weight-bold body-1">This station does not have any photos</div>
       </v-alert>
     </div>
-    <div style="height:200px;position:relative" v-else-if="loading">
-      <v-overlay color="grey lighten-2" absolute class="text-center" v-if="loading">
+    <div style="height:200px;position:relative" v-else-if="loading.images">
+      <v-overlay color="grey lighten-2" absolute class="text-center" v-if="loading.images">
         <div class="text-h6 mb-8 grey--text">Loading...</div>
         <v-progress-circular
           color="grey"
@@ -98,8 +79,14 @@
                     <div v-if="hover.value" class="font-weight-bold">
                       {{ hover.value.mean | d3Format('.3r') }}
                       {{ variable.selected.id !== 'OTHER' ? variable.selected.units : '' }}
+                      <span v-if="hover.nwis">(FPE)</span>
                     </div>
-                    <div v-else class="font-weight-bold">
+                    <div v-if="hover.nwis" class="font-weight-bold">
+                      {{ hover.nwis.mean | d3Format('.3r') }}
+                      {{ variable.selected.id !== 'OTHER' ? variable.selected.units : '' }}
+                      (NWIS)
+                    </div>
+                    <div v-if="!hover.value && !hover.nwis" class="font-weight-bold">
                       N/A
                     </div>
                   </td>
@@ -129,7 +116,18 @@
       <!-- CHART -->
       <v-divider class="mt-2 mb-4"></v-divider>
       <v-row>
-        <v-col cols="12">
+        <v-col cols="12" v-show="loading.values" style="height:200px;position:relative">
+          <v-overlay color="grey lighten-2" absolute class="text-center">
+            <div class="text-h6 mb-8 grey--text">Loading...</div>
+            <v-progress-circular
+              color="grey"
+              indeterminate
+              size="32"
+              width="4"
+            ></v-progress-circular>
+          </v-overlay>
+        </v-col>
+        <v-col cols="12" v-show="!loading.values">
           <v-row align="end" class="mb-0">
             <v-col cols="7">
               <div class="text-h6 font-weight-bold text--secondary">
@@ -172,6 +170,24 @@
             </v-col>
           </v-row>
           <svg ref="svg"></svg>
+
+          <v-alert color="error" dense text colored-border border="left" class="body-2 mb-0 mt-2" v-if="provisional">
+            <div class="font-weight-bold body-1 d-flex align-center">
+              <v-icon color="error" left>mdi-alert</v-icon>
+              <div class="body-2 font-weight-medium">Chart Contains Provisional Data</div>
+              <v-spacer></v-spacer>
+              <v-btn xs text color="default" @click="$refs.provisionalDialog.open()">Read More</v-btn>
+            </div>
+            <!-- Data are provisional and subject to revision until they have been thoroughly reviewed and received final approval. -->
+          </v-alert>
+
+          <InfoDialog title="Provisional Data Statement" ref="provisionalDialog">
+            <p>Data are provisional and subject to revision until they have been thoroughly reviewed and received final approval. Current condition data relayed by satellite or other telemetry are automatically screened to not display improbable values until they can be verified.</p>
+
+            <p>Provisional data may be inaccurate due to instrument malfunctions or physical changes at the measurement site. Subsequent review based on field inspections and measurements may result in significant revisions to the data.</p>
+
+            <p class="mb-0">Data users are cautioned to consider carefully the provisional nature of the information before using it for decisions that concern personal or public safety or the conduct of business that involves substantial monetary or operational consequences. Information concerning the accuracy and appropriate uses of these data or concerning other hydrologic data may be obtained from the USGS.</p>
+          </InfoDialog>
         </v-col>
       </v-row>
       <!-- IMAGE ERROR -->
@@ -190,7 +206,7 @@
         </v-col>
       </v-row>
       <!-- NO DATA -->
-      <v-row v-if="station.summary.values.count === 0" class="mt-0">
+      <v-row v-if="station.summary.values.count === 0 && !station.nwis_id" class="mt-0">
         <v-col>
           <v-alert
             type="warning"
@@ -207,7 +223,7 @@
       <!-- PLAYER -->
       <v-row>
         <v-col cols="12" class="pt-0">
-          <v-row class="mt-2">
+          <v-row class="mt-0">
             <v-col cols="3">
               <v-btn
                 block
@@ -241,6 +257,18 @@
           </v-row>
         </v-col>
       </v-row>
+      <v-alert
+        type="error"
+        text
+        dense
+        colored-border
+        border="left"
+        class="body-2 mb-0 mt-4"
+        v-if="error"
+      >
+        <div class="font-weight-bold body-1">Failed to Fetch Data</div>
+        <div>{{ error }}</div>
+      </v-alert>
       <!-- EXPLORE BUTTON -->
       <v-btn
         color="success"
@@ -265,7 +293,8 @@ import * as d3 from 'd3'
 import ImageDialog from '@/components/ImageDialog'
 import InfoDialog from '@/components/InfoDialog'
 
-import { hasDailyValue, timeFormat } from '@/lib/utils'
+import nwis from '@/lib/nwis'
+import { timeFormat } from '@/lib/utils'
 import { variables } from '@/lib/constants'
 
 export default {
@@ -277,7 +306,10 @@ export default {
   props: ['station'],
   data () {
     return {
-      loading: true,
+      loading: {
+        images: true,
+        values: true
+      },
       error: null,
       ready: false,
       clipId: 'preview',
@@ -304,12 +336,18 @@ export default {
         i: 0,
         playing: false,
         speed: 20
-      }
+      },
+      daily: {
+        images: [],
+        values: [],
+        nwis: []
+      },
+      provisional: false
     }
   },
   computed: {
     hasData () {
-      return this.station.summary.values.count > 0
+      return this.station.summary.values.count > 0 || this.station.nwis_id
     },
     height () {
       return this.hasData ? 150 : 40
@@ -326,23 +364,22 @@ export default {
       return `${this.variable.selected.label} (${this.variable.selected.units})`
     },
     minValue () {
-      if (this.dailyValues.length === 0 || this.variableId === 'FLOW_CFS') return 0
-      return d3.min(this.dailyValues, d => d.values ? d.values[this.variableId].min : null)
+      if ((this.daily.values.length + this.daily.nwis.length === 0) || this.variableId === 'FLOW_CFS') return 0
+      const values = [
+        this.daily.values.map(d => d.min),
+        this.daily.nwis.map(d => d.mean)
+      ].flat()
+      return d3.min(values)
     },
     maxValue () {
-      if (this.dailyValues.length === 0 || !this.variableId) return 0
-      return d3.max(this.dailyValues, d => d.values ? d.values[this.variableId].max : 0)
-    },
-    dailyValues () {
-      if (!this.daily || !this.variableId) return []
-      return this.daily
-        .filter(d => hasDailyValue(d, this.variableId))
-        .filter(d => d.dateUtc.isBetween(this.dateExtent[0].subtract(1, 'day'), this.dateExtent[1], null, '[]'))
+      if ((this.daily.values.length + this.daily.nwis.length === 0) || !this.variableId) return 0
+      const valuesMax = d3.max(this.daily.values, d => d.max)
+      const nwisMax = d3.max(this.daily.nwis, d => d.mean)
+      return d3.max([valuesMax, nwisMax])
     },
     dateExtent () {
       if (this.dailyImages.length === 0) return null
       const dateExtent = d3.extent(this.dailyImages, d => d.dateUtc)
-      // dateExtent[1] = dateExtent[1].add(1, 'day')
       return dateExtent
     },
     x () {
@@ -361,7 +398,7 @@ export default {
         .range([this.height - this.margin.bottom, this.margin.top])
     },
     dailyImages () {
-      return this.daily.filter(d => !!d.image)
+      return this.daily.images.filter(d => !!d.image)
     }
   },
   watch: {
@@ -371,8 +408,20 @@ export default {
     hover () {
       this.renderHover()
     },
-    'variable.selected' () {
-      this.render()
+    async 'variable.selected' () {
+      if (!this.ready) return
+      this.loading.values = true
+      this.error = null
+      try {
+        await this.fetchDailyValues()
+        await this.fetchDailyNwis()
+        this.render()
+      } catch (err) {
+        console.log(err)
+        this.error = this.$errorMessage(err)
+      } finally {
+        this.loading.values = false
+      }
     }
   },
   async mounted () {
@@ -385,16 +434,21 @@ export default {
   methods: {
     async init () {
       this.width = this.$el.offsetWidth
-      const data = await this.fetchDaily()
-      this.daily = Object.freeze(data)
 
       if (this.station.summary.values.count === 0) {
-        this.variable.options = []
-        this.variable.selected = null
+        if (this.station.nwis_id) {
+          this.variable.options = variables.filter(d => d.id === 'FLOW_CFS')
+          this.variable.selected = this.variable.options[0]
+        } else {
+          this.variable.options = []
+          this.variable.selected = null
+        }
       } else {
         this.variable.options = variables.filter(d => this.station.summary.values.variables.map(d => d.variable_id).includes(d.id))
         this.variable.selected = this.variable.options.find(d => d.id === this.station.summary.values.variables[0].variable_id)
       }
+
+      await this.fetchDaily()
 
       this.svg = d3.select(this.$refs.svg)
         .attr('width', this.width)
@@ -430,7 +484,7 @@ export default {
         legend: this.svg.append('g')
           .attr(
             'transform',
-            `translate(${this.width - this.margin.right + 10},${this.margin.top + (this.height - this.margin.top - this.margin.bottom) / 2})`
+            `translate(${this.width - this.margin.right + 10},60)`
           )
           .attr('class', 'legend')
       }
@@ -460,24 +514,65 @@ export default {
       this.render()
     },
     async fetchDaily () {
-      this.loading = true
+      this.loading.images = true
+      this.loading.values = true
       this.error = null
-
       try {
-        const url = `/stations/${this.station.id}/daily`
-        const response = await this.$http.public.get(url)
-        const data = response.data
-        data.forEach(d => {
+        await this.fetchDailyImages()
+        await this.fetchDailyValues()
+        await this.fetchDailyNwis()
+      } catch (err) {
+        console.error(err)
+        this.error = this.$errorMessage(err)
+      } finally {
+        this.loading.images = false
+        this.loading.values = false
+      }
+    },
+    async fetchDailyValues () {
+      this.provisional = this.station.provisional
+      const variableId = this.variable.selected.id
+      this.daily.values = []
+      if (this.daily.images.length > 0) {
+        const startDate = this.daily.images[0].date
+        const endDate = this.daily.images[this.daily.images.length - 1].date
+        const values = await this.$http.public
+          .get(`/stations/${this.station.id}/daily/values?variableId=${variableId}&start=${startDate}&end=${endDate}`)
+          .then(d => d.data)
+        values.forEach(d => {
           d.dateUtc = this.$date.utc(d.date)
           d.dateLocal = this.$date.tz(d.date, this.station.utczone)
         })
-        return data
-      } catch (err) {
-        console.error(err)
-        this.error = err.message || err.toString()
-      } finally {
-        this.loading = false
+        this.daily.values = Object.freeze(values)
       }
+    },
+    async fetchDailyNwis () {
+      const variableId = this.variable.selected.id
+      this.daily.nwis = []
+      if (this.daily.images.length > 0 && variableId === 'FLOW_CFS' && this.station.nwis_id) {
+        const startDate = this.daily.images[0].date
+        const endDate = this.daily.images[this.daily.images.length - 1].date
+        const nwisValues = await nwis.getDailyFlows(this.station.nwis_id, startDate, endDate)
+        nwisValues.forEach(d => {
+          d.dateUtc = this.$date.utc(d.date)
+          d.dateLocal = this.$date.tz(d.date, this.station.utczone)
+        })
+        if (nwisValues.some(d => d.provisional)) {
+          this.provisional = true
+        }
+        this.daily.nwis = Object.freeze(nwisValues)
+      }
+    },
+    async fetchDailyImages () {
+      const images = await this.$http.public
+        .get(`/stations/${this.station.id}/daily/images`)
+        .then(d => d.data)
+
+      images.forEach(d => {
+        d.dateUtc = this.$date.utc(d.date)
+        d.dateLocal = this.$date.tz(d.date, this.station.utczone)
+      })
+      this.daily.images = Object.freeze(images)
     },
     onMousemove (event) {
       if (this.player.playing) return
@@ -493,34 +588,19 @@ export default {
         const item = (dateUtc - a.dateUtc) > (b.dateUtc - dateUtc) ? b : a
         return item
       }
-      const hoveredItem = bisectDateUtc(this.dailyImages, mouseTimestampUtc)
-      const hoveredImage = hoveredItem.image
-      const hoveredValue = hasDailyValue(hoveredItem, this.variableId) ? hoveredItem.values[this.variableId] : null
-      // this.g.focus.selectAll('circle.value')
-      //   .data(hoveredValue ? [hoveredValue] : [])
-      //   .join('circle')
-      //   .attr('class', 'value')
-      //   .attr('fill', 'none')
-      //   .attr('stroke', 'orangered')
-      //   .attr('stroke-width', '2px')
-      //   .attr('cx', this.x(hoveredItem.dateUtc))
-      //   .attr('cy', d => this.y(d.mean))
-      //   .attr('r', this.imageRadius)
-      // this.g.focus.selectAll('circle.image')
-      //   .data([hoveredImage], d => d.id)
-      //   .join('circle')
-      //   .attr('class', 'image')
-      //   .attr('fill', 'none')
-      //   .attr('stroke', 'orangered')
-      //   .attr('stroke-width', '2px')
-      //   .attr('cx', d => this.x(hoveredItem.dateUtc))
-      //   .attr('cy', this.imageRadius + this.margin.images)
-      //   .attr('r', this.imageRadius)
+      const hoveredImageItem = bisectDateUtc(this.dailyImages, mouseTimestampUtc)
+      const hoveredImage = hoveredImageItem.image
 
+      const hoveredValueItem = this.daily.values.find(d => d.date === hoveredImageItem.date)
+      const hoveredValue = hoveredValueItem
+
+      const hoveredNwisItem = this.daily.nwis.find(d => d.date === hoveredImageItem.date)
+      const hoveredNwis = hoveredNwisItem
       this.showHover({
-        dateUtc: hoveredItem.dateUtc,
+        dateUtc: hoveredImageItem.dateUtc,
         image: hoveredImage,
-        value: hoveredValue
+        value: hoveredValue,
+        nwis: hoveredNwis
       })
     },
     clearHover () {
@@ -528,11 +608,21 @@ export default {
       this.showHover(null)
     },
     renderHover () {
-      const { value, image, dateUtc } = this.hover || {}
+      const { value, nwis, image, dateUtc } = this.hover || {}
       this.g.focus.selectAll('circle.value')
         .data(value ? [value] : [])
         .join('circle')
         .attr('class', 'value')
+        .attr('fill', 'none')
+        .attr('stroke', 'orangered')
+        .attr('stroke-width', '2px')
+        .attr('cx', this.x(dateUtc))
+        .attr('cy', d => this.y(d.mean))
+        .attr('r', this.imageRadius)
+      this.g.focus.selectAll('circle.nwis')
+        .data(nwis ? [nwis] : [])
+        .join('circle')
+        .attr('class', 'nwis')
         .attr('fill', 'none')
         .attr('stroke', 'orangered')
         .attr('stroke-width', '2px')
@@ -631,7 +721,6 @@ export default {
       this.g.images.selectAll('circle').remove()
 
       this.renderAxes()
-      this.renderLegend()
       this.renderDaily()
     },
     renderLegend () {
@@ -649,47 +738,93 @@ export default {
           .y1(d => 20)
 
         const values = [10, 25]
+        let nwisOffset = 0
 
-        this.g.legend.selectAll('path.mean')
-          .data([values])
-          .join('path')
-          .attr('class', 'mean')
-          .attr('fill', 'none')
-          .attr('stroke', 'steelblue')
-          .attr('stroke-width', '2px')
-          .attr('d', line)
+        if (this.daily.values.length > 0) {
+          nwisOffset = 60
+          this.g.legend.selectAll('path.mean.values')
+            .data([values])
+            .join('path')
+            .attr('class', 'mean')
+            .attr('class', 'values')
+            .attr('fill', 'none')
+            .attr('stroke', 'steelblue')
+            .attr('stroke-width', '2px')
+            .attr('d', line)
 
-        this.g.legend.selectAll('path.range')
-          .data([values])
-          .join('path')
-          .attr('class', 'range')
-          .attr('fill', 'gray')
-          .attr('opacity', 0.25)
-          .attr('d', area)
+          this.g.legend.selectAll('path.range.values')
+            .data([values])
+            .join('path')
+            .attr('class', 'range')
+            .attr('class', 'values')
+            .attr('fill', 'gray')
+            .attr('opacity', 0.25)
+            .attr('d', area)
 
-        this.g.legend.selectAll('text')
-          .data([{ value: -20, text: 'Max' }, { value: 0, text: 'Mean' }, { value: 20, text: 'Min' }])
-          .join('text')
-          .attr('font-size', 12)
-          .attr('font-family', 'sans-serif')
-          .attr('text-anchor', 'start')
-          .attr('fill', 'currentColor')
-          .attr('x', values[1] + 5)
-          .attr('y', d => d.value)
-          .attr('dy', '0.3em')
-          .text(d => d.text)
+          this.g.legend.selectAll('text')
+            .data([{ value: -20, text: 'Max' }, { value: 0, text: 'Mean' }, { value: 20, text: 'Min' }])
+            .join('text')
+            .attr('font-size', 12)
+            .attr('font-family', 'sans-serif')
+            .attr('text-anchor', 'start')
+            .attr('fill', 'currentColor')
+            .attr('x', values[1] + 5)
+            .attr('y', d => d.value)
+            .attr('dy', '0.3em')
+            .text(d => d.text)
 
-        this.g.legend
-          .append('text')
-          .attr('font-size', 12)
-          .attr('font-family', 'sans-serif')
-          .attr('text-anchor', 'start')
-          .attr('text-decoration', 'underline')
-          .attr('fill', 'currentColor')
-          .attr('x', 10)
-          .attr('y', -40)
-          .attr('dy', '0.3em')
-          .text('Obs. Daily')
+          this.g.legend
+            .append('text')
+            .attr('font-size', 12)
+            .attr('font-family', 'sans-serif')
+            .attr('text-anchor', 'start')
+            .attr('text-decoration', 'underline')
+            .attr('fill', 'currentColor')
+            .attr('x', 10)
+            .attr('y', -40)
+            .attr('dy', '0.3em')
+            .text('Obs. Daily')
+        }
+
+        if (this.daily.nwis && this.daily.nwis.length > 0) {
+          this.g.legend.selectAll('path.mean.nwis')
+            .data([values])
+            .join('path')
+            .attr('class', 'mean')
+            .attr('class', 'nwis')
+            .attr('fill', 'none')
+            .attr('stroke', 'deepskyblue')
+            .attr('stroke-width', '2px')
+            .attr('d', line)
+            .attr('transform', `translate(0,${nwisOffset + 20})`)
+
+          this.g.legend
+            .append('text')
+            .attr('class', 'nwis')
+            .attr('font-size', 12)
+            .attr('font-family', 'sans-serif')
+            .attr('text-anchor', 'start')
+            .attr('text-decoration', 'underline')
+            .attr('fill', 'currentColor')
+            .attr('x', 10)
+            .attr('y', nwisOffset)
+            .attr('dy', '0.3em')
+            .text('NWIS')
+          this.g.legend
+            .append('text')
+            .attr('class', 'nwis')
+            .attr('font-size', 12)
+            .attr('font-family', 'sans-serif')
+            .attr('text-anchor', 'start')
+            .attr('fill', 'currentColor')
+            .attr('x', 30)
+            .attr('y', nwisOffset + 20)
+            .attr('dy', '0.3em')
+            .text('Mean')
+        } else {
+          this.g.legend.selectAll('path.mean.nwis').remove()
+          this.g.legend.selectAll('text.nwis').remove()
+        }
       }
     },
     renderAxes () {
@@ -737,13 +872,16 @@ export default {
         .attr('visibility', !this.hasData ? 'hidden' : 'visible')
     },
     renderDaily () {
-      // if (this.variable.selected) {
+      this.renderDailyImages()
+      this.renderDailyValues()
+    },
+    renderDailyValues () {
       const valueChunks = []
-      this.dailyValues.forEach((d, i) => {
+      this.daily.values.forEach((d, i) => {
         if (i === 0) {
           valueChunks.push([d])
         } else {
-          if (d.dateUtc.diff(this.dailyValues[i - 1].dateUtc, 'day') > 1) {
+          if (d.dateUtc.diff(this.daily.values[i - 1].dateUtc, 'day') > 1) {
             valueChunks.push([d])
           } else {
             valueChunks[valueChunks.length - 1].push(d)
@@ -751,37 +889,61 @@ export default {
         }
       })
 
+      const nwisChunks = []
+      this.daily.nwis.forEach((d, i) => {
+        if (i === 0) {
+          nwisChunks.push([d])
+        } else {
+          if (d.dateUtc.diff(this.daily.nwis[i - 1].dateUtc, 'day') > 1) {
+            nwisChunks.push([d])
+          } else {
+            nwisChunks[nwisChunks.length - 1].push(d)
+          }
+        }
+      })
+
       const line = d3.line()
-        .defined(d => hasDailyValue(d, this.variableId))
         .curve(d3.curveStep)
         .x(d => this.x(d.dateUtc))
-        .y(d => this.y(d.values[this.variableId].mean))
+        .y(d => this.y(d.mean))
 
       const area = d3.area()
-        .defined(d => hasDailyValue(d, this.variableId))
         .curve(d3.curveStep)
         .x(d => this.x(d.dateUtc))
-        .y0(d => this.y(d.values[this.variableId].min))
-        .y1(d => this.y(d.values[this.variableId].max))
+        .y0(d => this.y(d.min))
+        .y1(d => this.y(d.max))
 
-      this.g.values.selectAll('path.mean')
+      this.g.values.selectAll('path.mean.values')
         .data(valueChunks)
         .join('path')
         .attr('class', 'mean')
+        .attr('class', 'values')
         .attr('fill', 'none')
         .attr('stroke', 'steelblue')
         .attr('stroke-width', '2px')
         .attr('d', line)
 
-      this.g.values.selectAll('path.range')
+      this.g.values.selectAll('path.range.values')
         .data(valueChunks)
         .join('path')
         .attr('class', 'range')
+        .attr('class', 'values')
         .attr('fill', 'gray')
         .attr('opacity', 0.5)
         .attr('d', area)
-      // }
 
+      this.g.values.selectAll('path.mean.nwis')
+        .data(nwisChunks)
+        .join('path')
+        .attr('class', 'mean')
+        .attr('class', 'nwis')
+        .attr('fill', 'none')
+        .attr('stroke', 'deepskyblue')
+        .attr('stroke-width', '2px')
+        .attr('d', line)
+      this.renderLegend()
+    },
+    renderDailyImages () {
       this.g.images.selectAll('circle')
         .data(this.dailyImages)
         .join('circle')
@@ -823,11 +985,14 @@ export default {
     },
     playFrame (i) {
       this.player.i = i
-      const row = this.dailyImages[i]
+      const dailyImage = this.dailyImages[i]
+      const dailyValue = this.daily.values.find(d => d.date === dailyImage.date)
+      const dailyNwis = this.daily.nwis.find(d => d.date === dailyImage.date)
       this.showHover({
-        dateUtc: row.dateUtc,
-        image: row.image,
-        value: hasDailyValue(row, this.variableId) ? row.values[this.variableId] : null
+        dateUtc: dailyImage.dateUtc,
+        image: dailyImage.image,
+        value: dailyValue,
+        nwis: dailyNwis
       })
 
       this.player.timeout = setTimeout(() => {

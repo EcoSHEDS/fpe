@@ -43,6 +43,20 @@
           </td>
           <td class="font-weight-bold">{{ station.affiliation_name }}</td>
         </tr>
+        <tr>
+          <td class="text-right grey--text text--darken-2">
+            NWIS ID
+          </td>
+          <td class="font-weight-bold">
+            <a
+              v-if="station.nwis_id"
+              :href="`https://waterdata.usgs.gov/nwis/inventory/?site_no=${station.nwis_id}&agency_cd=USGS`"
+              target="_blank"
+            >
+              {{ station.nwis_id }}
+            </a>
+          </td>
+        </tr>
       </tbody>
     </v-simple-table>
     <v-divider></v-divider>
@@ -147,7 +161,7 @@
     </div>
     <v-divider></v-divider>
     <div class="body-2 ma-2 font-weight-bold" v-if="station.summary.values.count == 0">
-      No Data Available
+      No Uploaded Data Available
     </div>
     <div v-else>
       <v-simple-table dense>

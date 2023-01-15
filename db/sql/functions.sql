@@ -349,3 +349,45 @@ create or replace view stations_summary_images as (
 	from stations s
 	left join t_json on s.id=t_json.station_id
 );
+
+-- daily values for station and variable
+create or replace function f_station_daily_values_variable(_station_id INT, _variable_id TEXT, _start DATE, _end DATE)
+returns table (
+	date DATE,
+	min REAL,
+	mean REAL,
+	max REAL,
+	count REAL
+)
+as $$
+	with tv as (
+		select
+			s.timezone,
+			ss.id as series_id,
+			(v.timestamp at time zone s.timezone)::date as date,
+			v.value
+		from stations s
+		inner join datasets d
+		on s.id=d.station_id
+		inner join series ss
+		on d.id=ss.dataset_id
+		inner join values v
+		on ss.id=v.series_id
+		where s.id=_station_id
+			and v.flag is null
+			and d.status='DONE'
+			and ss.variable_id=_variable_id
+		order by v.timestamp
+	)
+	select
+		tv.date,
+		min(tv.value)::REAL as min,
+		avg(tv.value)::REAL as mean,
+		max(tv.value)::REAL as max,
+		count(tv.value)::REAL as count
+	from tv
+	where tv.date >= _start
+		and tv.date <= _end
+	group by tv.date
+	order by tv.date
+$$ language sql;

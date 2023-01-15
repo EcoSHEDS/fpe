@@ -5,8 +5,6 @@
 <script>
 import * as d3 from 'd3'
 
-import { hasDailyValue } from '@/lib/utils'
-
 export default {
   name: 'ContextChart',
   props: ['station', 'variable', 'daily'],
@@ -28,8 +26,8 @@ export default {
       return this.variable.id
     },
     maxValue () {
-      if (!this.values.length === 0 || !this.variableId) return 0
-      return d3.max(this.values, d => d.values ? d.values[this.variableId].mean : 0)
+      if (!this.variableId || (this.values.length + this.nwis.length === 0)) return 0
+      return d3.max([this.values, this.nwis].flat(), d => d.mean)
     },
     dateExtent () {
       if (this.dailyImages.length === 0) return null
@@ -48,10 +46,10 @@ export default {
         .range([this.height - this.margin.bottom, this.margin.top])
     },
     dailyImages () {
-      return this.daily ? this.daily.filter(d => !!d.image) : []
+      return this.daily.images.filter(d => !!d.image)
     },
     imagePeriods () {
-      if (!this.daily || this.daily.length === 0) return []
+      // if ((!this.daily.values && !this.daily.nwis) || (this.daily.values.length + this.daily.nwis.length === 0)) return []
 
       const imagePeriods = []
       this.dailyImages.forEach((d, i) => {
@@ -73,11 +71,20 @@ export default {
       })
     },
     values () {
-      if (!this.variableId || !this.daily) return []
+      if (!this.variableId || !this.daily.values) return []
 
-      const data = [...this.daily]
-        .filter(d => hasDailyValue(d, this.variableId))
-        .filter(d => d.dateUtc.isBetween(this.dateExtent[0].subtract(1, 'day'), this.dateExtent[1], null, '[]'))
+      const data = [...this.daily.values]
+      if (data.length > 0) {
+        const lastValue = Object.assign({}, data[data.length - 1])
+        lastValue.dateUtc = lastValue.dateUtc.clone().add(1, 'day')
+        data.push(lastValue)
+      }
+      return data
+    },
+    nwis () {
+      if (!this.variableId || !this.daily.nwis) return []
+
+      const data = [...this.daily.nwis]
       if (data.length > 0) {
         const lastValue = Object.assign({}, data[data.length - 1])
         lastValue.dateUtc = lastValue.dateUtc.clone().add(1, 'day')
@@ -88,8 +95,11 @@ export default {
     hasValues () {
       return this.values.length > 0
     },
+    hasNwis () {
+      return this.nwis.length > 0
+    },
     height () {
-      return this.hasValues ? 100 : 50
+      return this.hasValues || this.hasNwis ? 100 : 50
     }
   },
   watch: {
@@ -173,7 +183,7 @@ export default {
               .attr('d', (d) => {
                 const e = +(d.type === 'e')
                 const x = e ? 1 : -1
-                const y0 = that.hasValues ? 27 : 0
+                const y0 = that.hasValues || this.hasNwis || that.hasNwis ? 27 : 0
                 const l = 30
                 return 'M' + (0.5 * x) + ',' + y0 +
                 'A6,6 0 0 ' + e + ' ' + (6.5 * x) + ',' + (y0 + 6) +
@@ -208,7 +218,7 @@ export default {
       }
     },
     renderAxes () {
-      if (this.hasValues) {
+      if (this.hasValues || this.hasNwis) {
         this.g.yAxis.attr('display', null)
         const yAxis = d3.axisLeft(this.y)
           .ticks(2)
@@ -255,14 +265,13 @@ export default {
       this.createBrush()
       this.renderAxes()
 
-      if (this.hasValues) {
-        const area = d3.area()
-          .defined(d => hasDailyValue(d, this.variableId))
-          .curve(d3.curveStep)
-          .x(d => this.x(d.dateUtc))
-          .y0(this.y(0))
-          .y1(d => this.y(d.values[this.variableId].mean))
+      const area = d3.area()
+        .curve(d3.curveStep)
+        .x(d => this.x(d.dateUtc))
+        .y0(this.y(0))
+        .y1(d => this.y(d.mean))
 
+      if (this.hasValues) {
         const valueChunks = []
         this.values.forEach((d, i) => {
           if (i === 0) {
@@ -279,11 +288,37 @@ export default {
         this.g.values.selectAll('path')
           .data(valueChunks)
           .join('path')
+          .attr('class', 'values')
           .attr('fill', 'steelblue')
           .attr('opacity', 0.9)
           .attr('d', area)
       } else {
-        this.g.values.selectAll('path').remove()
+        this.g.values.selectAll('path.values').remove()
+      }
+
+      if (this.hasNwis) {
+        const valueChunks = []
+        this.nwis.forEach((d, i) => {
+          if (i === 0) {
+            valueChunks.push([d])
+          } else {
+            if (d.dateUtc.diff(this.nwis[i - 1].dateUtc, 'day') > 1) {
+              valueChunks.push([d])
+            } else {
+              valueChunks[valueChunks.length - 1].push(d)
+            }
+          }
+        })
+
+        this.g.values.selectAll('path')
+          .data(valueChunks)
+          .join('path')
+          .attr('class', 'nwis')
+          .attr('fill', 'deepskyblue')
+          .attr('opacity', 0.9)
+          .attr('d', area)
+      } else {
+        this.g.values.selectAll('path.nwis').remove()
       }
 
       this.g.images

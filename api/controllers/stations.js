@@ -115,9 +115,13 @@ const getStationDaily = async (req, res, next) => {
 const getStationDailyValues = async (req, res, next) => {
   const variableId = req.query.variableId
   if (!variableId) throw createError(400, 'Query parameter \'variableId\' missing')
+  const start = req.query.start
+  if (!start) throw createError(400, 'Query parameter \'start\' missing')
+  const end = req.query.end
+  if (!end) throw createError(400, 'Query parameter \'end\' missing')
   const result = await knex.raw(
-    'select * from f_station_daily_values(?, ?)',
-    [res.locals.station.id, variableId]
+    'select * from f_station_daily_values_variable(?, ?, ?, ?)',
+    [res.locals.station.id, variableId, start, end]
   )
   const rows = result.rows
   return res.status(200).json(rows)

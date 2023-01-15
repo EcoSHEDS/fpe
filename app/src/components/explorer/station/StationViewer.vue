@@ -1,6 +1,6 @@
 <template>
   <div style="height:100%;min-height:100px">
-    <div v-if="loading" style="position:relative;height:100%">
+    <div v-if="loading.images" style="position:relative;height:100%">
       <v-overlay absolute color="grey lighten-2">
         <div class="text-h3 text-center grey--text">
           <div>
@@ -31,33 +31,6 @@
     <div v-else>
       <!-- IMAGES -->
       <v-container class="mt-n4 pt-0">
-        <v-row v-if="station.provisional" class="my-0 py-0">
-          <v-col class="py-0">
-            <v-alert
-              type="error"
-              dense
-              text
-              colored-border
-              border="left"
-              :value="station.provisional"
-              class="mb-0 mt-2 body-2"
-            >
-              <div class="font-weight-bold body-1">Station Contains Provisional Data</div>
-              <div>
-                <v-btn class="mt-1 float-right" xs text color="default" @click="$refs.provisionalDialog.open()">Read More</v-btn>
-                Data are provisional and subject to revision until they have been thoroughly reviewed and received final approval.
-              </div>
-            </v-alert>
-
-            <InfoDialog title="Provisional Data Statement" ref="provisionalDialog">
-              <p>Data are provisional and subject to revision until they have been thoroughly reviewed and received final approval. Current condition data relayed by satellite or other telemetry are automatically screened to not display improbable values until they can be verified.</p>
-
-              <p>Provisional data may be inaccurate due to instrument malfunctions or physical changes at the measurement site. Subsequent review based on field inspections and measurements may result in significant revisions to the data.</p>
-
-              <p class="mb-0">Data users are cautioned to consider carefully the provisional nature of the information before using it for decisions that concern personal or public safety or the conduct of business that involves substantial monetary or operational consequences. Information concerning the accuracy and appropriate uses of these data or concerning other hydrologic data may be obtained from the USGS.</p>
-            </InfoDialog>
-          </v-col>
-        </v-row>
         <v-row align="stretch" class="mt-0">
           <v-col cols="12" md="7">
             <div class="elevation-1 pa-2">
@@ -107,14 +80,19 @@
                       </div>
                     </td>
                   </tr>
-                  <tr v-if="variable.selected">
+                  <tr v-if="variableId">
                     <td class="py-2 pl-0">
-                      <div class="text-subtitle-2 text--secondary">Obs. Daily Mean {{ variable.selected.label }} (Min - Max)</div>
+                      <div class="text-subtitle-2 text--secondary">Obs. Daily Mean {{ variable.selected.label }}</div>
                       <div v-if="hover.value" class="font-weight-bold">
                         {{ hover.value.mean | d3Format('.3r') }} {{ variable.selected.id === 'OTHER' ? '' : variable.selected.units }}
-                        ({{ hover.value.min | d3Format('.3r') }} - {{ hover.value.max | d3Format('.3r') }} {{ variable.selected.id === 'OTHER' ? '' : variable.selected.units }})
+                        <span v-if="hover.nwis">(FPE)</span>
                       </div>
-                      <div v-else class="font-weight-bold">
+                      <div v-if="hover.nwis" class="font-weight-bold">
+                        {{ hover.nwis.mean | d3Format('.3r') }}
+                        {{ variable.selected.id !== 'OTHER' ? variable.selected.units : '' }}
+                        (NWIS)
+                      </div>
+                      <div v-if="!hover.value && !hover.nwis" class="font-weight-bold">
                         N/A
                       </div>
                     </td>
@@ -141,11 +119,21 @@
                       </div>
                     </td>
                   </tr>
-                  <tr v-if="hover.value">
+                  <tr v-if="variableId">
                     <td class="py-2 pl-0">
-                      <div class="text-subtitle-2 text--secondary">Instantaneous {{ variable.selected.label }} (Observed)</div>
-                      <div class="font-weight-bold">
+                      <div class="text-subtitle-2 text--secondary">Obs. {{ variable.selected.label }}</div>
+                      <div v-if="hover.value" class="font-weight-bold">
                         {{ hover.value | d3Format('.3r') }} {{ variable.selected.id === 'OTHER' ? '' : variable.selected.units }}
+                        <span v-if="hover.nwis">(FPE)</span>
+                      </div>
+
+                      <div v-if="hover.nwis" class="font-weight-bold">
+                        {{ hover.nwis | d3Format('.3r') }}
+                        {{ variable.selected.id !== 'OTHER' ? variable.selected.units : '' }}
+                        (NWIS)
+                      </div>
+                      <div v-if="!hover.value && !hover.nwis" class="font-weight-bold">
+                        N/A
                       </div>
                     </td>
                   </tr>
@@ -350,7 +338,7 @@
               @hover="setHover"
             ></TimeseriesChart>
 
-            <v-overlay color="grey lighten-2" absolute v-if="loadingInstantaneous" class="text-center">
+            <v-overlay color="grey lighten-2" absolute v-if="loading.instantaneous" class="text-center">
               <div class="text-h5 text-center grey--text">
                 <div>
                   Loading
@@ -419,10 +407,14 @@
               :hover="hover"
               :play="tab === 1 && player.playing"
               :speed="player.speed"
+              :nwis="!!station.nwis_id"
               @hover="setHover"
             ></DistributionChart>
+            <div v-if="station.nwis_id" class="body-2">
+              Note: Distribution computed using only data from NWIS.
+            </div>
 
-            <v-overlay color="grey lighten-2" absolute v-if="loadingInstantaneous" class="text-center">
+            <v-overlay color="grey lighten-2" absolute v-if="loading.instantaneous" class="text-center">
               <div class="text-h5 text-center grey--text">
                 <div>
                   Loading
@@ -445,7 +437,7 @@
           <v-spacer></v-spacer>
           <div>
             <span class="font-weight-regular">Selected:</span>
-            <span v-if="focus && this.daily.length > 0">
+            <span v-if="focus && this.daily.values.length > 0">
               {{ focus[0] | timestampLocalFormat(station.timezone, 'll') }} -
               {{ focus[1] | timestampLocalFormat(station.timezone, 'll') }}
               ({{ $date(focus[1]).diff($date(focus[0]), 'day') + 1 }} days)
@@ -481,6 +473,34 @@
           :daily="daily"
           @brush="setFocus"
         ></ContextChart>
+
+        <v-row v-if="provisional" class="my-0 py-0">
+          <v-col class="py-0">
+            <v-alert
+              color="error"
+              dense
+              text
+              colored-border
+              border="left"
+              class="mb-0 mt-2 body-2"
+            >
+              <div class="font-weight-bold body-1 d-flex align-center">
+                <v-icon color="error" left>mdi-alert</v-icon>
+                <div class="body-2 font-weight-medium">Charts Contains Provisional Data</div>
+                <v-spacer></v-spacer>
+                <v-btn xs text color="default" @click="$refs.provisionalDialog.open()">Read More</v-btn>
+              </div>
+            </v-alert>
+
+            <InfoDialog title="Provisional Data Statement" ref="provisionalDialog">
+              <p>Data are provisional and subject to revision until they have been thoroughly reviewed and received final approval. Current condition data relayed by satellite or other telemetry are automatically screened to not display improbable values until they can be verified.</p>
+
+              <p>Provisional data may be inaccurate due to instrument malfunctions or physical changes at the measurement site. Subsequent review based on field inspections and measurements may result in significant revisions to the data.</p>
+
+              <p class="mb-0">Data users are cautioned to consider carefully the provisional nature of the information before using it for decisions that concern personal or public safety or the conduct of business that involves substantial monetary or operational consequences. Information concerning the accuracy and appropriate uses of these data or concerning other hydrologic data may be obtained from the USGS.</p>
+            </InfoDialog>
+          </v-col>
+        </v-row>
       </v-container>
     </div>
   </div>
@@ -489,6 +509,7 @@
 <script>
 import { interpolateValuesAtTimestamp } from '@/lib/utils'
 import { variables } from '@/lib/constants'
+import nwis from '@/lib/nwis'
 
 import ImageDialog from '@/components/ImageDialog'
 import InfoDialog from '@/components/InfoDialog'
@@ -508,12 +529,19 @@ export default {
   },
   data () {
     return {
-      loading: true,
+      loading: {
+        images: true,
+        values: true,
+        instantaneous: false
+      },
       error: null,
       imageError: false,
       tab: 0,
-      daily: [],
-      loadingInstantaneous: false,
+      daily: {
+        images: [],
+        values: [],
+        nwis: []
+      },
       instantaneous: null,
       mode: 'daily',
       focus: null,
@@ -521,6 +549,7 @@ export default {
       variable: {
         selected: null
       },
+      provisional: false,
       queue: [],
       drawing: false,
       aspectRatio: null,
@@ -531,9 +560,6 @@ export default {
     }
   },
   computed: {
-    hasData () {
-      return this.station.summary.values && this.station.summary.values.n_rows > 0
-    },
     variableOptions () {
       const options = [
         {
@@ -543,10 +569,18 @@ export default {
           units: null
         }
       ]
-      if (!this.station || !this.station.summary.values || this.station.summary.values.n_rows === 0) {
+      if (!this.station) {
+        return options
+      } else if (!this.station.summary.values || this.station.summary.values.n_rows === 0) {
+        if (this.station.nwis_id) {
+          options.push(variables.find(d => d.id === 'FLOW_CFS'))
+        }
         return options
       } else {
         const stationVariableIds = this.station.summary.values.variables.map(d => d.variable_id)
+        if (!stationVariableIds.includes('FLOW_CFS') && this.station.nwis_id) {
+          options.push(variables.find(d => d.id === 'FLOW_CFS'))
+        }
         variables.forEach(v => {
           if (stationVariableIds.includes(v.id)) {
             options.push(v)
@@ -565,7 +599,7 @@ export default {
     }
   },
   mounted () {
-    this.fetchDaily()
+    this.init()
   },
   watch: {
     variableOptions (options) {
@@ -573,6 +607,7 @@ export default {
     },
     variableId () {
       // workaround to trigger timeseries chart update
+      this.fetchDaily()
       this.setFocus(this.focus ? [...this.focus] : this.focus)
     },
     tab () {
@@ -584,9 +619,13 @@ export default {
     }
   },
   methods: {
+    init () {
+      this.autoselectVariable()
+      this.fetchDaily()
+    },
     autoselectVariable () {
       const values = this.variableOptions.map(d => d.id)
-      if (values.includes('FLOW_CFS')) {
+      if (values.includes('FLOW_CFS') || this.station.nwis_id) {
         this.variable.selected = this.variableOptions.find(d => d.id === 'FLOW_CFS')
       } else if (values && values.length > 0) {
         this.variable.selected = this.variableOptions.find(d => d.id === values[0])
@@ -595,25 +634,68 @@ export default {
       }
     },
     async fetchDaily () {
-      this.loading = true
+      this.loading.images = true
+      this.loading.values = true
       this.error = null
-
+      this.provisional = this.station.provisional
       try {
-        const url = `/stations/${this.$route.params.stationId}/daily`
-        const response = await this.$http.public.get(url)
-        const data = response.data
-        data.forEach(d => {
-          d.dateUtc = this.$date.utc(d.date)
-          d.dateLocal = this.$date.tz(d.date, this.station.timezone)
-        })
-        this.daily = Object.freeze(data)
-        this.autoselectVariable()
+        await this.fetchDailyImages()
+        await this.fetchDailyValues()
+        await this.fetchDailyNwis()
       } catch (err) {
         console.error(err)
-        this.error = err.message || err.toString()
+        this.error = this.$errorMessage(err)
       } finally {
-        this.loading = false
+        this.loading.images = false
+        this.loading.values = false
       }
+    },
+    async fetchDailyValues () {
+      this.provisional = this.station.provisional
+      const variableId = this.variable.selected.id
+      this.daily.values = []
+      if (this.daily.images.length > 0) {
+        const startDate = this.daily.images[0].date
+        const endDate = this.daily.images[this.daily.images.length - 1].date
+        const values = await this.$http.public
+          .get(`/stations/${this.station.id}/daily/values?variableId=${variableId}&start=${startDate}&end=${endDate}`)
+          .then(d => d.data)
+        values.forEach(d => {
+          d.dateUtc = this.$date.utc(d.date)
+          d.dateLocal = this.$date.tz(d.date, this.station.utczone)
+        })
+        this.daily.values = Object.freeze(values)
+      }
+    },
+    async fetchDailyNwis () {
+      const variableId = this.variable.selected.id
+      this.daily.nwis = []
+      if (this.daily.images.length > 0 && variableId === 'FLOW_CFS' && this.station.nwis_id) {
+        const startDate = this.daily.images[0].date
+        const endDate = this.daily.images[this.daily.images.length - 1].date
+        const nwisValues = await nwis.getDailyFlows(this.station.nwis_id, startDate, endDate)
+        nwisValues.forEach(d => {
+          d.dateUtc = this.$date.utc(d.date)
+          d.dateLocal = this.$date.tz(d.date, this.station.utczone)
+        })
+        if (nwisValues.some(d => d.provisional)) {
+          this.provisional = true
+        }
+        this.daily.nwis = Object.freeze(nwisValues)
+      } else {
+        this.daily.nwis = []
+      }
+    },
+    async fetchDailyImages () {
+      const images = await this.$http.public
+        .get(`/stations/${this.station.id}/daily/images`)
+        .then(d => d.data)
+
+      images.forEach(d => {
+        d.dateUtc = this.$date.utc(d.date)
+        d.dateLocal = this.$date.tz(d.date, this.station.utczone)
+      })
+      this.daily.images = Object.freeze(images)
     },
     async setFocus (focus) {
       if (!focus) return
@@ -631,13 +713,14 @@ export default {
       this.focus = focus
     },
     async setHover (hover) {
+      // console.log('setHover()', hover, this.queue.length)
       const nextInQueue = this.queue.length ? this.queue[this.queue.length - 1] : null
 
       if (nextInQueue && hover) {
         // hover is already at end of queue
         if (nextInQueue.image.id === hover.image.id) return
       } else if (this.hover && hover) {
-        // hover is alredy being shown
+        // hover is already being shown
         if (this.hover.image.id === hover.image.id) return
       }
 
@@ -648,7 +731,9 @@ export default {
       }
     },
     shiftQueue () {
-      this.queue.shift()
+      if (this.queue.length > 0) {
+        this.queue.shift()
+      }
       if (this.queue.length > 5) {
         this.queue.splice(0, this.queue.length - 5)
       }
@@ -682,18 +767,18 @@ export default {
           ctx.drawImage(imageElement, 0, 0, canvas.width, canvas.height)
           this.hover = hover
           this.shiftQueue()
+          // this.drawImage()
           if (this.queue.length > 0) {
             this.drawImage()
           } else {
             this.drawing = false
           }
         }
-        imageElement.onerror = () => {
-          // console.error(err)
+        imageElement.onerror = (err) => {
+          console.log(err)
           this.hover = hover
           this.imageError = true
           this.shiftQueue()
-          // ctx.clearRect(0, 0, canvas.width, canvas.height)
           if (this.queue.length > 0) {
             this.drawImage()
           } else {
@@ -704,21 +789,28 @@ export default {
       }
     },
     async fetchInstantaneous (focus) {
-      this.loadingInstantaneous = true
+      this.loading.instantaneous = true
       try {
         const images = await this.fetchInstantaneousImages(focus)
         const values = await this.fetchInstantaneousValues(focus)
+        const nwis = await this.fetchInstantaneousNwis(focus)
 
         if (values.length > 0) {
           images.forEach(d => {
             d.value = interpolateValuesAtTimestamp(values, d.timestamp)
           })
         }
-        return { images, values }
+        if (nwis.length > 0) {
+          console.log(nwis)
+          images.forEach((d, i) => {
+            d.nwis = interpolateValuesAtTimestamp(nwis, d.timestamp)
+          })
+        }
+        return { images, values, nwis }
       } catch (err) {
         console.error(err)
       } finally {
-        this.loadingInstantaneous = false
+        this.loading.instantaneous = false
       }
     },
     async fetchInstantaneousImages (focus) {
@@ -751,6 +843,19 @@ export default {
         }
       })
       const values = response.data
+      values.forEach((d, i) => {
+        d.timestampRaw = d.timestamp
+        d.timestamp = this.$date(d.timestamp).tz(this.station.timezone)
+        d.timestampUtc = this.$date(d.timestampRaw).add(d.timestamp.utcOffset() / 60, 'hour')
+      })
+      return values
+    },
+    async fetchInstantaneousNwis (focus) {
+      if (!this.variableId || !focus || !this.station.nwis_id) return []
+
+      const startDate = this.$date(focus[0]).subtract(1, 'day').toISOString().substr(0, 10)
+      const endDate = this.$date(focus[1]).add(1, 'day').toISOString().substr(0, 10)
+      const values = await nwis.getInstantaneousFlows(this.station.nwis_id, startDate, endDate)
       values.forEach((d, i) => {
         d.timestampRaw = d.timestamp
         d.timestamp = this.$date(d.timestamp).tz(this.station.timezone)

@@ -33,11 +33,11 @@
 import * as d3 from 'd3'
 import debounce from 'debounce'
 
-import { hasDailyImage, hasDailyValue, lerp } from '@/lib/utils'
+import { lerp } from '@/lib/utils'
 
 export default {
   name: 'DistributionChart',
-  props: ['station', 'variable', 'daily', 'instantaneous', 'mode', 'focus', 'hover', 'play', 'speed'],
+  props: ['station', 'variable', 'daily', 'instantaneous', 'mode', 'focus', 'hover', 'play', 'speed', 'nwis'],
   data () {
     return {
       ready: false,
@@ -88,25 +88,45 @@ export default {
         .domain([0, 1])
         .range([this.height - this.margin.bottom, this.margin.top + this.margin.images])
     },
+    focusDailyValues () {
+      if (!this.variableId) return []
+      let values = this.daily.values
+      if (this.nwis) {
+        values = this.daily.nwis
+      }
+      return values.filter(d => d.dateUtc.isBetween(this.focusUtc[0], this.focusUtc[1], null, '[]'))
+    },
+    focusDailyImages () {
+      return this.daily.images.filter(d => !!d.image).filter(d => d.dateUtc.isBetween(this.focusUtc[0], this.focusUtc[1], null, '[]'))
+    },
     focusDaily () {
-      if (!this.daily || !this.focusUtc) return []
-      return this.daily.filter(d => d.dateUtc.isBetween(this.focusUtc[0], this.focusUtc[1], null, '[]'))
+      const images = this.focusDailyImages.map(d => ([d.date, d]))
+      const imageMap = new Map(images)
+      return this.focusDailyValues.map(d => ({
+        ...d,
+        image: imageMap.has(d.date) ? imageMap.get(d.date).image : undefined
+      }))
     },
     distributionValues () {
       if (this.mode === 'daily') {
         if (!this.focusDaily || !this.variableId || !this.focusUtc) return []
 
         return this.focusDaily
-          .filter(d => hasDailyValue(d, this.variableId))
-          .sort((a, b) => d3.ascending(a.values[this.variableId].mean, b.values[this.variableId].mean))
+          .slice()
+          .sort((a, b) => d3.ascending(a.mean, b.mean))
           .map((d, i, arr) => ({
             p: i / (arr.length + 1),
-            value: d.values[this.variableId].mean,
+            value: d.mean,
             ...d
           }))
       } else {
         if (!this.instantaneous || !this.variableId || !this.focusUtc) return []
-        return this.instantaneous.values.slice()
+        let values = this.instantaneous.values
+        if (this.nwis) {
+          values = this.instantaneous.nwis
+        }
+        return values
+          .slice()
           .sort((a, b) => d3.ascending(a.value, b.value))
           .map((d, i, arr) => ({
             p: i / (arr.length + 1),
@@ -117,12 +137,13 @@ export default {
     },
     distributionImages () {
       if (this.mode === 'daily') {
-        return this.distributionValues.filter(hasDailyImage)
+        return this.distributionValues
+          .filter(d => !!d.image)
           .map(d => ({
             date: d.date,
             dateUtc: d.dateUtc,
             image: d.image,
-            value: d.values[this.variableId],
+            value: d,
             p: d.p
           }))
       } else {
@@ -147,10 +168,21 @@ export default {
 
           return p
         }
-        this.instantaneous.images.forEach(d => {
-          d.p = interpolateProbability(this.distributionValues, d.value)
+        const images = this.instantaneous.images.map(d => {
+          let p
+          if (this.nwis) {
+            p = interpolateProbability(this.distributionValues, d.nwis)
+          } else {
+            p = interpolateProbability(this.distributionValues, d.value)
+          }
+          return {
+            ...d,
+            value: this.nwis ? d.nwis : d.value,
+            nwis: this.nwis,
+            p
+          }
         })
-        return this.instantaneous.images.slice()
+        return images.slice()
           .filter(d => d.value !== null && d.p !== null)
           .sort((a, b) => d3.ascending(a.value, b.value))
       }
@@ -261,13 +293,19 @@ export default {
         }
         const hoveredItem = bisectValue(this.distributionImages, mouseValue)
 
-        this.emitHover({
+        const x = {
           mode: this.mode,
           dateUtc: hoveredItem.dateUtc,
           image: hoveredItem.image,
-          value: hoveredItem.value,
-          p: hoveredItem.p
-        })
+          p: hoveredItem.p,
+          nwis: this.nwis
+        }
+        if (this.nwis) {
+          x.nwis = hoveredItem.value
+        } else {
+          x.value = hoveredItem.value
+        }
+        this.emitHover(x)
       } else if (this.mode === 'instantaneous') {
         if (this.distributionImages.length === 0) return this.emitHover()
 
@@ -283,13 +321,20 @@ export default {
         }
         const hoveredImage = bisectValue(this.distributionImages, mouseValue)
 
-        this.emitHover({
+        const x = {
           mode: this.mode,
           timestampUtc: hoveredImage.timestampUtc,
           image: hoveredImage,
-          value: hoveredImage.value,
-          p: hoveredImage.p
-        })
+          p: hoveredImage.p,
+          nwis: this.nwis
+        }
+        if (this.nwis) {
+          x.nwis = hoveredImage.value
+        } else {
+          x.value = hoveredImage.value
+        }
+
+        this.emitHover(x)
       }
     },
     clearHover () {
@@ -368,7 +413,6 @@ export default {
 
       if (this.variableId) {
         const line = d3.line()
-          .defined(d => hasDailyValue(d, this.variableId))
           .x(d => this.x(d.value))
           .y(d => this.y(d.p))
 
@@ -377,7 +421,7 @@ export default {
           .join('path')
           .attr('class', 'mean')
           .attr('fill', 'none')
-          .attr('stroke', 'steelblue')
+          .attr('stroke', this.nwis ? 'deepskyblue' : 'steelblue')
           .attr('stroke-width', '2px')
           .attr('d', line)
 
@@ -406,7 +450,7 @@ export default {
         .join('path')
         .attr('class', 'value')
         .attr('fill', 'none')
-        .attr('stroke', 'steelblue')
+        .attr('stroke', this.nwis ? 'deepskyblue' : 'steelblue')
         .attr('stroke-width', '2px')
         .attr('d', line)
 
@@ -435,7 +479,7 @@ export default {
           .attr('fill', 'none')
           .attr('stroke', 'orangered')
           .attr('stroke-width', '2px')
-          .attr('cx', d => this.x(d.value.mean))
+          .attr('cx', d => this.x(this.nwis ? d.nwis.mean : d.value.mean))
           .attr('cy', d => this.y(d.p))
           .attr('r', 5)
       } else if (this.mode === 'instantaneous') {
@@ -446,7 +490,7 @@ export default {
           .attr('fill', 'none')
           .attr('stroke', 'orangered')
           .attr('stroke-width', '2px')
-          .attr('cx', d => this.x(d.value))
+          .attr('cx', d => this.x(this.nwis ? d.nwis : d.value))
           .attr('cy', d => this.y(d.p))
           .attr('r', 5)
       }
@@ -463,22 +507,33 @@ export default {
       this.player.i = i
       if (this.mode === 'daily') {
         const row = this.distributionImages[i]
-        this.emitHover({
+        const x = {
           mode: this.mode,
           dateUtc: row.dateUtc,
           image: row.image,
-          value: row.value,
+          // value: row.value,
           p: row.p
-        })
+        }
+        if (this.nwis) {
+          x.nwis = row.value
+        } else {
+          x.value = row.value
+        }
+        this.emitHover(x)
       } else if (this.mode === 'instantaneous') {
         const row = this.distributionImages[i]
-        this.emitHover({
+        const x = {
           mode: this.mode,
           timestampUtc: row.timestampUtc,
           image: row,
-          value: row.value,
           p: row.p
-        })
+        }
+        if (this.nwis) {
+          x.nwis = row.value
+        } else {
+          x.value = row.value
+        }
+        this.emitHover(x)
       }
 
       this.player.timeout = setTimeout(() => {

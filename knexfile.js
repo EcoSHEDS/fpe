@@ -4,6 +4,10 @@ require('dotenv-flow').config({
   path: path.resolve(__dirname)
 })
 
+// override date parser to prevent fields of type `date` from being converted to JS Date()
+// https://github.com/brianc/node-postgres/issues/1844
+const types = require('pg').types
+types.setTypeParser(types.builtins.DATE, (val) => val)
 const secretsmanager = new AWS.SecretsManager({
   region: process.env.REGION
 })

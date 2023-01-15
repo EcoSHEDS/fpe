@@ -57,7 +57,7 @@
                       style="width:100px">
                       Citation
                     </td>
-                    <td class="font-weight-medium">{{ station.metadata.imageset.citation || 'None' | truncate(190) }}</td>
+                    <td class="font-weight-medium">{{ station.metadata.imageset.citation | truncate(190) }}</td>
                   </tr>
                 </tbody>
               </v-simple-table>
