@@ -36,8 +36,19 @@
       </v-alert>
     </div>
     <div v-else-if="station">
-      <div class="text-subtitle-2 text--secondary mb-2">{{ station.affiliation_name | truncate(70) }}</div>
-      <StationViewer :station="station"></StationViewer>
+      <div class="text-subtitle-2 text--secondary">
+        {{ station.affiliation_name | truncate(70) }}
+      </div>
+      <div v-if="station.nwis_id" class="text-subtitle-2 text--secondary">
+        NWIS ID:
+        <a
+          :href="`https://waterdata.usgs.gov/nwis/inventory/?site_no=${station.nwis_id}&agency_cd=USGS`"
+          target="_blank"
+        >
+          {{ station.nwis_id }}
+        </a>
+      </div>
+      <StationViewer :station="station" class="mt-2"></StationViewer>
     </div>
     <div v-else>
       <v-alert

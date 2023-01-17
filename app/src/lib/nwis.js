@@ -55,7 +55,6 @@ async function getDailyFlows (stationId, startDate, endDate) {
     provisional: d.qualifiers.includes('P')
     // qualifiers: d.qualifiers
   }))
-  x[10].provisional = true
   return x
 }
 

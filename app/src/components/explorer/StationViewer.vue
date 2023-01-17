@@ -531,6 +531,7 @@ export default {
     },
     async fetchDailyValues () {
       this.provisional = this.station.provisional
+      if (!this.variable.selected) return
       const variableId = this.variable.selected.id
       this.daily.values = []
       if (this.daily.images.length > 0) {
@@ -547,6 +548,7 @@ export default {
       }
     },
     async fetchDailyNwis () {
+      if (!this.variable.selected) return
       const variableId = this.variable.selected.id
       this.daily.nwis = []
       if (this.daily.images.length > 0 && variableId === 'FLOW_CFS' && this.station.nwis_id) {
