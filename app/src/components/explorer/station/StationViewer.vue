@@ -486,7 +486,7 @@
             >
               <div class="font-weight-bold body-1 d-flex align-center">
                 <v-icon color="error" left>mdi-alert</v-icon>
-                <div class="body-2 font-weight-medium">Charts Contains Provisional Data</div>
+                <div class="body-2 font-weight-medium">Charts May Contain Provisional Data</div>
                 <v-spacer></v-spacer>
                 <v-btn xs text color="default" @click="$refs.provisionalDialog.open()">Read More</v-btn>
               </div>

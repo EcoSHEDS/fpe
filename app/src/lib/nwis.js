@@ -41,7 +41,7 @@ async function getInstantaneousFlows (stationId, startDate, endDate) {
     value: Number(d.value),
     provisional: d.qualifiers.includes('P')
     // qualifiers: d.qualifiers
-  }))
+  })).filter(d => d.value >= 0)
 }
 
 async function getDailyFlows (stationId, startDate, endDate) {
@@ -54,7 +54,7 @@ async function getDailyFlows (stationId, startDate, endDate) {
     max: null,
     provisional: d.qualifiers.includes('P')
     // qualifiers: d.qualifiers
-  }))
+  })).filter(d => d.mean >= 0)
   return x
 }
 

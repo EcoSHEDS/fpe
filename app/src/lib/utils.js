@@ -26,6 +26,12 @@ export function interpolateValuesAtTimestamp (arr, x) {
 
   if (!a) return null
 
+  // timestamp must be within 1 hour of neighboring points
+  if ((x.valueOf() - a.timestamp.valueOf() > 60 * 60 * 1000) ||
+      (b.timestamp.valueOf() - x.valueOf() > 60 * 60 * 1000)) {
+    return null
+  }
+
   const t = (x.valueOf() - a.timestamp.valueOf()) /
     (b.timestamp.valueOf() - a.timestamp.valueOf())
 
