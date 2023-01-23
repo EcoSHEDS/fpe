@@ -437,7 +437,7 @@
           <v-spacer></v-spacer>
           <div>
             <span class="font-weight-regular">Selected:</span>
-            <span v-if="focus && this.daily.values.length > 0">
+            <span v-if="focus && (this.daily.values.length > 0 || this.daily.nwis.length > 0)">
               {{ focus[0] | timestampLocalFormat(station.timezone, 'll') }} -
               {{ focus[1] | timestampLocalFormat(station.timezone, 'll') }}
               ({{ $date(focus[1]).diff($date(focus[0]), 'day') + 1 }} days)

@@ -47,7 +47,16 @@ export default {
       if ((this.daily.values.length + this.daily.nwis.length === 0) || !this.variableId) return 0
       const valuesMax = d3.max(this.dailyValues, d => d.max)
       const nwisMax = d3.max(this.dailyNwis, d => d.mean)
-      return d3.max([valuesMax, nwisMax])
+      const maxValues = [valuesMax, nwisMax]
+      if (this.instantaneous) {
+        if (this.instantaneous.values && this.instantaneous.values.length > 0) {
+          maxValues.push(d3.max(this.instantaneous.values, d => d.value))
+        }
+        if (this.instantaneous.nwis && this.instantaneous.nwis.length > 0) {
+          maxValues.push(d3.max(this.instantaneous.nwis, d => d.value))
+        }
+      }
+      return d3.max(maxValues)
     },
     dailyValues () {
       if (!this.daily || !this.variableId) return []
