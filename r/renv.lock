@@ -1,6 +1,6 @@
 {
   "R": {
-    "Version": "4.1.2",
+    "Version": "4.2.0",
     "Repositories": [
       {
         "Name": "CRAN",
@@ -59,6 +59,23 @@
       "Hash": "d1258c16d609c27a3ba022d50c054b34",
       "Requirements": [
         "DBI"
+      ]
+    },
+    "RPostgres": {
+      "Package": "RPostgres",
+      "Version": "1.4.4",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "c593ecb8dbca9faf3906431be610ca28",
+      "Requirements": [
+        "DBI",
+        "Rcpp",
+        "bit64",
+        "blob",
+        "hms",
+        "lubridate",
+        "plogr",
+        "withr"
       ]
     },
     "Rcpp": {
@@ -241,6 +258,21 @@
       "Repository": "CRAN",
       "Hash": "36b67b5adf57b292923f5659f5f0c853",
       "Requirements": []
+    },
+    "dataRetrieval": {
+      "Package": "dataRetrieval",
+      "Version": "2.7.12",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "b54aa9f6b0304e0e80e329f42c6e3a72",
+      "Requirements": [
+        "curl",
+        "httr",
+        "jsonlite",
+        "lubridate",
+        "readr",
+        "xml2"
+      ]
     },
     "dbplyr": {
       "Package": "dbplyr",
@@ -745,6 +777,14 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "01f28d4278f15c76cddbea05899c5d6f",
+      "Requirements": []
+    },
+    "plogr": {
+      "Package": "plogr",
+      "Version": "0.2.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "09eb987710984fc2905c7129c7d85e65",
       "Requirements": []
     },
     "prettyunits": {

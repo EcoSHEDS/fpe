@@ -57,15 +57,40 @@ and i.status = 'DONE'
     as_tibble()
 }
 
+fetch_station_values_from_nwis <- function(station, start, end) {
+  x_raw <- dataRetrieval::readNWISuv(station$nwis_id, parameterCd = "00060", startDate = as_date(start) - days(1), endDate = as_date(end) + days(1)) %>%
+    tibble()
+  dataRetrieval::renameNWISColumns(x_raw) %>%
+    select(timestamp = dateTime, value = Flow_Inst, flag = Flow_Inst_cd) %>%
+    mutate(
+      station_name = station$name,
+      station_id = station$id,
+      dataset_id = "NWIS",
+      series_id = NA_character_,
+      variable_id = "FLOW_CFS",
+      .before = "timestamp"
+    ) %>%
+    mutate(
+      flag = na_if(flag, "A")
+    ) %>%
+    filter(!is.na(value))
+}
+
 log_info("fetching: station")
 station <- fetch_station(con, station_id)
 stopifnot(nrow(station) == 1)
 
-log_info("fetching: values")
-values <- fetch_station_values(con, station_id)
-
 log_info("fetching: images")
 images <- fetch_station_images(con, station_id)
+
+log_info("fetching: values")
+if (!is.na(station$nwis_id)) {
+  start_timestamp <- min(images$timestamp)
+  end_timestamp <- max(images$timestamp)
+  values <- fetch_station_values_from_nwis(station, start_timestamp, end_timestamp)
+} else {
+  values <- fetch_station_values(con, station_id)
+}
 
 station_dir <- file.path(output_dir, station$name)
 if (!dir.exists(station_dir)) {
@@ -91,9 +116,12 @@ if (nrow(images) > 0) {
 # flow images -------------------------------------------------------------
 
 flow_values <- values %>%
-  filter(variable_id == "FLOW_CFS")
+  filter(variable_id == "FLOW_CFS") %>%
+  filter(!is.na(value))
 
 interp_flow_values <- approxfun(flow_values$timestamp, y = flow_values$value)
+
+log_info("estimating flow for each image")
 
 images_flow <- images %>%
   mutate(
@@ -110,8 +138,11 @@ p <- flow_values %>%
     aes(y = flow_cfs),
     size = 0.25, color = "deepskyblue"
   )
+log_info("saving: {file.path(station_dir, 'flow-images.png')}")
 ggsave(file.path(station_dir, "flow-images.png"), p, width = 8, height = 4)
 
+
+log_info("saving: {file.path(station_dir, 'flow-images.csv')}")
 images_flow %>%
   write_csv(file.path(station_dir, "flow-images.csv"), na = "")
 
