@@ -44,9 +44,26 @@
     "userPoolId": {
       "Description": "User pool ID",
       "Type": "String"
+    },
+    "modelBucketName": {
+      "Description": "Model bucket name",
+      "Type": "String"
     }
   },
   "Resources": {
+    "ModelsStack": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": "./models.json",
+        "Parameters": {
+          "appName": { "Ref": "appName" },
+          "env": { "Ref": "env" },
+          "modelBucketName": { "Ref": "modelBucketName" },
+          "storageBucketName": { "Ref": "storageBucketName" },
+          "permissionsBoundaryName": { "Ref": "permissionsBoundaryName" }
+        }
+      }
+    },
     "NotifyStack": {
       "Type": "AWS::CloudFormation::Stack",
       "Properties": {

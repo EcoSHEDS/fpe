@@ -1,0 +1,235 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "FPE Models",
+  "Parameters": {
+    "appName": {
+      "Description": "Application name",
+      "Type": "String",
+      "Default": "fpe"
+    },
+    "env": {
+      "Description": "Environment",
+      "Type": "String",
+      "Default": "dev"
+    },
+    "storageBucketName": {
+      "Description": "Storage bucket name",
+      "Type": "String"
+    },
+    "modelBucketName": {
+      "Description": "Model bucket name",
+      "Type": "String"
+    },
+    "permissionsBoundaryName": {
+      "Description": "Permissions boundary name",
+      "Type": "String",
+      "Default": "NONE"
+    }
+  },
+  "Conditions": {
+    "PermissionsBoundaryExists": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "permissionsBoundaryName"
+            },
+            "NONE"
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "PiiRepository": {
+      "Type": "AWS::ECR::Repository",
+      "Properties": {
+        "RepositoryName": {
+          "Fn::Join": [
+            "-",
+            [
+              {
+                "Ref": "appName"
+              },
+              {
+                "Ref": "env"
+              },
+              "pii"
+            ]
+          ]
+        }
+      }
+    },
+    "PiiExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": {
+          "Fn::Join": [
+            "-",
+            [
+              {
+                "Ref": "appName"
+              },
+              {
+                "Ref": "env"
+              },
+              "pii-execution-role"
+            ]
+          ]
+        },
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "sagemaker.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "arn:aws:iam::694155575325:role/adfs-developers"
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+        ],
+        "Policies": [
+          {
+            "PolicyName": {
+              "Fn::Join": [
+                "-",
+                [
+                  {
+                    "Ref": "appName"
+                  },
+                  {
+                    "Ref": "env"
+                  },
+                  "pii-execution-policy"
+                ]
+              ]
+            },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject",
+                    "s3:PutObject"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:aws:s3:::${ModelBucket}/*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:ListBucket"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:aws:s3:::${ModelBucket}"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:aws:s3:::${storageBucketName}/*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:ListBucket"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:aws:s3:::${storageBucketName}"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "PermissionsBoundary": {
+          "Fn::If": [
+            "PermissionsBoundaryExists",
+            {
+              "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:policy/${permissionsBoundaryName}"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    "PiiModel": {
+      "Type": "AWS::SageMaker::Model",
+      "Properties": {
+        "ModelName": {
+          "Fn::Join": [
+            "-",
+            [
+              {
+                "Ref": "appName"
+              },
+              {
+                "Ref": "env"
+              },
+              "pii"
+            ]
+          ]
+        },
+        "PrimaryContainer": {
+          "Image": {
+            "Fn::Sub": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PiiRepository}:latest"
+          },
+          "ModelDataUrl": {
+            "Fn::Sub": "s3://${ModelBucket}/pii/mdv5a.tar.gz"
+          }
+        },
+        "ExecutionRoleArn": { "Fn::GetAtt" : ["PiiExecutionRole", "Arn"] }
+      }
+    },
+    "ModelBucket": {
+      "Type": "AWS::S3::Bucket",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "BucketName": {
+          "Ref": "modelBucketName"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "PiiRepositoryUrl": {
+      "Description": "ECR repository URL for PII Detector",
+      "Value": {
+        "Fn::Sub": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${PiiRepository}"
+      }
+    }
+  }
+}
