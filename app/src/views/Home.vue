@@ -37,7 +37,7 @@
               The Flow Photo Explorer is an integrated database and machine learning platform for estimating streamflow from timelapse imagery. The goal of this project is to develop new approaches to monitoring hydrologic conditions in streams and rivers where flow data are historically sparse or non-existent.
             </p>
 
-            <v-img src="@/assets/img/fpe-diagram.png" alt="FPE diagram of images to machine learning models to estimated streamflow" class="mx-4 my-8"></v-img>
+            <v-img src="img/fpe-diagram.png" alt="FPE diagram of images to machine learning models to estimated streamflow" class="mx-4 my-8"></v-img>
 
             <div class="text-center my-10">
               <v-btn color="success" x-large :to="{ name: 'explorer' }">Start Exploring <v-icon>mdi-chevron-right</v-icon></v-btn>
@@ -62,7 +62,7 @@
                 </p>
               </v-col>
               <v-col cols="12" md="5">
-                <v-img src="@/assets/img/gupta2022-fig4.png" alt="Figure 4 of Gupta et al (2022) showing good agreement between observed and predicted streamflow"></v-img>
+                <v-img src="img/gupta2022-fig4.png" alt="Figure 4 of Gupta et al (2022) showing good agreement between observed and predicted streamflow"></v-img>
               </v-col>
             </v-row>
 
@@ -72,7 +72,7 @@
 
             <p><span class="font-weight-bold">Phase I (complete)</span>: a database and cloud-based data pipeline was developed for storing, managing, and accessing timelapse imagery of streams and rivers along with associated flow and stage data. The system allows registered users to upload and manage their own photos and (optionally) flow data at multiple locations. The images and flow data are accessible through the <router-link :to="{ name: 'explorer' }">Photo Explorer</router-link>, which provides an interactive and exploratory interface for viewing the timelapse imagery coupled with observed flow data. The images and flow data in the FPE database will serve as the primary data source for developing and training the machine learning models in Phase II.</p>
 
-            <p><span class="font-weight-bold">Phase II (ongoing)</span>: the photos and data uploaded to FPE are currently being used to develop deep learning models to predict flow from timelapse imagery. Two types of models are currently being developed (see <a href="https://doi.org/10.1145/3530190.3534805">Gupta et al., 2022</a> for details):
+            <p><span class="font-weight-bold">Phase II (ongoing)</span>: the photos and data uploaded to FPE are currently being used to develop deep learning models to predict flow from timelapse imagery. Two types of models are currently being developed (see <a href="https://doi.org/10.1145/3530190.3534805">Gupta et al., 2022</a> for details):</p>
 
             <ol class="my-4">
               <li>The first is a classical <span class="font-weight-bold">regression model</span> that is trained using both images and observed (or estimated) flows. This model will predict the flow rate directly from an image. However, it requires observed flow data for training, which negates (to some degree) the purpose of using timelapse imagery in the first place.</li>

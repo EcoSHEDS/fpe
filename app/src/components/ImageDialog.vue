@@ -19,7 +19,7 @@
       <v-card-text class="pt-4">
         <v-sheet rounded class="pa-4" elevation="2">
           <v-img
-            lazy-src="@/assets/img/placeholder.png"
+            lazy-src="img/placeholder.png"
             :src="image.full_url"
             :alt="image.filename"
             :max-width="options.width"

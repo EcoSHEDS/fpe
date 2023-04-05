@@ -2,7 +2,7 @@
   <div class="d-flex justify-center align-center flex-column">
     <div style="max-width:100%">
       <v-img
-        lazy-src="@/assets/img/placeholder.png"
+        lazy-src="img/placeholder.png"
         :src="image.thumb_url"
         :alt="image.filename"
         max-width="200"
@@ -11,7 +11,7 @@
         style="cursor:pointer"
       >
       </v-img>
-      <v-img src="@/assets/img/placeholder.png" :alt="image.filename" max-width="200" v-else></v-img>
+      <v-img src="img/placeholder.png" :alt="image.filename" max-width="200" v-else></v-img>
       <v-tooltip bottom max-width="400px" open-delay="500" v-if="image.status === 'DONE'">
         <template v-slot:activator="{ on }">
           <v-btn

@@ -44,7 +44,7 @@
                 <v-card-text class="black--text body-1">
                   <div class="text-h5">Background</div>
 
-                  <v-img src="@/assets/img/user-guide/avery-brook.jpg" alt="Photo of Avery Brook" class="my-4"></v-img>
+                  <v-img src="img/user-guide/avery-brook.jpg" alt="Photo of Avery Brook" class="my-4"></v-img>
 
                   <p>The goals of the Flow Photo Explorer are to:</p>
 
@@ -99,7 +99,7 @@
                     Actual items will vary depending on the camera and location you choose, as well as the budget you have available. The categories of equipment will likely stay the same. As long as you have a clear view of the river, the images should be useful.
                   </p>
 
-                  <v-img src="@/assets/img/user-guide/secure-camera.jpg" alt="Deployed game camera" class="my-4"></v-img>
+                  <v-img src="img/user-guide/secure-camera.jpg" alt="Deployed game camera" class="my-4"></v-img>
 
                   <v-divider class="my-4"></v-divider>
 
@@ -137,15 +137,15 @@
                   <ul>
                     <li>
                       A <span class="font-weight-bold">security housing box</span> can be used to securely hold the camera and prevent theft. Security boxes are designed to fit specific camera makes and models, be sure the box is compatible with your camera.<br>
-                      <v-img src="@/assets/img/user-guide/security-box.jpg" alt="Security box" class="my-4" max-width="200px"></v-img>
+                      <v-img src="img/user-guide/security-box.jpg" alt="Security box" class="my-4" max-width="200px"></v-img>
                     </li>
                     <li>
                       A <span class="font-weight-bold">lock</span> is used to to secure the camera in the security box.<br>
-                      <v-img src="@/assets/img/user-guide/security-lock.jpg" alt="Security lock" class="my-4" max-width="200px"></v-img>
+                      <v-img src="img/user-guide/security-lock.jpg" alt="Security lock" class="my-4" max-width="200px"></v-img>
                     </li>
                     <li>
                       A <span class="font-weight-bold">security cable</span> is used to prevent theft by tethering the camera security box to a tree or other fixture. This cable is different from a tree strap that secures the camera to the tree.<br>
-                      <v-img src="@/assets/img/user-guide/security-cable.jpg" alt="Security cable" class="my-4" max-width="200px"></v-img>
+                      <v-img src="img/user-guide/security-cable.jpg" alt="Security cable" class="my-4" max-width="200px"></v-img>
                     </li>
                   </ul>
 
@@ -157,7 +157,7 @@
                   </p>
 
                   <div class="font-weight-bold mb-4">Tree Strap</div>
-                  <v-img src="@/assets/img/user-guide/tree-strap.jpg" alt="Tree strap" class="my-4" max-width="400px"></v-img>
+                  <v-img src="img/user-guide/tree-strap.jpg" alt="Tree strap" class="my-4" max-width="400px"></v-img>
                   <p>A tree strap is usually provided with the camera for securing the unit to a post or tree.</p>
                   <v-simple-table>
                     <template v-slot:default>
@@ -191,7 +191,7 @@
                   </v-simple-table>
 
                   <div class="font-weight-bold mb-4 mt-8">Tree Screw</div>
-                  <v-img src="@/assets/img/user-guide/tree-screw.jpg" alt="Tree screw" class="my-4" max-width="400px"></v-img>
+                  <v-img src="img/user-guide/tree-screw.jpg" alt="Tree screw" class="my-4" max-width="400px"></v-img>
                   <p>A tree screw must be purchased separately.</p>
                   <v-simple-table>
                     <template v-slot:default>
@@ -225,7 +225,7 @@
                   </v-simple-table>
 
                   <div class="font-weight-bold mb-4 mt-8">Swivel Mount</div>
-                  <v-img src="@/assets/img/user-guide/swivel-mount.jpg" alt="Swivel mount" class="my-4" max-width="400px"></v-img>
+                  <v-img src="img/user-guide/swivel-mount.jpg" alt="Swivel mount" class="my-4" max-width="400px"></v-img>
                   <p>A swivel mount must be purchased separately.</p>
                   <v-simple-table>
                     <template v-slot:default>
@@ -259,7 +259,7 @@
                   </v-simple-table>
 
                   <div class="font-weight-bold mb-4 mt-8">Fence T-Post</div>
-                  <v-img src="@/assets/img/user-guide/fence-t-post.jpg" alt="Fence T-Post" class="my-4" max-width="400px"></v-img>
+                  <v-img src="img/user-guide/fence-t-post.jpg" alt="Fence T-Post" class="my-4" max-width="400px"></v-img>
                   <p>Fence T-post and camera mount for T-post must be purchased separately.</p>
                   <v-simple-table>
                     <template v-slot:default>
@@ -297,7 +297,7 @@
                   </v-simple-table>
 
                   <div class="font-weight-bold mb-4 mt-8">Ground Mount</div>
-                  <v-img src="@/assets/img/user-guide/ground-mount.jpg" alt="Ground Mount" class="my-4" max-width="400px"></v-img>
+                  <v-img src="img/user-guide/ground-mount.jpg" alt="Ground Mount" class="my-4" max-width="400px"></v-img>
                   <p>A ground mount must be purchased separately for most cameras (some include a mount).</p>
                   <v-simple-table class="mb-4">
                     <template v-slot:default>
@@ -360,7 +360,7 @@
 
                   <p>Install your camera mount to a tree or post near the river bank. Use the security housing, lock, and cable to secure the camera to the tree or post to prevent theft.</p>
 
-                  <v-img src="@/assets/img/user-guide/image-perspective.png" alt="Diagram of camera setup" class="my-4"></v-img>
+                  <v-img src="img/user-guide/image-perspective.png" alt="Diagram of camera setup" class="my-4"></v-img>
 
                   <p>When selecting a location to mount your camera, ensure that:</p>
                   <ul class="mb-4">
@@ -373,7 +373,7 @@
 
                   Here is an example of an ideal camera view:
 
-                  <v-img src="@/assets/img/user-guide/image-ideal.png" alt="Example of ideal image perspective" class="my-4"></v-img>
+                  <v-img src="img/user-guide/image-ideal.png" alt="Example of ideal image perspective" class="my-4"></v-img>
 
                   <v-divider class="my-4"></v-divider>
 
@@ -435,10 +435,125 @@
             <v-tab-item>
               <v-card flat>
                 <v-card-text class="black--text body-1">
-                  <div class="text-h5">Uploading Photos to FPE</div>
+                  <div class="text-h5">Uploading Photos</div>
+                  <p>To upload photos to the USGS Flow Photo Explorer, please follow these three steps.</p>
+                  <ol class="font-weight-bold">
+                    <li>Create Account</li>
+                    <li>Create Station</li>
+                    <li>Upload Photos</li>
+                  </ol>
 
                   <v-divider class="my-4"></v-divider>
-                  <div class="text-h6">Coming Soon!</div>
+                  <div class="text-h6" id="create-account">Step 1: Create Account</div>
+                  <p>To upload photos to FPE, you must first <strong>request an account</strong> by going to <code>Account > Request Account</code> on the navigation bar.</p>
+
+                  <v-img src="img/user-guide/upload/account-request-button.png" alt="Screenshot of Account Request button" class="my-4 mx-auto elevation-2" style="border-radius:5px" max-width="500px"></v-img>
+
+                  <p>Next, <strong>submit the form</strong> with your name, email, affiliation and brief description of your monitoring program. Once submitted, this form will be sent to the FPE team for approval. New accounts will be approved within 2 business days. Once approved, you will be sent an automated email with a temporary password to use in the next step. <strong>If you do not receive a temporary password within 2 days</strong>, please check your spam folder first and then contact us at <a href="mailto:gs-naar-lsc-ecosheds@doimspp.onmicrosoft.com">gs-naar-lsc-ecosheds@doimspp.onmicrosoft.com</a> for assistance.</p>
+
+                  <v-img src="img/user-guide/upload/account-request-form.png" alt="Screenshot of Account Request form" class="my-4 mx-auto" max-width="500px"></v-img>
+
+                  <p>After you receive your temporary password, go to the <code>Account > Login</code> page to log in.</p>
+
+                  <v-img src="img/user-guide/upload/account-login-button.png" alt="Screenshot of Login button" class="my-4 mx-auto elevation-2" style="border-radius:5px" max-width="500px"></v-img>
+
+                  <p><strong>Login</strong> using your temporary password.</p>
+
+                  <v-img src="img/user-guide/upload/account-login-form.png" alt="Screenshot of Login form" class="my-4 mx-auto" max-width="500px"></v-img>
+
+                  <p><strong>Fill out the form</strong> to set a permanent password for your account.</p>
+
+                  <v-img src="img/user-guide/upload/account-login-password.png" alt="Screenshot of Permanent Password Form" class="my-4 mx-auto" max-width="500px"></v-img>
+
+                  <p>You will then be logged in to you account, and taken to the <code>Upload</code> page.</p>
+
+                  <v-divider class="my-4"></v-divider>
+                  <div class="text-h6" id="create-station">Step 2: Create Station</div>
+
+                  <p>To create a station, <strong>click the <code>+ NEW STATION</code> button</strong> on the <code>Upload</code> page.</p>
+
+                  <v-img src="img/user-guide/upload/station-new-button.png" alt="Screenshot of New Station button" class="my-4 mx-auto"></v-img>
+
+                  <p><strong>Fill out the form</strong> containing a brief name, description, latitude/longitude, and time zone. If the station is associated with an existing USGS NWIS station, enter the station ID to automatically link any available flow or stage data to this station. Click the private checkbox to prevent the station from appearing on the public Photo Explorer page (note that the flow model can still be used at private stations).</p>
+
+                  <v-img src="img/user-guide/upload/station-new-form.png" alt="Screenshot of New Station form" class="my-4 mx-auto elevation-2" max-width="500" style="border-radius:5px"></v-img>
+
+                  <p>After the form is submitted, the station will be created and should appear in the <code>Stations</code> table on the <code>Upload</code> page.</p>
+
+                  <v-img src="img/user-guide/upload/station-new-row.png" alt="Screenshot of New Station added to Stations table" class="my-4"></v-img>
+
+                  <v-divider class="my-4"></v-divider>
+                  <div class="text-h6" id="upload-photos">Step 3: Upload Photos</div>
+
+                  <p>To upload photos for a station, <strong>click on it's row</strong> in the <code>Stations</code> table on the <code>Upload</code> page, which will take you to the <code>Manage Station</code> page. Here, you can edit the station information, delete the station, and upload photos or observed flow data for that station.</p>
+
+                  <p><strong>Click the Photos</strong> tab to upload a new batch of photos for the selected station.</p>
+
+                  <v-img src="img/user-guide/upload/photos-button.png" alt="Screenshot of Manage Station page with Photos button" class="my-4"></v-img>
+
+                  <p>Before you can upload photos, <strong>click the <code>Enter Photos Source and Methodology</code> button</strong> to describe how the photos were collected.</p>
+
+                  <v-img src="img/user-guide/upload/photos-method-button.png" alt="Screenshot of Photo tab on Manage Station page" class="my-4"></v-img>
+
+                  <p><strong>Fill out the form</strong> with the source of the photos (if different from your own affiliation), the methodology used to collect the photos (e.g. type of camera used or other sources), and a citation to the QAPP/SOP if available.</p>
+
+                  <v-img src="img/user-guide/upload/photos-method-form.png" alt="Screenshot of Photo Methodology form" class="my-4 mx-auto elevation-2" max-width="500" style="border-radius:5px"></v-img>
+
+                  <p>After the form is submitted, <strong>click the <code>Upload Photos</code> button</strong> to open the multi-step upload form.</p>
+
+                  <v-img src="img/user-guide/upload/photos-upload-button.png" alt="Screenshot of Upload Photos button" class="my-4 mx-auto"></v-img>
+
+                  <p><strong>Read the instructions</strong> to be sure your photos satify all requirements, then <strong>click continue</strong>.</p>
+
+                  <v-img src="img/user-guide/upload/photos-form-instructions.png" alt="Screenshot of upload instructions" class="my-4 mx-auto"></v-img>
+
+                  <p><strong>Click the input field</strong> to select the photo files on your computer (note that multiple files can be selected). After the files are selected, the form will automatically check that each file is a valid JPEG image with embedded EXIF data.</p>
+
+                  <v-img src="img/user-guide/upload/photos-form-files-select.png" alt="Screenshot of photo select form showing files being validated" class="my-4 mx-auto"></v-img>
+
+                  <p>If all photos are valid, <strong>click Continue</strong>.</p>
+
+                  <v-img src="img/user-guide/upload/photos-form-files-valid.png" alt="Screenshot of selected photos after validation is complete" class="my-4 mx-auto"></v-img>
+
+                  <p><strong>Select the UTC offset</strong> for the timezone associated with the timestamp of each photo. This setting is important for converting the photo timestamps to UTC (aka GMT) for storage in the database. If you typically set the camera clock to the local time on your watch or phone, then choose the standard or daylight savings version of your local timezone that was in effect when you last set the camera clock. For example, if you last set the camera clock in the summer and you are in US/Eastern time zone, then choose UTC-04 (EDT) for eastern daylight time.</p>
+
+                  <v-img src="img/user-guide/upload/photos-form-timestamp.png" alt="Screenshot of timestamp settings" class="my-4 mx-auto"></v-img>
+
+                  <p>After selecting a UTC offset, <strong>verify that the EXIF, UTC, and Local Timestamps are correct</strong> as shown for the first photo in this batch and then <strong>click Continue</strong>. In general, the EXIF timestamp should match the timestamp shown within the image itself, the UTC timestamp should then be shifted by the selected UTC offset (e.g. 5 hours ahead for EST or CDT), and the local timestamp should be the same as the EXIF data with the correct timezone abbreviation appended at the end. However, the Local Timestamp may differ from the EXIF timestamp if the camera clock was set based on a UTC offset that differed from the local standard or daylight savings time at the start of the deployment. For example, if the camera clock was last set during daylight savings (summer), but it was not deployed until later in the year when local standard time was in effect (winter), then the photo timestamps would be in UTC-04 (EDT) even during the winter when UTC-05 (EST) was in effect. In this case the correct Local Timestamp of the first photo would be one hour behind the EXIF timestamp.</p>
+
+                  <p>After verifying the timestamps are correctly adjusted, <strong>enter any additional information</strong> specific to this batch of images, especially any changes that may have occurred related to the positioning or deployment of the camera.</p>
+
+                  <v-img src="img/user-guide/upload/photos-form-metadata.png" alt="Screenshot of additional information form" class="my-4 mx-auto"></v-img>
+
+                  <p>Lastly, <strong>review and agree to the upload conditions</strong>, and then <strong>click Start Upload</strong> to begin uploading the photos to the FPE database.</p>
+
+                  <v-img src="img/user-guide/upload/photos-form-ready.png" alt="Screenshot of additional information form" class="my-4 mx-auto"></v-img>
+
+                  <p>Now <strong>wait while the photos are uploaded</strong>. If you have a large batch of photos, this process could take an hour or more depending on your internet speed. You can minimize this browser window and work on other things, but <strong>do not close your web browser or this tab</strong> and be sure to change your power settings so your computer does not go to sleep, which will stop the upload.</p>
+
+                  <v-img src="img/user-guide/upload/photos-form-uploading.png" alt="Screenshot of additional information form" class="my-4 mx-auto"></v-img>
+
+                  <p>If an error or network problem occurs or your computer goes to sleep while the files are being uploaded, the form will provide a few options for how to continue. Click the <code>Retry</code> to pick up where it left off and continue trying to upload any remaining files that have not yet been uploaded. Click the <code>Finish</code> button to complete the upload but skip any remaining photos that have not been uploaded yet. Or click <code>Cancel</code> to cancel this entire upload and delete any photos that have already been uploaded.</p>
+
+                  <v-img src="img/user-guide/upload/photos-form-error.png" alt="Screenshot of uploading step when error occurs" class="my-4 mx-auto"></v-img>
+
+                  <p>When all images have been uploaded, you will see a brief confirmation message and then be taken back to the <code>Manage Station</code> page.</p>
+
+                  <v-img src="img/user-guide/upload/photos-form-complete.png" alt="Screenshot of uploading step when complete" class="my-4 mx-auto"></v-img>
+
+                  <p>After the photos are uploaded, a new row will appear in the <code>Photo Sets</code> table on the <code>Manage Station</code> page. The new photo set will initially be in the <code>Queued</code> stage, which indicates the FPE server is preparing to process this set of photos.</p>
+
+                  <v-img src="img/user-guide/upload/photos-queued.png" alt="Screenshot of photo set in queued stage" class="my-4 mx-auto"></v-img>
+
+                  <p>Once the FPE server is ready, the photo set will then automatically move to the <code>Processing</code> stage during which the EXIF data and timestamp will be extracted from each photo file, and a smaller thumbnail version of each photo will be generated. This step can take up to an hour, but unlike the file upload step, it is safe to close your browser and return later.</p>
+
+                  <v-img src="img/user-guide/upload/photos-processing.png" alt="Screenshot of photo set processing stage" class="my-4 mx-auto"></v-img>
+
+                  <p>After all photos are processed, FPE show the status of this set as <code>Done</code> and the page will show a thumbnail preview along with the filename and local timestamp of each photo in this set. Use the start/end filters to see photos during a specific range, and the up/down arrow buttons to change the order. Click the X icon in the top right of each thumbnail to delete an individual image (e.g., in the event it contains personal identifying information), or click the <code>Delete Photo Set</code> button to delete this entire batch.</p>
+
+                  <v-img src="img/user-guide/upload/photos-done.png" alt="Screenshot of photo set after processing is complete" class="my-4 mx-auto"></v-img>
+
+                  <p><strong>Congratulations!</strong> The upload process is now complete and the photos for this station will appear on the Photo Explorer (unless the station is marked as private).</p>
                 </v-card-text>
               </v-card>
             </v-tab-item>
@@ -454,7 +569,7 @@ export default {
   name: 'UserGuide',
   data () {
     return {
-      tab: 0
+      tab: 3
     }
   }
 }
