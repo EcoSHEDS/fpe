@@ -37,6 +37,8 @@
             </v-tab>
           </v-tabs>
 
+          <v-divider></v-divider>
+
           <v-tabs-items v-model="tab">
             <!-- BACKGROUND -->
             <v-tab-item>
@@ -569,7 +571,7 @@ export default {
   name: 'UserGuide',
   data () {
     return {
-      tab: 3
+      tab: 0
     }
   }
 }
