@@ -449,7 +449,7 @@
 
                   <v-img src="img/user-guide/upload/account-request-button.png" alt="Screenshot of Account Request button" class="my-4 mx-auto elevation-2" style="border-radius:5px" max-width="500px"></v-img>
 
-                  <p>Next, <strong>submit the form</strong> with your name, email, affiliation and brief description of your monitoring program. Once submitted, this form will be sent to the FPE team for approval. New accounts will be approved within 2 business days. Once approved, you will be sent an automated email with a temporary password to use in the next step. <strong>If you do not receive a temporary password within 2 days</strong>, please check your spam folder first and then contact us at <a href="mailto:gs-naar-lsc-ecosheds@doimspp.onmicrosoft.com">gs-naar-lsc-ecosheds@doimspp.onmicrosoft.com</a> for assistance.</p>
+                  <p>Next, <strong>submit the form</strong> with your name, email, affiliation and brief description of your monitoring program. Once submitted, this form will be sent to the FPE team for approval. New accounts will be approved within 2 business days. Once approved, you will be sent an automated email with a temporary password to use in the next step. <strong>If you do not receive a temporary password within 2 days</strong>, please check your spam folder first and then contact us at <a href="mailto:ecosheds@usgs.gov">ecosheds@usgs.gov</a> for assistance.</p>
 
                   <v-img src="img/user-guide/upload/account-request-form.png" alt="Screenshot of Account Request form" class="my-4 mx-auto" max-width="500px"></v-img>
 

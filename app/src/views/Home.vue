@@ -29,7 +29,7 @@
                 We are currently looking for users interested in collecting and uploading timelapse photos of streams across the U.S. to support the development of deep learning models that will estimate flows from images.
               </p>
               <p class="mb-0 pl-4">
-                If you are interested in contributing to this project, check out our <router-link :to="{ name: 'user-guide' }">User Guide</router-link>, which provides a Standard Operating Procedure (SOP) and other tips on collecting flow photos for FPE. If you have any questions, please <a href="mailto:gs-naar-lsc-ecosheds@doimspp.onmicrosoft.com">get in touch</a>.
+                If you are interested in contributing to this project, check out our <router-link :to="{ name: 'user-guide' }">User Guide</router-link>, which provides a Standard Operating Procedure (SOP) and other tips on collecting flow photos for FPE. If you have any questions, please <a href="mailto:ecosheds@usgs.gov">get in touch</a>.
               </p>
             </v-alert>
 
@@ -55,7 +55,7 @@
             <v-row>
               <v-col cols="12" md="7">
                 <p>
-                  <strong>Interested in the deep learning models?</strong> Results from our preliminary models can be found in the following publication (<a href="mailto:gs-naar-lsc-ecosheds@doimspp.onmicrosoft.com">contact us</a> for a copy). A presentation by our collaborator and model developer, Dr. Amrita Gupta, can also be found at the link below.
+                  <strong>Interested in the deep learning models?</strong> Results from our preliminary models can be found in the following publication (<a href="mailto:ecosheds@usgs.gov">contact us</a> for a copy). A presentation by our collaborator and model developer, Dr. Amrita Gupta, can also be found at the link below.
                 </p>
                 <p class="font-italic">
                   Gupta, A., Chang, T., Walker, J., and B. Letcher (2022). Towards Continuous Streamflow Monitoring with Time-Lapse Cameras and Deep Learning. In ACM SIGCAS/SIGCHI Conference on Computing and Sustainable Societies (COMPASS) (COMPASS '22). Association for Computing Machinery, New York, NY, USA, 353–363. <a href="https://doi.org/10.1145/3530190.3534805">https://doi.org/10.1145/3530190.3534805</a>
@@ -88,7 +88,7 @@
               The Flow Photo Explorer project is a collaboration between U.S. Environmental Protection Agency, U.S. Geological Survey, Walker Environmental Research, Conservation Science Partners, and many contributing partners. Funding was provided by U.S. Environmental Protection Agency and National Geographic Society. See <router-link :to="{ name: 'about' }">About</router-link> for more information.
             </p>
             <p>
-              <strong>Questions?</strong> You can reach us at <a href="mailto:gs-naar-lsc-ecosheds@doimspp.onmicrosoft.com">gs-naar-lsc-ecosheds@doimspp.onmicrosoft.com</a>.
+              <strong>Questions?</strong> You can reach us at <a href="mailto:ecosheds@usgs.gov">ecosheds@usgs.gov</a>.
             </p>
           </v-card-text>
         </v-card>

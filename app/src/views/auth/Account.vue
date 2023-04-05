@@ -7,7 +7,7 @@
     <v-form ref="form" @submit.prevent="submit" :disabled="loading">
       <v-card-text class="py-4 body-1 black--text">
         <p class="mb-8">
-          Note: Email address cannot be changed. Please contact us at <a href="mailto:gs-naar-lsc-ecosheds@doimspp.onmicrosoft.com">gs-naar-lsc-ecosheds@doimspp.onmicrosoft.com</a> if you need to change it.
+          Note: Email address cannot be changed. Please contact us at <a href="mailto:ecosheds@usgs.gov">ecosheds@usgs.gov</a> if you need to change it.
         </p>
         <v-text-field
           v-model="email.value"

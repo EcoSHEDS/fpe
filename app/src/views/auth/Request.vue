@@ -19,7 +19,7 @@
           We may use your email to contact you if we have questions about your photos or data, but we will not share it with any third party.
         </p>
         <p class="mb-8">
-          If you have questions or trouble requesting an account, contact us at <a href="mailto:gs-naar-lsc-ecosheds@doimspp.onmicrosoft.com">gs-naar-lsc-ecosheds@doimspp.onmicrosoft.com</a>.
+          If you have questions or trouble requesting an account, contact us at <a href="mailto:ecosheds@usgs.gov">ecosheds@usgs.gov</a>.
         </p>
 
         <v-text-field
