@@ -46,7 +46,8 @@
                 <v-card-text class="black--text body-1">
                   <div class="text-h5">Background</div>
 
-                  <v-img src="img/user-guide/avery-brook.jpg" alt="Photo of Avery Brook" class="my-4"></v-img>
+                  <!-- <v-img src="img/user-guide/avery-brook.jpg" alt="Photo of Avery Brook" class="my-4"></v-img> -->
+                  <video src="video/AIML_FINALDRAFT_v3_optim.mp4" controls width="100%" poster="video/AIML_FINALDRAFT_v3_optim.jpg" class="my-4"></video>
 
                   <p>The goals of the Flow Photo Explorer are to:</p>
 

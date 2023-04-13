@@ -23,6 +23,15 @@
         </template>
 
         <v-list>
+          <v-list-item :to="{ name: 'home' }" class="pr-8">
+            <v-list-item-icon>
+              <v-icon>mdi-home</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>Home</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+
           <v-list-item :to="{ name: 'about' }" class="pr-8">
             <v-list-item-icon>
               <v-icon>mdi-information-outline</v-icon>
@@ -129,6 +138,9 @@
 
       <v-spacer></v-spacer>
 
+      <v-btn text :to="{ name: 'home' }" class="mx-2" exact>
+        <v-icon small left>mdi-home</v-icon> Home
+      </v-btn>
       <v-btn text :to="{ name: 'about' }" class="mx-2">
         <v-icon small left>mdi-information-outline</v-icon> About
       </v-btn>
@@ -138,9 +150,6 @@
       <v-btn text :to="{ name: 'explorer' }" class="mx-2">
         <v-icon small left>mdi-image-multiple-outline</v-icon> Photo Explorer
       </v-btn>
-      <!-- <v-btn text :to="{ name: 'models' }" class="mx-2">
-        <v-icon small left>mdi-brain</v-icon> AI Models
-      </v-btn> -->
 
       <v-divider vertical class="mx-4"></v-divider>
 

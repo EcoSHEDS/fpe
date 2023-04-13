@@ -22,7 +22,7 @@
               <div>This website is primarily designed for latop or desktop computers.</div>
             </v-alert>
 
-            <v-alert color="primary" colored-border border="left" :value="true" elevation="2" class="pl-4">
+            <!-- <v-alert color="primary" colored-border border="left" :value="true" elevation="2" class="pl-4">
               <div class="text-h6 mb-2 pl-4"><v-icon left large color="primary">mdi-alert</v-icon> Flow Photos Wanted!</div>
 
               <p class="pl-4">
@@ -31,9 +31,9 @@
               <p class="mb-0 pl-4">
                 If you are interested in contributing to this project, check out our <router-link :to="{ name: 'user-guide' }">User Guide</router-link>, which provides a Standard Operating Procedure (SOP) and other tips on collecting flow photos for FPE. If you have any questions, please <a href="mailto:ecosheds@usgs.gov">get in touch</a>.
               </p>
-            </v-alert>
+            </v-alert> -->
 
-            <p class="mt-8">
+            <p>
               The Flow Photo Explorer is an integrated database and machine learning platform for estimating streamflow from timelapse imagery. The goal of this project is to develop new approaches to monitoring hydrologic conditions in streams and rivers where flow data are historically sparse or non-existent.
             </p>
 
@@ -51,6 +51,12 @@
               <strong>Do you have flow photos to contribute?</strong> <router-link :to="{ name: 'request' }">Request an account</router-link> to upload your photos and data.<br>
               <strong>Already have an account?</strong> <router-link :to="{ name: 'login' }">Log in</router-link>.
             </p>
+
+            <p>To learn more about the motivation and goals for this project, please enjoy this video produced by the USGS MD-DE-DC Water Science Center:</p>
+
+            <video src="video/AIML_FINALDRAFT_v3_optim.mp4" controls width="100%" poster="video/AIML_FINALDRAFT_v3_optim.jpg"></video>
+
+            <v-divider class="my-4"></v-divider>
 
             <v-row>
               <v-col cols="12" md="7">

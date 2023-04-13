@@ -36,10 +36,9 @@
               <li>Ben Letcher, USGS - Principal Investigator</li>
               <li>Jeff Walker, Walker Environmental Research - Database and Web Application Developer</li>
               <li>Jenn Fair, USGS - Research Hydrologist and Field Coordinator</li>
+              <li>Amrita Gupta, Microsoft AI for Good - Machine Learning Model Developer</li>
               <li>Todd Dubreuil, USGS - Ecologist and Field Technician</li>
               <li>Mike Hayden, USGS - Fish Biologist and Field Technician</li>
-              <li>Tony Chang, Conservation Science Partners - Machine Learning Model Developer</li>
-              <li>Amrita Gupta, Conservation Science Partners - Machine Learning Model Developer</li>
             </ul>
 
             <div class="mt-2 font-weight-medium">Project Management</div>
