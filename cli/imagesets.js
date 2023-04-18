@@ -110,8 +110,8 @@ exports.processImageset = async function (id) {
   }
 
   const results = await batch.submitJob({
-    jobName: 'process-imageset',
-    jobDefinition: process.env.JOB_DEFINITION,
+    jobName: `process-imageset-${id}`,
+    jobDefinition: process.env.JOB_DEFINITION_PROCESSOR,
     jobQueue: process.env.JOB_QUEUE,
     containerOverrides: {
       command: [
@@ -120,6 +120,28 @@ exports.processImageset = async function (id) {
         'imageset',
         '-i',
         id
+      ]
+    }
+  }).promise()
+  console.log(`batch job submitted (jobId: ${results.jobId})`)
+}
+
+exports.piiImageset = async function (id) {
+  const imageset = await Imageset.query().findById(id)
+  if (!imageset) {
+    console.error(`Error: Imageset not found (id=${id})`)
+    process.exit(1)
+  }
+
+  const results = await batch.submitJob({
+    jobName: `pii-imageset-${id}`,
+    jobDefinition: process.env.JOB_DEFINITION_PII,
+    jobQueue: process.env.JOB_QUEUE,
+    containerOverrides: {
+      command: [
+        'python',
+        'detect-imageset.py',
+        imageset.id.toString()
       ]
     }
   }).promise()

@@ -62,7 +62,7 @@ const processDataset = async (req, res, next) => {
   // console.log(`process dataset (id=${res.locals.dataset.id})`)
   const response = await batch.submitJob({
     jobName: `process-dataset-${res.locals.dataset.id}`,
-    jobDefinition: process.env.JOB_DEFINITION,
+    jobDefinition: process.env.JOB_DEFINITION_PROCESSOR,
     jobQueue: process.env.JOB_QUEUE,
     containerOverrides: {
       command: [

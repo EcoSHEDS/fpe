@@ -42,7 +42,7 @@ node process.js dataset <id>
 ```bash
 export APP_NAME=fpe
 export ENV=dev
-export NAME=${APP_NAME}-${ENV}-batch
+export NAME=${APP_NAME}-${ENV}-batch-processor
 export AWS_ACCOUNT=
 export AWS_REGION=
 export AWS_REPO=${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com/${NAME}
@@ -72,7 +72,7 @@ See https://code.chs.usgs.gov/jdwalker1/fpe
 ## Docker Hub
 
 ```bash
-export NAME=${APP_NAME}-${ENV}-batch
+export NAME=${APP_NAME}-${ENV}-batch-processor
 export DOCKER_USER=
 export DOCKER_REPO=${DOCKER_USER}/${NAME}
 

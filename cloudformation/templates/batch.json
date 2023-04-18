@@ -126,6 +126,37 @@
         }
       }
     },
+    "ComputeEnvironment": {
+      "Type": "AWS::Batch::ComputeEnvironment",
+      "Properties": {
+        "ComputeEnvironmentName": {
+          "Fn::Join": [
+            "-",
+            [
+              { "Ref": "appName" },
+              { "Ref": "env" },
+              "batch-compute-environment"
+            ]
+          ]
+        },
+        "Type": "MANAGED",
+        "ComputeResources": {
+          "Type": "FARGATE",
+          "MaxvCpus": 32,
+          "Subnets": {
+            "Ref": "subnetIds"
+          },
+          "SecurityGroupIds": [
+            {
+              "Ref": "SecurityGroup"
+            }
+          ]
+        },
+        "ServiceRole": {
+          "Ref": "ServiceRole"
+        }
+      }
+    },
     "JobRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
@@ -165,6 +196,42 @@
                   "Resource": {
                     "Ref": "notifyTopicArn"
                   }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "batch:SubmitJob"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:aws:batch:",
+                          { "Ref": "AWS::Region" },
+                          ":",
+                          { "Ref": "AWS::AccountId" },
+                          ":job-definition/",
+                          { "Ref": "appName" },
+                          "*"
+                        ]
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:aws:batch:",
+                          { "Ref": "AWS::Region" },
+                          ":",
+                          { "Ref": "AWS::AccountId" },
+                          ":job-queue/",
+                          { "Ref": "appName" },
+                          "*"
+                        ]
+                      ]
+                    }
+                  ]
                 }
               ]
             }
@@ -184,7 +251,31 @@
         }
       }
     },
-    "JobDefinition": {
+    "JobQueue": {
+      "Type": "AWS::Batch::JobQueue",
+      "Properties": {
+        "JobQueueName": {
+          "Fn::Join": [
+            "-",
+            [
+              { "Ref": "appName" },
+              { "Ref": "env" },
+              "batch-job-queue"
+            ]
+          ]
+        },
+        "Priority": 1,
+        "ComputeEnvironmentOrder": [
+          {
+            "Order": 1,
+            "ComputeEnvironment": {
+              "Ref": "ComputeEnvironment"
+            }
+          }
+        ]
+      }
+    },
+    "JobDefinitionProcessor": {
       "Type": "AWS::Batch::JobDefinition",
       "Properties": {
         "Type": "container",
@@ -194,7 +285,7 @@
             [
               { "Ref": "appName" },
               { "Ref": "env" },
-              "batch-job-definition"
+              "batch-job-definition-processor"
             ]
           ]
         },
@@ -203,7 +294,7 @@
         ],
         "ContainerProperties": {
           "Image": {
-            "Fn::Sub": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${Repository}:latest"
+            "Fn::Sub": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${RepositoryProcessor}:latest"
           },
           "ExecutionRoleArn": {
             "Fn::GetAtt": [
@@ -257,62 +348,7 @@
         }
       }
     },
-    "JobQueue": {
-      "Type": "AWS::Batch::JobQueue",
-      "Properties": {
-        "JobQueueName": {
-          "Fn::Join": [
-            "-",
-            [
-              { "Ref": "appName" },
-              { "Ref": "env" },
-              "batch-job-queue"
-            ]
-          ]
-        },
-        "Priority": 1,
-        "ComputeEnvironmentOrder": [
-          {
-            "Order": 1,
-            "ComputeEnvironment": {
-              "Ref": "ComputeEnvironment"
-            }
-          }
-        ]
-      }
-    },
-    "ComputeEnvironment": {
-      "Type": "AWS::Batch::ComputeEnvironment",
-      "Properties": {
-        "ComputeEnvironmentName": {
-          "Fn::Join": [
-            "-",
-            [
-              { "Ref": "appName" },
-              { "Ref": "env" },
-              "batch-compute-environment"
-            ]
-          ]
-        },
-        "Type": "MANAGED",
-        "ComputeResources": {
-          "Type": "FARGATE",
-          "MaxvCpus": 32,
-          "Subnets": {
-            "Ref": "subnetIds"
-          },
-          "SecurityGroupIds": [
-            {
-              "Ref": "SecurityGroup"
-            }
-          ]
-        },
-        "ServiceRole": {
-          "Ref": "ServiceRole"
-        }
-      }
-    },
-    "Repository": {
+    "RepositoryProcessor": {
       "Type": "AWS::ECR::Repository",
       "Properties": {
         "RepositoryName": {
@@ -321,7 +357,91 @@
             [
               { "Ref": "appName" },
               { "Ref": "env" },
-              "batch"
+              "batch-processor"
+            ]
+          ]
+        }
+      }
+    },
+    "JobDefinitionPii": {
+      "Type": "AWS::Batch::JobDefinition",
+      "Properties": {
+        "Type": "container",
+        "JobDefinitionName": {
+          "Fn::Join": [
+            "-",
+            [
+              { "Ref": "appName" },
+              { "Ref": "env" },
+              "batch-job-definition-pii"
+            ]
+          ]
+        },
+        "PlatformCapabilities": [
+          "FARGATE"
+        ],
+        "ContainerProperties": {
+          "Image": {
+            "Fn::Sub": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${RepositoryPii}:latest"
+          },
+          "ExecutionRoleArn": {
+            "Fn::GetAtt": [
+              "ExecutionRole",
+              "Arn"
+            ]
+          },
+          "JobRoleArn": {
+            "Fn::GetAtt": [
+              "JobRole",
+              "Arn"
+            ]
+          },
+          "FargatePlatformConfiguration": {
+            "PlatformVersion": "LATEST"
+          },
+          "ResourceRequirements": [
+            {
+              "Type": "MEMORY",
+              "Value": 3072
+            },
+            {
+              "Type": "VCPU",
+              "Value": 1
+            }
+          ],
+          "Command": [
+            "python",
+            "detect-imageset.py"
+          ],
+          "NetworkConfiguration": {
+            "AssignPublicIp": "ENABLED"
+          },
+          "Environment": [
+            {
+              "Name": "REGION",
+              "Value": { "Ref": "AWS::Region" }
+            },
+            {
+              "Name": "DB_SECRET_NAME",
+              "Value": { "Ref": "dbSecretName" }
+            }
+          ]
+        },
+        "RetryStrategy": {
+          "Attempts": 1
+        }
+      }
+    },
+    "RepositoryPii": {
+      "Type": "AWS::ECR::Repository",
+      "Properties": {
+        "RepositoryName": {
+          "Fn::Join": [
+            "-",
+            [
+              { "Ref": "appName" },
+              { "Ref": "env" },
+              "batch-pii"
             ]
           ]
         }
@@ -334,7 +454,7 @@
       "Value": { "Ref": "ComputeEnvironment" }
     },
     "JobQueueName": {
-      "Description": "Job queue name",
+      "Description": "Processor job queue name",
       "Value": {
         "Fn::Join": [
           "-",
@@ -346,23 +466,42 @@
         ]
       }
     },
-    "JobDefinitionName": {
-      "Description": "Job definition name",
+    "JobDefinitionNameProcessor": {
+      "Description": "Processor job definition name",
       "Value": {
         "Fn::Join": [
           "-",
           [
             { "Ref": "appName" },
             { "Ref": "env" },
-            "batch-job-definition"
+            "batch-job-definition-processor"
           ]
         ]
       }
     },
-    "RepositoryUrl": {
-      "Description": "Batch repository URL",
+    "RepositoryUrlProcessor": {
+      "Description": "Batch processor repository URL",
       "Value": {
-        "Fn::Sub": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${Repository}"
+        "Fn::Sub": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${RepositoryProcessor}"
+      }
+    },
+    "JobDefinitionNamePii": {
+      "Description": "PII job definition name",
+      "Value": {
+        "Fn::Join": [
+          "-",
+          [
+            { "Ref": "appName" },
+            { "Ref": "env" },
+            "batch-job-definition-pii"
+          ]
+        ]
+      }
+    },
+    "RepositoryUrlPii": {
+      "Description": "Batch PII repository URL",
+      "Value": {
+        "Fn::Sub": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${RepositoryPii}"
       }
     }
   }

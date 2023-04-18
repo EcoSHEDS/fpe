@@ -6,14 +6,14 @@ const dayjs = require('dayjs')
 const timezone = require('dayjs/plugin/timezone')
 const utc = require('dayjs/plugin/utc')
 const localizedFormat = require('dayjs/plugin/localizedFormat')
-const { notify } = require('../aws')
+const { notify, batch } = require('../aws')
 
 dayjs.extend(timezone)
 dayjs.extend(utc)
 dayjs.extend(localizedFormat)
 dayjs.tz.setDefault('UTC')
 
-const { Imageset } = require('../models')
+const { Imageset } = require('../../models')
 
 const s3 = new AWS.S3()
 
@@ -179,6 +179,28 @@ async function processImageset (id, dryRun) {
       start_timestamp: imageSummary.start_timestamp,
       end_timestamp: imageSummary.end_timestamp,
       n_images: imageSummary.n_images
+    })
+    .returning('*')
+
+  console.log(`submitting PII detector job (id=${imageset.id})`)
+  const response = await batch.submitJob({
+    jobName: `pii-imageset-${imageset.id}`,
+    jobDefinition: process.env.JOB_DEFINITION_PII,
+    jobQueue: process.env.JOB_QUEUE,
+    containerOverrides: {
+      command: [
+        'python',
+        'detect-imageset.py',
+        imageset.id.toString()
+      ]
+    }
+  }).promise()
+  console.log(`batch job submitted (jobId: ${response.jobId})`)
+
+  console.log(`updating imageset.pii_status (id=${imageset.id})`)
+  imageset = await imageset.$query()
+    .patch({
+      pii_status: 'QUEUED'
     })
     .returning('*')
 

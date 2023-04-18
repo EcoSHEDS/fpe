@@ -77,7 +77,7 @@ const processImageset = async (req, res, next) => {
 
   const response = await batch.submitJob({
     jobName: `process-imageset-${res.locals.imageset.id}`,
-    jobDefinition: process.env.JOB_DEFINITION,
+    jobDefinition: process.env.JOB_DEFINITION_PROCESSOR,
     jobQueue: process.env.JOB_QUEUE,
     containerOverrides: {
       command: [
@@ -90,6 +90,27 @@ const processImageset = async (req, res, next) => {
   }).promise()
 
   await res.locals.imageset.$query().patch({ status: 'QUEUED' })
+
+  return res.status(200).json(response)
+}
+
+const piiImageset = async (req, res, next) => {
+  console.log(`run pii detector on imageset (id=${res.locals.imageset.id})`)
+
+  const response = await batch.submitJob({
+    jobName: `pii-imageset-${res.locals.imageset.id}`,
+    jobDefinition: process.env.JOB_DEFINITION_PII,
+    jobQueue: process.env.JOB_QUEUE,
+    containerOverrides: {
+      command: [
+        'python',
+        'detect-imageset.py',
+        imageset.id.toString()
+      ]
+    }
+  }).promise()
+
+  await res.locals.imageset.$query().patch({ pii_status: 'QUEUED' })
 
   return res.status(200).json(response)
 }
@@ -137,5 +158,6 @@ module.exports = {
   deleteImagesetFiles,
   presignImageset,
   processImageset,
+  piiImageset,
   listImagesetFiles
 }

@@ -29,12 +29,14 @@ const {
   putImageset,
   deleteImageset,
   processImageset,
+  piiImageset,
   listImagesetFiles
 } = require('../../controllers/imagesets')
 const {
   attachImage,
   getImages,
   postImage,
+  putImage,
   deleteImage
 } = require('../../controllers/images')
 const { requireStationOwnerOrAdmin } = require('../../middleware/auth')
@@ -93,6 +95,10 @@ router.route('/:stationId/imagesets/:imagesetId/process')
   .all(asyncHandler(attachStation), asyncHandler(attachImageset))
   .post(requireStationOwnerOrAdmin, asyncHandler(processImageset))
 
+router.route('/:stationId/imagesets/:imagesetId/pii')
+  .all(asyncHandler(attachStation), asyncHandler(attachImageset))
+  .post(requireStationOwnerOrAdmin, asyncHandler(piiImageset))
+
 router.route('/:stationId/imagesets/:imagesetId/images')
   .all(asyncHandler(attachStation), asyncHandler(attachImageset))
   .get(asyncHandler(getImages))
@@ -100,6 +106,7 @@ router.route('/:stationId/imagesets/:imagesetId/images')
 
 router.route('/:stationId/imagesets/:imagesetId/images/:imageId')
   .all(asyncHandler(attachStation), asyncHandler(attachImageset), asyncHandler(attachImage))
+  .put(requireStationOwnerOrAdmin, asyncHandler(putImage))
   .delete(requireStationOwnerOrAdmin, asyncHandler(deleteImage))
 
 router.route('/:stationId/imagesets/:imagesetId/list')

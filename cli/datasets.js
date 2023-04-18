@@ -95,7 +95,7 @@ exports.processDataset = async function (id) {
 
   const results = await batch.submitJob({
     jobName: 'process-dataset',
-    jobDefinition: process.env.JOB_DEFINITION,
+    jobDefinition: process.env.JOB_DEFINITION_PROCESSOR,
     jobQueue: process.env.JOB_QUEUE,
     containerOverrides: {
       command: [

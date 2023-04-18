@@ -18,3 +18,8 @@ exports.notify = async (subject, message) => {
 
   return response
 }
+
+exports.batch = new AWS.Batch({
+  apiVersion: '2016-08-10',
+  region: process.env.REGION
+})

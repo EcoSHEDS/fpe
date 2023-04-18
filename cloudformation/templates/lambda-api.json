@@ -39,8 +39,12 @@
       "Description": "Name of lambda worker function",
       "Type": "String"
     },
-    "batchJobDefinitionName": {
-      "Description": "Name of batch job definition",
+    "batchJobDefinitionNameProcessor": {
+      "Description": "Name of batch job definition for processor",
+      "Type": "String"
+    },
+    "batchJobDefinitionNamePii": {
+      "Description": "Name of batch job definition for PII",
       "Type": "String"
     },
     "batchJobQueueName": {
@@ -130,8 +134,11 @@
             "LAMBDA_WORKER": {
               "Ref": "lambdaWorkerName"
             },
-            "JOB_DEFINITION": {
-              "Ref": "batchJobDefinitionName"
+            "JOB_DEFINITION_PROCESSOR": {
+              "Ref": "batchJobDefinitionNameProcessor"
+            },
+            "JOB_DEFINITION_PII": {
+              "Ref": "batchJobDefinitionNamePii"
             },
             "JOB_QUEUE": {
               "Ref": "batchJobQueueName"
@@ -285,9 +292,38 @@
             {
               "Effect": "Allow",
               "Action": [
-                "batch:*"
+                "batch:SubmitJob"
               ],
-              "Resource": "*"
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:batch:",
+                      { "Ref": "AWS::Region" },
+                      ":",
+                      { "Ref": "AWS::AccountId" },
+                      ":job-definition/",
+                      { "Ref": "appName" },
+                      "*"
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:batch:",
+                      { "Ref": "AWS::Region" },
+                      ":",
+                      { "Ref": "AWS::AccountId" },
+                      ":job-queue/",
+                      { "Ref": "appName" },
+                      "*"
+                    ]
+                  ]
+                }
+              ]
             },
             {
               "Effect": "Allow",

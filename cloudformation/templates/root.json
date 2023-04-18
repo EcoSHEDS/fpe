@@ -90,11 +90,14 @@
           "lambdaWorkerName": {
             "Fn::GetAtt": [ "LambdaWorkerStack", "Outputs.LambdaName" ]
           },
-          "batchJobDefinitionName": {
-            "Fn::GetAtt": [ "BatchStack", "Outputs.JobDefinitionName" ]
-          },
           "batchJobQueueName": {
             "Fn::GetAtt": [ "BatchStack", "Outputs.JobQueueName" ]
+          },
+          "batchJobDefinitionNameProcessor": {
+            "Fn::GetAtt": [ "BatchStack", "Outputs.JobDefinitionNameProcessor" ]
+          },
+          "batchJobDefinitionNamePii": {
+            "Fn::GetAtt": [ "BatchStack", "Outputs.JobDefinitionNamePii" ]
           },
           "userPoolId": { "Ref": "userPoolId" },
           "notifyTopicArn": {

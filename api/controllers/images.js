@@ -36,6 +36,12 @@ const postImage = async (req, res, next) => {
   return res.status(201).json(row)
 }
 
+const putImage = async (req, res, next) => {
+  const row = await Image.query()
+    .patchAndFetchById(res.locals.image.id, req.body)
+  return res.status(200).json(row)
+}
+
 const deleteImage = async (req, res, next) => {
   const nrow = await Image.query().deleteById(res.locals.image.id)
   if (nrow === 0) {
@@ -61,6 +67,7 @@ module.exports = {
   attachImage,
   getImages,
   getImage,
+  putImage,
   postImage,
   deleteImage
 }
