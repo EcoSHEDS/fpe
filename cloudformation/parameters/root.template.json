@@ -34,9 +34,5 @@
   {
     "ParameterKey": "userPoolId",
     "ParameterValue": ""
-  },
-  {
-    "ParameterKey": "modelBucketName",
-    "ParameterValue": ""
   }
 ]

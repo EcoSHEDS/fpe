@@ -13,7 +13,7 @@ dayjs.extend(utc)
 dayjs.extend(localizedFormat)
 dayjs.tz.setDefault('UTC')
 
-const { Imageset } = require('../../models')
+const { Imageset } = require('../models')
 
 const s3 = new AWS.S3()
 

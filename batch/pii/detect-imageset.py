@@ -4,14 +4,14 @@ import PIL
 import json
 import os
 from io import BytesIO, StringIO
-from sqlalchemy import create_engine, text, Table, MetaData, Column, Float, Integer
+from sqlalchemy import create_engine, text, Table, MetaData, Column, Float, Integer, JSON
 import pandas as pd
 from detection.run_detector import load_detector
 
 MD_CATEGORIES = {
-    "0": "animal",
-    "1": "person",
-    "2": "vehicle"
+    "1": "animal",
+    "2": "person",
+    "3": "vehicle"
 }
 DEFAULT_CONF_THRESHOLD=0.1
 
@@ -92,7 +92,8 @@ def save_pii_to_database(engine, results):
             'image_id': result['image_id'],
             'pii_animal': result['max_conf']['animal'],
             'pii_person': result['max_conf']['person'],
-            'pii_vehicle': result['max_conf']['vehicle']
+            'pii_vehicle': result['max_conf']['vehicle'],
+            'pii_detections': result['detections']
         } for result in results
     ]
     with engine.connect() as conn:
@@ -101,6 +102,7 @@ def save_pii_to_database(engine, results):
             Column('pii_animal', Float),
             Column('pii_person', Float),
             Column('pii_vehicle', Float),
+            Column('pii_detections', JSON),
             prefixes=['TEMPORARY']
         )
         table.create(conn)
@@ -110,7 +112,8 @@ def save_pii_to_database(engine, results):
             UPDATE images
             SET pii_animal = pii_results.pii_animal,
                 pii_person = pii_results.pii_person,
-                pii_vehicle = pii_results.pii_vehicle
+                pii_vehicle = pii_results.pii_vehicle,
+                pii_detections = pii_results.pii_detections
             FROM pii_results
             WHERE images.id = pii_results.image_id;
         """)

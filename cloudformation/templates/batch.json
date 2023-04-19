@@ -179,6 +179,15 @@
                 "Service": "ecs-tasks.amazonaws.com"
               },
               "Action": "sts:AssumeRole"
+            },
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "arn:aws:iam::694155575325:role/adfs-developers"
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
             }
           ]
         },
@@ -228,6 +237,26 @@
                           ":job-queue/",
                           { "Ref": "appName" },
                           "*"
+                        ]
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "batch:TerminateJob"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:aws:batch:",
+                          { "Ref": "AWS::Region" },
+                          ":",
+                          { "Ref": "AWS::AccountId" },
+                          ":job/*"
                         ]
                       ]
                     }
@@ -340,6 +369,32 @@
             {
               "Name": "NOTIFY_TOPIC",
               "Value": { "Ref": "notifyTopicArn" }
+            },
+            {
+              "Name": "JOB_DEFINITION_PII",
+              "Value": {
+                "Fn::Join": [
+                  "-",
+                  [
+                    { "Ref": "appName" },
+                    { "Ref": "env" },
+                    "batch-job-definition-pii"
+                  ]
+                ]
+              }
+            },
+            {
+              "Name": "JOB_QUEUE",
+              "Value": {
+                "Fn::Join": [
+                  "-",
+                  [
+                    { "Ref": "appName" },
+                    { "Ref": "env" },
+                    "batch-job-queue"
+                  ]
+                ]
+              }
             }
           ]
         },
