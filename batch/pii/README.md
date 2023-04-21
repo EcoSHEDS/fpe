@@ -48,7 +48,8 @@ Create conda environment from `Microsoft/cameratraps`:
 ```sh
 conda env create --file lib/cameratraps/environment-detector.yml
 conda activate cameratraps-detector
-pip install sqlalchemy psycopg2
+pip install -r requirements.txt
+# pip install sqlalchemy psycopg2
 ```
 
 Finally, add the submodule repositories to your Python path (whenever you start a new shell).
@@ -64,5 +65,5 @@ source .env.development.local
 ```
 
 ```sh
-python detect-imageset.py
+python detect-imageset.py 1
 ```

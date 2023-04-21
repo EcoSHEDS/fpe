@@ -142,7 +142,7 @@
         "Type": "MANAGED",
         "ComputeResources": {
           "Type": "FARGATE",
-          "MaxvCpus": 32,
+          "MaxvCpus": 64,
           "Subnets": {
             "Ref": "subnetIds"
           },
