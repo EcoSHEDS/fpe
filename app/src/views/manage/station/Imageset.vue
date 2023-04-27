@@ -104,9 +104,17 @@
                     <td
                       class="text-right text--secondary"
                       style="width:110px">
-                      Status
+                      Upload Status
                     </td>
                     <td class="font-weight-bold"><StatusChip :status="imageset.status"></StatusChip></td>
+                  </tr>
+                  <tr>
+                    <td
+                      class="text-right text--secondary"
+                      style="width:110px">
+                      PII Status
+                    </td>
+                    <td class="font-weight-bold"><StatusChip :status="imageset.pii_status"></StatusChip></td>
                   </tr>
                 </tbody>
               </v-simple-table>
@@ -320,6 +328,11 @@
                         </v-btn-toggle>
                       </template>
                     </v-toolbar>
+                    <v-toolbar dense
+                      class="mb-2"
+                      elevation="0">
+                      <v-simple-checkbox v-model="piiOnly"></v-simple-checkbox>Only Photos with Detected PII (Person or Vehicle)
+                    </v-toolbar>
                     <v-divider class="mb-4 pt-0"></v-divider>
                   </template>
 
@@ -348,6 +361,7 @@
                             :timezone="station.timezone"
                             @click="showImage(item)"
                             @delete="confirmDeleteImage"
+                            @flag="flagImage"
                           ></ImagePreview>
                         </v-card>
                       </v-col>
@@ -415,6 +429,15 @@
                 </v-data-iterator>
                 <v-overlay absolute class="text-center py-8" color="black" v-if="imageDeleter.loading">
                   <div class="text-h5 font-weight-bold mb-8 white--text">Deleting Image...</div>
+                  <v-progress-circular
+                    color="white"
+                    indeterminate
+                    size="32"
+                    width="4"
+                  ></v-progress-circular>
+                </v-overlay>
+                <v-overlay absolute class="text-center py-8" color="black" v-if="imageFlagger.loading">
+                  <div class="text-h5 font-weight-bold mb-8 white--text">Flagging Image...</div>
                   <v-progress-circular
                     color="white"
                     indeterminate
@@ -499,6 +522,10 @@ export default {
         loading: false,
         error: null
       },
+      imageFlagger: {
+        loading: false,
+        error: null
+      },
       iterator: {
         itemsPerPage: 9,
         itemsPerPageArray: [6, 9, 12, 24, 48],
@@ -510,7 +537,8 @@ export default {
         startDate: null,
         endDate: null
       },
-      hideConfirmDeleteImage: false
+      hideConfirmDeleteImage: false,
+      piiOnly: false
     }
   },
   computed: {
@@ -539,6 +567,10 @@ export default {
         .filter(d => {
           if (end === null) return true
           return this.$date(d.timestamp).tz(this.station.timezone).startOf('day').isSameOrBefore(end)
+        })
+        .filter(d => {
+          if (!this.piiOnly) return true
+          return d.pii_person >= 0.8 || d.pii_vehicle >= 0.8 || d.pii_user
         })
       return images
     }
@@ -657,7 +689,7 @@ export default {
       this.imageDeleter.loading = true
       try {
         await this.$http.restricted.delete(`/stations/${this.imageset.station_id}/imagesets/${this.imageset.id}/images/${image.id}`)
-        evt.$emit('notify', 'success', `Photo set (${this.imageset.id}) has been deleted`)
+        evt.$emit('notify', 'success', `Photo (${image.id}) has been deleted`)
         this.refresh()
       } catch (err) {
         console.error(err)
@@ -665,6 +697,20 @@ export default {
       } finally {
         this.imageDeleter.loading = false
       }
+    },
+    async flagImage (image) {
+      if (!image) return
+      this.imageFlagger.loading = true
+      try {
+        await this.$http.restricted.put(`/stations/${this.imageset.station_id}/imagesets/${this.imageset.id}/images/${image.id}`, { pii_user: !image.pii_user })
+        evt.$emit('notify', 'success', `Photo (${image.id}) has been flagged for PII`)
+        this.refresh()
+      } catch (err) {
+        evt.$emit('notify', 'error', `Failed to flag photo (${image.id}) for PII`)
+      } finally {
+        this.imageFlagger.loading = false
+      }
+      // image.pii_user = result.pii_user
     },
     initializeStartDate () {
       if (this.iterator.startDate === null) {

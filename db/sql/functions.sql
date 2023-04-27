@@ -82,6 +82,9 @@ create or replace function f_station_daily_images(_station_id INT)
 			where s.id=_station_id
 				and ss.status='DONE'
 				and i.status='DONE'
+				and i.pii_person < 0.8
+				and i.pii_vehicle < 0.8
+				and not i.pii_user
 			order by i.timestamp
 		), t_images_rank as (
 			select *, row_number() over(partition by i.date order by i.hours_from_noon, i.timestamp) as rank
@@ -135,11 +138,14 @@ create or replace function f_station_images(_station_id int, _start timestamp, _
 			and i.status='DONE'
 			and i.timestamp >= _start
 			and i.timestamp <= _end
+			and i.pii_person < 0.8
+			and i.pii_vehicle < 0.8
+			and not i.pii_user
 		order by i.timestamp
 	$$ language sql;
 
-	-- get all data values for station and variable within timestamp range
-	create or replace function f_station_values(_station_id int, _variable_id text, _start timestamp, _end timestamp)
+-- get all data values for station and variable within timestamp range
+create or replace function f_station_values(_station_id int, _variable_id text, _start timestamp, _end timestamp)
 	returns table (
 		"timestamp" timestamptz,
 		value real

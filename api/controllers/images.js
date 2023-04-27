@@ -18,6 +18,7 @@ const getImages = async (req, res, next) => {
   const rows = await res.locals.imageset.$relatedQuery('images')
     .modify('defaultOrderBy')
     .modify('defaultSelect')
+    .modify('excludePii')
   return res.status(200).json(rows)
 }
 
