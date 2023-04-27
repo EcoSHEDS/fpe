@@ -26,6 +26,14 @@
         {{ item.name | truncate(45) }}
       </template>
       <!-- eslint-disable-next-line vue/valid-v-slot -->
+      <template v-slot:item.waterbody_type="{ item }">
+        {{ item.waterbody_type | waterbodyType }}
+      </template>
+      <!-- eslint-disable-next-line vue/valid-v-slot -->
+      <template v-slot:item.status="{ item }">
+        {{ item.status | stationStatus }}
+      </template>
+      <!-- eslint-disable-next-line vue/valid-v-slot -->
       <template v-slot:item.summary.images.n_images="{ item }">
         <span v-if="item.summary && item.summary.images && item.summary.images.n_images > 0">
           {{ item.summary.images.n_images.toLocaleString() }}
@@ -42,13 +50,11 @@
       </template>
       <!-- eslint-disable-next-line vue/valid-v-slot -->
       <template v-slot:item.hasValues="{ item }">
-        <v-icon v-if="item.hasValues">mdi-check-circle</v-icon>
-        <v-icon v-else>mdi-circle-outline</v-icon>
+        <v-simple-checkbox :value="item.hasValues" disabled></v-simple-checkbox>
       </template>
       <!-- eslint-disable-next-line vue/valid-v-slot -->
       <template v-slot:item.private="{ item }">
-        <v-icon v-if="item.private">mdi-check-circle</v-icon>
-        <v-icon v-else>mdi-circle-outline</v-icon>
+        <v-simple-checkbox :value="item.private" disabled></v-simple-checkbox>
       </template>
     </v-data-table>
     <StationForm ref="stationForm"></StationForm>
@@ -82,6 +88,11 @@ export default {
           align: 'left'
         },
         {
+          text: 'Waterbody Type',
+          value: 'waterbody_type',
+          align: 'left'
+        },
+        {
           text: '# Photos',
           value: 'summary.images.n_images',
           align: 'center',
@@ -107,6 +118,11 @@ export default {
           align: 'center',
           sortable: true,
           width: 120
+        },
+        {
+          text: 'Status',
+          value: 'status',
+          align: 'left'
         }
       ]
     }

@@ -158,12 +158,17 @@
                   Refresh
                 </v-btn>
                 <v-spacer></v-spacer>
-                <v-btn color="success" :to="{ name: 'newDataset' }">
+                <v-btn color="success" :to="{ name: 'newDataset' }" :disabled="station.status === 'DISCONTINUED'">
                   <v-icon left>mdi-upload</v-icon> Upload File
                 </v-btn>
               </v-toolbar>
-              <div class="text--secondary mx-4">
-                Click on a row to select a file.
+              <div class="mx-4 d-flex">
+                <div>Click on a row to select a file.</div>
+                <v-spacer></v-spacer>
+                <div v-if="station.status === 'DISCONTINUED'">
+                  <v-icon left color="error" small>mdi-alert</v-icon>
+                  Data uploading disabled because station is discontinued
+                </div>
               </div>
               <v-divider></v-divider>
             </template>

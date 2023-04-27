@@ -32,7 +32,7 @@
               <tr>
                 <td
                   class="text-right grey--text text--darken-2"
-                  style="width:100px">
+                  style="width:140px">
                   ID
                 </td>
                 <td class="font-weight-bold">{{ station.id }}</td>
@@ -40,7 +40,7 @@
               <tr>
                 <td
                   class="text-right grey--text text--darken-2"
-                  style="width:100px">
+                  style="width:140px">
                   Name
                 </td>
                 <td class="font-weight-bold">{{ station.name }}</td>
@@ -48,7 +48,7 @@
               <tr>
                 <td
                   class="text-right grey--text text--darken-2"
-                  style="width:100px">
+                  style="width:140px">
                   Description
                 </td>
                 <td class="font-weight-bold">{{ station.description }}</td>
@@ -56,7 +56,7 @@
               <tr>
                 <td
                   class="text-right grey--text text--darken-2"
-                  style="width:100px">
+                  style="width:140px">
                   Latitude
                 </td>
                 <td class="font-weight-bold">{{ station.latitude.toFixed(4) }}</td>
@@ -64,7 +64,7 @@
               <tr>
                 <td
                   class="text-right grey--text text--darken-2"
-                  style="width:100px">
+                  style="width:140px">
                   Longitude
                 </td>
                 <td class="font-weight-bold">{{ station.longitude.toFixed(4) }}</td>
@@ -72,7 +72,7 @@
               <tr>
                 <td
                   class="text-right grey--text text--darken-2"
-                  style="width:100px">
+                  style="width:140px">
                   Timezone
                 </td>
                 <td class="font-weight-bold">{{ station.timezone }}</td>
@@ -80,7 +80,15 @@
               <tr>
                 <td
                   class="text-right grey--text text--darken-2"
-                  style="width:100px">
+                  style="width:140px">
+                  Waterbody Type
+                </td>
+                <td class="font-weight-bold">{{ station.waterbody_type | waterbodyType }}</td>
+              </tr>
+              <tr>
+                <td
+                  class="text-right grey--text text--darken-2"
+                  style="width:140px">
                   NWIS ID
                 </td>
                 <td class="font-weight-bold">
@@ -96,11 +104,19 @@
               <tr>
                 <td
                   class="text-right grey--text text--darken-2"
-                  style="width:100px">
+                  style="width:140px">
+                  Status
+                </td>
+                <td class="font-weight-bold">{{ station.status | stationStatus }}</td>
+              </tr>
+              <tr>
+                <td
+                  class="text-right grey--text text--darken-2"
+                  style="width:140px">
                   Private
                 </td>
                 <td class="font-weight-bold">
-                  <v-simple-checkbox :value="station.private"></v-simple-checkbox>
+                  <v-simple-checkbox :value="station.private" disabled></v-simple-checkbox>
                 </td>
               </tr>
             </tbody>

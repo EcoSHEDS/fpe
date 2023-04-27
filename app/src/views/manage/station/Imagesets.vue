@@ -123,12 +123,17 @@
                   <span v-if="!$vuetify.breakpoint.mobile">Refresh</span>
                 </v-btn>
                 <v-spacer></v-spacer>
-                <v-btn color="success" :to="{ name: 'newImageset' }">
+                <v-btn color="success" :to="{ name: 'newImageset' }" :disabled="station.status === 'DISCONTINUED'">
                   <v-icon left>mdi-upload</v-icon> Upload Photos
                 </v-btn>
               </v-toolbar>
-              <div class="text--secondary mx-4">
-                Click on a row to select a photo set.
+              <div class="mx-4 d-flex">
+                <div>Click on a row to select a photo set.</div>
+                <v-spacer></v-spacer>
+                <div v-if="station.status === 'DISCONTINUED'">
+                  <v-icon left color="error" small>mdi-alert</v-icon>
+                  Photo uploading disabled because station is discontinued
+                </div>
               </div>
               <v-divider></v-divider>
             </template>

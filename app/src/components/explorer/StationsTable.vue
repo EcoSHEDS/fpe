@@ -83,6 +83,10 @@
       {{ item.name | truncate(40) }}
     </template>
     <!-- eslint-disable-next-line vue/valid-v-slot -->
+    <template v-slot:item.waterbody_type="{ item }">
+      {{ item.waterbody_type | waterbodyType | truncate(17) }}
+    </template>
+    <!-- eslint-disable-next-line vue/valid-v-slot -->
     <template v-slot:item.images.count="{ item }">
       <span v-if="item.images.count > 0">
         {{ item.images.count.toLocaleString() }}
@@ -90,21 +94,24 @@
       <span v-else>0</span>
     </template>
     <!-- eslint-disable-next-line vue/valid-v-slot -->
-    <template v-slot:item.images.period="{ item }">
+    <template v-slot:item.images.start_date="{ item }">
       <span v-if="item.images.count > 0">
-        {{ item.images.start_date | timestampFormat('ll') }} &#8211;
+        {{ item.images.start_date | timestampFormat('ll') }}
+      </span>
+    </template>
+    <!-- eslint-disable-next-line vue/valid-v-slot -->
+    <template v-slot:item.images.end_date="{ item }">
+      <span v-if="item.images.count > 0">
         {{ item.images.end_date | timestampFormat('ll') }}
       </span>
     </template>
     <!-- eslint-disable-next-line vue/valid-v-slot -->
     <template v-slot:item.variables="{ item }">
-      <v-icon v-if="item.variables.length > 0">mdi-check-circle</v-icon>
-      <v-icon v-else>mdi-circle-outline</v-icon>
+      <v-simple-checkbox :value="item.variables.length > 0" disabled></v-simple-checkbox>
     </template>
     <!-- eslint-disable-next-line vue/valid-v-slot -->
     <template v-slot:item.private="{ item }">
-      <v-icon v-if="item.private">mdi-check-circle</v-icon>
-      <v-icon v-else>mdi-circle-outline</v-icon>
+      <v-simple-checkbox :value="item.private" disabled></v-simple-checkbox>
     </template>
   </v-data-table>
 </template>
@@ -136,17 +143,27 @@ export default {
           align: 'left'
         },
         {
+          text: 'Waterbody Type',
+          value: 'waterbody_type',
+          align: 'left'
+        },
+        {
           text: '# Photos',
           value: 'images.count',
           align: 'center',
           width: 120
         },
         {
-          text: 'Period',
-          value: 'images.period',
-          align: 'center',
-          sortable: false,
-          width: 250
+          text: 'Start',
+          value: 'images.start_date',
+          align: 'right',
+          sortable: true
+        },
+        {
+          text: 'End',
+          value: 'images.end_date',
+          align: 'right',
+          sortable: true
         },
         {
           text: 'Has Obs. Data',

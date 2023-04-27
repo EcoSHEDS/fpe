@@ -72,6 +72,23 @@
             validate-on-blur
             outlined
           ></v-select>
+          <v-autocomplete
+            v-model="waterbodyType.value"
+            :items="waterbodyType.options"
+            :rules="waterbodyType.rules"
+            item-text="label"
+            item-value="value"
+            label="Waterbody Type"
+            validate-on-blur
+            outlined
+          >
+            <template v-slot:item="{ item }">
+              <v-list-item-content style="max-width:600px">
+                <v-list-item-title v-html="item.label"></v-list-item-title>
+                <div class="text-subheading text--secondary" v-html="item.description"></div>
+              </v-list-item-content>
+            </template>
+          </v-autocomplete>
           <v-text-field
             v-model="nwisId.value"
             :rules="nwisId.rules"
@@ -81,6 +98,25 @@
             validate-on-blur
             outlined
           ></v-text-field>
+          <v-select
+            v-model="status.value"
+            :items="status.options"
+            :rules="status.rules"
+            item-text="label"
+            item-value="value"
+            label="Station Status"
+            validate-on-blur
+            outlined
+            clearable
+            hide-details
+          >
+            <template v-slot:item="{ item }">
+              <v-list-item-content style="max-width:600px">
+                <v-list-item-title v-html="item.label"></v-list-item-title>
+                <div class="text-subheading text--secondary" v-html="item.description"></div>
+              </v-list-item-content>
+            </template>
+          </v-select>
           <v-checkbox
             v-model="private_.value"
             label="Private"
@@ -121,7 +157,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { stationTimezones } from '@/lib/constants'
+import { stationTimezones, waterbodyTypes, stationStatusTypes } from '@/lib/constants'
 import nwis from '@/lib/nwis'
 import evt from '@/events'
 
@@ -179,6 +215,16 @@ export default {
           v => !!v || 'Timezone is required'
         ]
       },
+      waterbodyType: {
+        value: null,
+        options: waterbodyTypes,
+        rules: []
+      },
+      status: {
+        value: 'ACTIVE',
+        options: stationStatusTypes,
+        rules: []
+      },
       nwisId: {
         value: '',
         rules: []
@@ -203,6 +249,8 @@ export default {
         this.latitude.value = this.station.latitude
         this.longitude.value = this.station.longitude
         this.timezone.value = this.station.timezone
+        this.waterbodyType.value = this.station.waterbody_type
+        this.status.value = this.station.status
         this.nwisId.value = this.station.nwis_id
         this.private_.value = this.station.private
       }
@@ -225,6 +273,8 @@ export default {
           latitude: this.latitude.value,
           longitude: this.longitude.value,
           timezone: this.timezone.value,
+          waterbody_type: this.waterbodyType.value,
+          status: this.status.value,
           private: this.private_.value
         }
 
@@ -266,6 +316,8 @@ export default {
         this.latitude.value = this.station.latitude
         this.longitude.value = this.station.longitude
         this.timezone.value = this.station.timezone
+        this.waterbodyType.value = this.station.waterbody_type
+        this.status.value = this.station.status
         this.nwisId.value = this.station.nwis_id
         this.private_.value = this.station.private
       } else {
@@ -274,6 +326,8 @@ export default {
         this.latitude.value = null
         this.longitude.value = null
         this.timezone.value = null
+        this.waterbodyType.value = null
+        this.status.value = null
         this.nwisId.value = null
         this.private_.value = false
       }

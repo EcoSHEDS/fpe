@@ -39,6 +39,14 @@
         </tr>
         <tr>
           <td class="text-right grey--text text--darken-2">
+            Waterbody Type
+          </td>
+          <td class="font-weight-bold">
+            {{ station.waterbody_type | waterbodyType }}
+          </td>
+        </tr>
+        <tr>
+          <td class="text-right grey--text text--darken-2">
             Affiliation
           </td>
           <td class="font-weight-bold">{{ station.affiliation_name }}</td>
@@ -55,6 +63,14 @@
             >
               {{ station.nwis_id }}
             </a>
+          </td>
+        </tr>
+        <tr>
+          <td class="text-right grey--text text--darken-2">
+            Status
+          </td>
+          <td class="font-weight-bold">
+            {{ station.status | stationStatus }}
           </td>
         </tr>
       </tbody>
@@ -306,6 +322,6 @@ export default {
 
 <style scoped>
 tr > td:first-child {
-  width: 115px;
+  width: 140px;
 }
 </style>

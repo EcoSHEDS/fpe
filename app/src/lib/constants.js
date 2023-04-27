@@ -232,3 +232,65 @@ export const timestampFormats = [
 ]
 
 export const MAX_IMAGES_PER_IMAGESET = 10000
+
+export const stationStatusTypes = [
+  {
+    value: 'ACTIVE',
+    label: 'Active',
+    description: 'Photos are actively being collected at this station.'
+  },
+  {
+    value: 'DISCONTINUED',
+    label: 'Discontinued',
+    description: 'Photos are no longer being collected at this station.'
+  }
+]
+
+// https://maps.waterdata.usgs.gov/mapper/help/sitetype.html#SW
+export const waterbodyTypes = [
+  {
+    value: 'ST',
+    label: 'Stream',
+    description: 'A body of running water moving under gravity flow in a defined channel. The channel may be entirely natural, or altered by engineering practices through straightening, dredging, and (or) lining. An entirely artificial channel should be classified as Canal or Ditch.'
+  },
+  {
+    value: 'LK',
+    label: 'Lake, Reservoir, Impoundment',
+    description: 'An inland body of standing fresh or saline water that is generally too deep to permit submerged aquatic vegetation to take root across the entire body (cf: wetland). Includes an expanded part of a river, a reservoir behind a dam, and a natural or excavated depression containing a water body without surface-water inlet and/or outlet.'
+  },
+  {
+    value: 'WE',
+    label: 'Wetland',
+    description: 'Areas that are inundated or saturated by surface or groundwater at a frequency and duration sufficient to support, and that under normal circumstances do support, a prevalence of vegetation typically adapted for life in saturated soil conditions. Wetlands generally include swamps, marshes, bogs and similar areas. Wetlands may be forested or unforested, and naturally or artificially created.'
+  },
+  {
+    value: 'ST-CA',
+    label: 'Canal',
+    description: 'An artificial watercourse designed for navigation, drainage, or irrigation by connecting two or more bodies of water; it is larger than a ditch.'
+  },
+  {
+    value: 'ST-DCH',
+    label: 'Ditch',
+    description: 'An excavation artificially dug in the ground, either lined or unlined, for conveying water for drainage or irrigation; it is smaller than a canal.'
+  },
+  {
+    value: 'ST-TS',
+    label: 'Tidal stream',
+    description: 'A stream reach where the flow is influenced by the tide, but where the water chemistry is not normally influenced. A site where ocean water typically mixes with stream water should be coded as an estuary.'
+  },
+  {
+    value: 'ES',
+    label: 'Estuary',
+    description: 'A coastal inlet of the sea or ocean; esp. the mouth of a river, where tide water normally mixes with stream water (modified, Webster). Salinity in estuaries typically ranges from 1 to 25 Practical Salinity Units (psu), as compared oceanic values around 35-psu. See also: tidal stream and coastal.'
+  },
+  {
+    value: 'OC-CO',
+    label: 'Coastal',
+    description: 'An oceanic site that is located off-shore beyond the tidal mixing zone (estuary) but close enough to the shore that the investigator considers the presence of the coast to be important. Coastal sites typically are within three nautical miles of the shore.'
+  },
+  {
+    value: 'OC',
+    label: 'Ocean',
+    description: 'Site in the open ocean, gulf, or sea. (See also: Coastal, Estuary, and Tidal stream).'
+  }
+]
