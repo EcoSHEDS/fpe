@@ -36,9 +36,16 @@
   },
   "Conditions": {
     "PermissionsBoundaryExists": {
-      "Fn::Not": [{
-        "Fn::Equals": [ { "Ref": "permissionsBoundaryName" }, "NONE" ]
-      }]
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "permissionsBoundaryName"
+            },
+            "NONE"
+          ]
+        }
+      ]
     }
   },
   "Resources": {
@@ -58,8 +65,12 @@
           "Fn::Join": [
             "-",
             [
-              { "Ref": "appName" },
-              { "Ref": "env" },
+              {
+                "Ref": "appName"
+              },
+              {
+                "Ref": "env"
+              },
               "batch-service-role"
             ]
           ]
@@ -82,8 +93,12 @@
         "PermissionsBoundary": {
           "Fn::If": [
             "PermissionsBoundaryExists",
-            { "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:policy/${permissionsBoundaryName}" },
-            { "Ref": "AWS::NoValue" }
+            {
+              "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:policy/${permissionsBoundaryName}"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
           ]
         }
       }
@@ -95,8 +110,12 @@
           "Fn::Join": [
             "-",
             [
-              { "Ref": "appName" },
-              { "Ref": "env" },
+              {
+                "Ref": "appName"
+              },
+              {
+                "Ref": "env"
+              },
               "batch-execution-role"
             ]
           ]
@@ -120,8 +139,12 @@
         "PermissionsBoundary": {
           "Fn::If": [
             "PermissionsBoundaryExists",
-            { "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:policy/${permissionsBoundaryName}" },
-            { "Ref": "AWS::NoValue" }
+            {
+              "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:policy/${permissionsBoundaryName}"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
           ]
         }
       }
@@ -133,8 +156,12 @@
           "Fn::Join": [
             "-",
             [
-              { "Ref": "appName" },
-              { "Ref": "env" },
+              {
+                "Ref": "appName"
+              },
+              {
+                "Ref": "env"
+              },
               "batch-compute-environment"
             ]
           ]
@@ -164,8 +191,12 @@
           "Fn::Join": [
             "-",
             [
-              { "Ref": "appName" },
-              { "Ref": "env" },
+              {
+                "Ref": "appName"
+              },
+              {
+                "Ref": "env"
+              },
               "batch-job-role"
             ]
           ]
@@ -217,11 +248,17 @@
                         "",
                         [
                           "arn:aws:batch:",
-                          { "Ref": "AWS::Region" },
+                          {
+                            "Ref": "AWS::Region"
+                          },
                           ":",
-                          { "Ref": "AWS::AccountId" },
+                          {
+                            "Ref": "AWS::AccountId"
+                          },
                           ":job-definition/",
-                          { "Ref": "appName" },
+                          {
+                            "Ref": "appName"
+                          },
                           "*"
                         ]
                       ]
@@ -231,11 +268,17 @@
                         "",
                         [
                           "arn:aws:batch:",
-                          { "Ref": "AWS::Region" },
+                          {
+                            "Ref": "AWS::Region"
+                          },
                           ":",
-                          { "Ref": "AWS::AccountId" },
+                          {
+                            "Ref": "AWS::AccountId"
+                          },
                           ":job-queue/",
-                          { "Ref": "appName" },
+                          {
+                            "Ref": "appName"
+                          },
                           "*"
                         ]
                       ]
@@ -253,9 +296,13 @@
                         "",
                         [
                           "arn:aws:batch:",
-                          { "Ref": "AWS::Region" },
+                          {
+                            "Ref": "AWS::Region"
+                          },
                           ":",
-                          { "Ref": "AWS::AccountId" },
+                          {
+                            "Ref": "AWS::AccountId"
+                          },
                           ":job/*"
                         ]
                       ]
@@ -274,8 +321,12 @@
         "PermissionsBoundary": {
           "Fn::If": [
             "PermissionsBoundaryExists",
-            { "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:policy/${permissionsBoundaryName}" },
-            { "Ref": "AWS::NoValue" }
+            {
+              "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:policy/${permissionsBoundaryName}"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
           ]
         }
       }
@@ -287,8 +338,12 @@
           "Fn::Join": [
             "-",
             [
-              { "Ref": "appName" },
-              { "Ref": "env" },
+              {
+                "Ref": "appName"
+              },
+              {
+                "Ref": "env"
+              },
               "batch-job-queue"
             ]
           ]
@@ -312,8 +367,12 @@
           "Fn::Join": [
             "-",
             [
-              { "Ref": "appName" },
-              { "Ref": "env" },
+              {
+                "Ref": "appName"
+              },
+              {
+                "Ref": "env"
+              },
               "batch-job-definition-processor"
             ]
           ]
@@ -360,15 +419,21 @@
           "Environment": [
             {
               "Name": "REGION",
-              "Value": { "Ref": "AWS::Region" }
+              "Value": {
+                "Ref": "AWS::Region"
+              }
             },
             {
               "Name": "DB_SECRET_NAME",
-              "Value": { "Ref": "dbSecretName" }
+              "Value": {
+                "Ref": "dbSecretName"
+              }
             },
             {
               "Name": "NOTIFY_TOPIC",
-              "Value": { "Ref": "notifyTopicArn" }
+              "Value": {
+                "Ref": "notifyTopicArn"
+              }
             },
             {
               "Name": "JOB_DEFINITION_PII",
@@ -376,8 +441,12 @@
                 "Fn::Join": [
                   "-",
                   [
-                    { "Ref": "appName" },
-                    { "Ref": "env" },
+                    {
+                      "Ref": "appName"
+                    },
+                    {
+                      "Ref": "env"
+                    },
                     "batch-job-definition-pii"
                   ]
                 ]
@@ -389,8 +458,12 @@
                 "Fn::Join": [
                   "-",
                   [
-                    { "Ref": "appName" },
-                    { "Ref": "env" },
+                    {
+                      "Ref": "appName"
+                    },
+                    {
+                      "Ref": "env"
+                    },
                     "batch-job-queue"
                   ]
                 ]
@@ -410,8 +483,12 @@
           "Fn::Join": [
             "-",
             [
-              { "Ref": "appName" },
-              { "Ref": "env" },
+              {
+                "Ref": "appName"
+              },
+              {
+                "Ref": "env"
+              },
               "batch-processor"
             ]
           ]
@@ -426,8 +503,12 @@
           "Fn::Join": [
             "-",
             [
-              { "Ref": "appName" },
-              { "Ref": "env" },
+              {
+                "Ref": "appName"
+              },
+              {
+                "Ref": "env"
+              },
               "batch-job-definition-pii"
             ]
           ]
@@ -474,11 +555,15 @@
           "Environment": [
             {
               "Name": "REGION",
-              "Value": { "Ref": "AWS::Region" }
+              "Value": {
+                "Ref": "AWS::Region"
+              }
             },
             {
               "Name": "DB_SECRET_NAME",
-              "Value": { "Ref": "dbSecretName" }
+              "Value": {
+                "Ref": "dbSecretName"
+              }
             }
           ]
         },
@@ -494,19 +579,80 @@
           "Fn::Join": [
             "-",
             [
-              { "Ref": "appName" },
-              { "Ref": "env" },
+              {
+                "Ref": "appName"
+              },
+              {
+                "Ref": "env"
+              },
               "batch-pii"
             ]
           ]
         }
+      }
+    },
+    "EventRuleFailedJob": {
+      "Type": "AWS::Events::Rule",
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "-",
+            [
+              {
+                "Ref": "appName"
+              },
+              {
+                "Ref": "env"
+              },
+              "batch-job-failed"
+            ]
+          ]
+        },
+        "Description": "Rule for detecting failed batch jobs",
+        "EventPattern": {
+          "source": [
+            "aws.batch"
+          ],
+          "detail-type": [
+            "Batch Job State Change"
+          ],
+          "detail": {
+            "status": [
+              "FAILED"
+            ]
+          }
+        },
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Ref": "notifyTopicArn"
+            },
+            "Id": "FpeNotifyTopic",
+            "InputTransformer": {
+              "InputPathsMap": {
+                "jobName": "$.detail.jobName",
+                "jobId": "$.detail.jobId",
+                "jobQueue": "$.detail.jobQueue",
+                "time": "$.time",
+                "status": "$.detail.status"
+              },
+              "InputTemplate": "{\n  \"message\": \"FPE Batch Job Failed\",\n  \"jobName\": \"<jobName>\",\n  \"jobId\": \"<jobId>\",\n  \"jobQueue\": \"<jobQueue>\",\n  \"status\": \"<status>\",\n  \"time\": \"<time>\"\n}"
+            },
+            "RetryPolicy": {
+              "MaximumRetryAttempts": 5
+            }
+          }
+        ]
       }
     }
   },
   "Outputs": {
     "ComputeEnvironmentArn": {
       "Description": "Compute environment Arn",
-      "Value": { "Ref": "ComputeEnvironment" }
+      "Value": {
+        "Ref": "ComputeEnvironment"
+      }
     },
     "JobQueueName": {
       "Description": "Processor job queue name",
@@ -514,8 +660,12 @@
         "Fn::Join": [
           "-",
           [
-            { "Ref": "appName" },
-            { "Ref": "env" },
+            {
+              "Ref": "appName"
+            },
+            {
+              "Ref": "env"
+            },
             "batch-job-queue"
           ]
         ]
@@ -527,8 +677,12 @@
         "Fn::Join": [
           "-",
           [
-            { "Ref": "appName" },
-            { "Ref": "env" },
+            {
+              "Ref": "appName"
+            },
+            {
+              "Ref": "env"
+            },
             "batch-job-definition-processor"
           ]
         ]
@@ -546,8 +700,12 @@
         "Fn::Join": [
           "-",
           [
-            { "Ref": "appName" },
-            { "Ref": "env" },
+            {
+              "Ref": "appName"
+            },
+            {
+              "Ref": "env"
+            },
             "batch-job-definition-pii"
           ]
         ]
