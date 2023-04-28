@@ -437,7 +437,7 @@
                   ></v-progress-circular>
                 </v-overlay>
                 <v-overlay absolute class="text-center py-8" color="black" v-if="imageFlagger.loading">
-                  <div class="text-h5 font-weight-bold mb-8 white--text">Flagging Image...</div>
+                  <div class="text-h5 font-weight-bold mb-8 white--text">Updating PII Flag for Image...</div>
                   <v-progress-circular
                     color="white"
                     indeterminate

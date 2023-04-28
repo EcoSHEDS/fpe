@@ -39,8 +39,8 @@
             <v-icon v-else>mdi-flag-outline</v-icon>
           </v-btn>
         </template>
-        <span v-if="image.pii_user">Flag for PII</span>
-        <span v-else>Remove PII Flag</span>
+        <span v-if="image.pii_user">Remove PII Flag</span>
+        <span v-else>Add PII Flag</span>
       </v-tooltip>
     </div>
     <div class="text-caption text-center">

@@ -15,8 +15,15 @@ class Image extends Base {
           'id', 'imageset_id',
           'filename', 'timestamp',
           'full_url', 'thumb_url',
-          'status', 'error_message'
+          'status', 'error_message',
+          'pii_person', 'pii_vehicle', 'pii_user'
         )
+      },
+      excludePii (builder) {
+        builder
+          .where('pii_person', '<', 0.8)
+          .andWhere('pii_vehicle', '<', 0.8)
+          .andWhere('pii_user', false)
       },
       daily (builder) {
         builder
