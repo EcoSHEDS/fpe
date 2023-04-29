@@ -82,15 +82,15 @@
 
         <div class="mx-4">
           <div class="d-flex align-end">
-            <div class="font-weight-light black--text text-h6">PII Detection, Station Categories, User Guide, Design Tweaks</div>
+            <div class="font-weight-light black--text text-h6">PII Detection, Stations, Video, User Guide, Homepage</div>
             <v-spacer></v-spacer>
             <div class="text-subtitle-1 font-weight-light font-italic">April 28, 2023</div>
           </div>
-          <v-divider class="mb-4"></v-divider>
+          <v-divider class="mb-2"></v-divider>
           <div class="body-1">
             <p>All photos are now screened for <strong>Personal Identifying Information (PII)</strong> using <a href="https://github.com/ecologize/CameraTraps/blob/main/megadetector.md">MegaDetector</a> to detect people and vehicles. Images with suspected PII are <u>not shown</u> on the <i>Photo Explorer</i>, but can be reviewed by station owners in the <i>Upload</i> section.</p>
-            <p>Stations can now be categorized by <strong>Waterbody Type</strong> (e.g., stream, lake, etc.) and <strong>Status</strong> (active vs. discontinued). By default, all stations have been marked as "Stream" and "Active". <strong>Please review your stations</strong> in the <i>Upload</i> section to confirm.</p>
-            <p>We have also added detailed <strong>instructions for uploading photos</strong> to FPE in the <router-link :to="{ name: 'user-guide' }">User Guide</router-link>. And lastly, the homepage has received some much-needed <strong>sprucing up</strong>!</p>
+            <p><strong>Stations</strong> can now be categorized by <strong>Waterbody Type</strong> (e.g., stream, lake, etc.) and <strong>Status</strong> (active vs. discontinued). By default, all stations have been marked as "Stream" and "Active". <strong>Please review your stations</strong> in the <i>Upload</i> section to confirm.</p>
+            <p>We have a great <strong>new video</strong> about why and how we created FPE, and what it means to us. We have also added detailed <strong>instructions for uploading photos</strong> to FPE in the <router-link :to="{ name: 'user-guide' }">User Guide</router-link>. And lastly, the homepage has received some much-needed <strong>sprucing up</strong>!</p>
           </div>
         </div>
 
