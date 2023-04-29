@@ -37,7 +37,7 @@
               <div
                 v-if="!hover || !hover.image"
                 class="d-flex flex-column justify-center align-center"
-                style="width:100%;min-height:211px;background-color:rgb(0,0,0,0.05)"
+                style="width:100%;min-height:300px;background-color:rgb(0,0,0,0.05)"
               >
                 <div>
                   <v-icon x-large>mdi-image-outline</v-icon>
@@ -49,7 +49,7 @@
               <div
                 v-else-if="imageError"
                 class="d-flex flex-column justify-center align-center"
-                style="width:100%;height:310px;background-color:rgb(0,0,0,0.05)"
+                style="width:100%;height:300px;background-color:rgb(0,0,0,0.05)"
               >
                 <div>
                   <v-icon x-large>mdi-image-off-outline</v-icon>
@@ -762,7 +762,9 @@ export default {
         imageElement.onload = () => {
           if (!this.aspectRatio) {
             this.aspectRatio = imageElement.width / imageElement.height
-            canvas.height = canvas.width / this.aspectRatio
+            // canvas.height = canvas.width / this.aspectRatio
+            canvas.setAttribute('width', canvas.parentElement.clientWidth + 'px')
+            canvas.setAttribute('height', Math.floor(canvas.parentElement.clientWidth / this.aspectRatio) + 'px')
           }
           ctx.drawImage(imageElement, 0, 0, canvas.width, canvas.height)
           this.hover = hover
@@ -801,7 +803,6 @@ export default {
           })
         }
         if (nwis.length > 0) {
-          console.log(nwis)
           images.forEach((d, i) => {
             d.nwis = interpolateValuesAtTimestamp(nwis, d.timestamp)
           })

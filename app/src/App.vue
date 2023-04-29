@@ -236,7 +236,7 @@
     </v-app-bar>
 
     <v-main>
-      <v-container>
+      <v-container fluid>
         <v-row justify="space-around">
           <v-col cols="12" xl="10">
             <router-view></router-view>

@@ -34,11 +34,11 @@
             <div class="mt-2 font-weight-medium">Development Team</div>
             <ul>
               <li>Ben Letcher, USGS - Principal Investigator</li>
-              <li>Jeff Walker, Walker Environmental Research - Database and Web Application Developer</li>
               <li>Jenn Fair, USGS - Research Hydrologist and Field Coordinator</li>
-              <li>Amrita Gupta, Microsoft AI for Good - Machine Learning Model Developer</li>
               <li>Todd Dubreuil, USGS - Ecologist and Field Technician</li>
               <li>Mike Hayden, USGS - Fish Biologist and Field Technician</li>
+              <li>Jeff Walker, Walker Environmental Research - Database and Web Application Developer</li>
+              <li>Amrita Gupta, Microsoft AI for Good - Machine Learning Model Developer</li>
             </ul>
 
             <div class="mt-2 font-weight-medium">Project Management</div>
@@ -59,7 +59,7 @@
             </ul>
 
             <div class="text-h6 mt-4">Funding</div>
-            <p>This project was funded by a U.S. Environmental Protection Agency Innovation Project Interagency Agreement (DW-014-92517601-0) with U.S. Geological Survey and an AI for Earth Innovation Grant (# NGS-67677T-20) from the National Geographic Society.</p>
+            <p>This project was funded by U.S. Geological Survey, U.S. Environmental Protection Agency through an Innovation Project Interagency Agreement (DW-014-92517601-0) with USGS, and an AI for Earth Innovation Grant (# NGS-67677T-20) from the National Geographic Society.</p>
 
             <div class="text-h6">Contact Us</div>
             <p>

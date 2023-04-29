@@ -13,7 +13,7 @@
           <v-card-text class="body-1 black--text">
             <v-row align="stretch">
               <!-- MAP -->
-              <v-col cols="12" md="6">
+              <v-col cols="12" lg="6">
                 <v-sheet elevation="2" style="height:450px;">
                   <StationsMap
                     :loading="loading"
@@ -25,7 +25,7 @@
               </v-col>
 
               <!-- STATION INFO -->
-              <v-col cols="12" md="6">
+              <v-col cols="12" lg="6">
                 <v-sheet elevation="2" rounded class="pa-2">
                   <div v-if="loading" class="text-center grey lighten-2 py-8">
                     <div class="text-h5 mb-8">Loading stations...</div>

@@ -31,7 +31,7 @@
             <div
               v-if="!hover || !hover.image"
               class="d-flex flex-column justify-center align-center"
-              style="width:265;height:202px;background-color:rgb(0,0,0,0.05)"
+              style="width:100%;height:202px;background-color:rgb(0,0,0,0.05)"
             >
               <div>
                 <v-icon x-large>mdi-image-outline</v-icon>
@@ -43,7 +43,7 @@
             <div
               v-else-if="imageError"
               class="d-flex flex-column justify-center align-center"
-              style="width:265;height:202px;background-color:rgb(0,0,0,0.05)"
+              style="width:100%;height:200px;background-color:rgb(0,0,0,0.05)"
             >
               <div>
                 <v-icon x-large>mdi-image-off-outline</v-icon>
@@ -52,7 +52,7 @@
                 Photo Unavailable
               </div>
             </div>
-            <canvas ref="canvas" width="265" height="195" v-show="!!hover && hover.image && !imageError" @click="showImage(hover.image)" style="cursor:pointer"></canvas>
+            <canvas ref="canvas" v-show="!!hover && hover.image && !imageError" @click="showImage(hover.image)" style="cursor:pointer"></canvas>
           </div>
         </v-col>
         <v-col cols="12" md="5" :class="{ 'pl-0': !$vuetify.breakpoint.mobile }" class="mb-0">
@@ -221,8 +221,8 @@
         </v-col>
       </v-row>
       <!-- PLAYER -->
-      <v-row>
-        <v-col cols="12" class="pt-0">
+      <v-row justify="space-around" align="center">
+        <v-col cols="12" xl="6" class="pt-0">
           <v-row class="mt-0">
             <v-col cols="3">
               <v-btn
@@ -256,6 +256,19 @@
             </v-col>
           </v-row>
         </v-col>
+        <v-col cols="12" xl="6" class="pt-0">
+          <v-btn
+            color="success"
+            dark
+            block
+            large
+            :to="{ name: 'explorerStation', params: { stationId: station.id } }"
+            class="mt-4"
+            :disabled="station.summary.images.count === 0"
+          >
+            <v-icon left>mdi-image-multiple-outline</v-icon> Explore Sub-Daily Photos<v-icon right>mdi-chevron-right</v-icon>
+          </v-btn>
+        </v-col>
       </v-row>
       <v-alert
         type="error"
@@ -269,18 +282,6 @@
         <div class="font-weight-bold body-1">Failed to Fetch Data</div>
         <div>{{ error }}</div>
       </v-alert>
-      <!-- EXPLORE BUTTON -->
-      <v-btn
-        color="success"
-        dark
-        block
-        large
-        :to="{ name: 'explorerStation', params: { stationId: station.id } }"
-        class="mt-4"
-        :disabled="station.summary.images.count === 0"
-      >
-        <v-icon left>mdi-earth</v-icon> Explore All Photos
-      </v-btn>
     </div>
 
     <ImageDialog ref="imageDialog"></ImageDialog>
@@ -689,7 +690,8 @@ export default {
         imageElement.onload = () => {
           if (!this.aspectRatio) {
             this.aspectRatio = imageElement.width / imageElement.height
-            canvas.height = canvas.width / this.aspectRatio
+            canvas.setAttribute('width', canvas.parentElement.clientWidth + 'px')
+            canvas.setAttribute('height', Math.floor(canvas.parentElement.clientWidth / this.aspectRatio) + 'px')
           }
           ctx.drawImage(imageElement, 0, 0, canvas.width, canvas.height)
           this.hover = hover

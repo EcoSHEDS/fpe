@@ -33,7 +33,7 @@
               <v-icon left>
                 mdi-upload
               </v-icon>
-              Photo Uploading
+              Uploading Photos
             </v-tab>
           </v-tabs>
 
@@ -78,14 +78,6 @@
                   <p>
                     The following sections provides a simplified Standard Operating Procedure (SOP) for collecting timelapse images using inexpensive and off-the-shelf trail (or "game") cameras.
                   </p>
-
-                  <!-- <p>
-                    The complete SOP is also available as a PDF:
-                  </p> -->
-
-                  <!-- <v-btn color="primary" href="" download>
-                    <v-icon left>mdi-download</v-icon> Download SOP (PDF)
-                  </v-btn> -->
                 </v-card-text>
               </v-card>
             </v-tab-item>
