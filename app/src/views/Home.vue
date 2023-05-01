@@ -2,7 +2,8 @@
   <v-container fluid>
     <v-row>
       <v-col cols="12">
-        <h1 class="text-h2 font-weight-thin my-8 ml-4">Welcome to the Flow Photo Explorer</h1>
+        <h1 class="text-h2 font-weight-thin my-8 ml-4" v-if="$vuetify.breakpoint.mdAndUp">Welcome to the Flow Photo Explorer</h1>
+        <h1 class="text-h3 font-weight-thin my-8 ml-4" v-else>Welcome to the Flow Photo Explorer</h1>
         <v-divider></v-divider>
       </v-col>
     </v-row>
@@ -84,7 +85,7 @@
           <div class="d-flex align-end">
             <div class="font-weight-light black--text text-h6">PII Detection, Stations, Video, User Guide, Homepage</div>
             <v-spacer></v-spacer>
-            <div class="text-subtitle-1 font-weight-light font-italic">April 28, 2023</div>
+            <div class="text-subtitle-2 font-weight-light font-italic">April 28, 2023</div>
           </div>
           <v-divider class="mb-2"></v-divider>
           <div class="body-1">
