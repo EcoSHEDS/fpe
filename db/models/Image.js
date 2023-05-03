@@ -16,14 +16,15 @@ class Image extends Base {
           'filename', 'timestamp',
           'full_url', 'thumb_url',
           'status', 'error_message',
-          'pii_person', 'pii_vehicle', 'pii_user'
+          'pii_person', 'pii_vehicle', 'pii_animal', 'pii_on', 'pii_off'
         )
       },
       excludePii (builder) {
         builder
           .where('pii_person', '<', 0.8)
           .andWhere('pii_vehicle', '<', 0.8)
-          .andWhere('pii_user', false)
+          .andWhere('pii_on', false)
+          .orWhere('pii_off', true)
       },
       daily (builder) {
         builder

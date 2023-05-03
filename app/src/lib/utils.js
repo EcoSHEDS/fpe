@@ -12,6 +12,10 @@ export function hasDailyImage (d) {
   return !!d.image
 }
 
+export function imagePiiFlag (image) {
+  return (image.pii_person >= 0.8 || image.pii_vehicle >= 0.8 || image.pii_on) && !image.pii_off
+}
+
 const timestampBisector = d3.bisector(d => d.timestamp).left
 export function interpolateValuesAtTimestamp (arr, x) {
   if (x.isBefore(arr[0].timestamp)) {

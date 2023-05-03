@@ -21,7 +21,6 @@ a.ecosheds-link {
   margin-top:8px;
   margin-right:8px;
   color:white;
-  font-weight: bold;
   border-radius: 5px;
   padding: 5px;
 }

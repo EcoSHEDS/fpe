@@ -128,7 +128,7 @@
                   :loading="loadingProcessing"
                   @click="processImageset"
                 >
-                  <v-icon left>mdi-refresh</v-icon> Re-Process Photo Set
+                  <v-icon left>mdi-refresh</v-icon> Re-Process Photo Set (Admin Only)
                 </v-btn>
                 <v-btn
                   color="error"
@@ -237,102 +237,118 @@
                   hide-default-footer
                 >
                   <template v-slot:header>
-                    <v-toolbar
-                      class="mb-2"
-                      elevation="0"
-                    >
-                      <v-menu
-                        ref="startMenu"
-                        v-model="iterator.startMenu"
-                        :close-on-content-click="false"
-                        transition="scale-transition"
-                        offset-y
-                        min-width="auto"
-                        @input="initializeStartDate"
+                    <v-container>
+                      <v-row
+                        class="mb-2 align-items-center"
+                        elevation="0"
                       >
-                        <template v-slot:activator="{ on, attrs }">
-                          <v-text-field
-                            v-model="iterator.startDate"
-                            class="mt-4 mr-4"
-                            label="Select start date"
-                            prepend-icon="mdi-calendar"
-                            readonly
-                            v-bind="attrs"
-                            v-on="on"
-                            clearable
-                            light
-                            hide-details
-                            @click:clear="iterator.startDate = null"
-                          ></v-text-field>
-                        </template>
-                        <v-date-picker
-                          v-model="iterator.startDate"
-                          @input="iterator.startMenu = false"
-                          no-title
-                          scrollable
-                          :show-current="false"
-                        >
-                        </v-date-picker>
-                      </v-menu>
-                      <v-menu
-                        ref="endMenu"
-                        v-model="iterator.endMenu"
-                        :close-on-content-click="false"
-                        transition="scale-transition"
-                        offset-y
-                        min-width="auto"
-                        @input="initializeEndDate"
-                      >
-                        <template v-slot:activator="{ on, attrs }">
-                          <v-text-field
-                            v-model="iterator.endDate"
-                            class="mt-4 mx-4"
-                            label="Select end date"
-                            prepend-icon="mdi-calendar"
-                            readonly
-                            v-bind="attrs"
-                            v-on="on"
-                            clearable
-                            light
-                            hide-details
-                            @click:clear="iterator.endDate = null"
-                          ></v-text-field>
-                        </template>
-                        <v-date-picker
-                          v-model="iterator.endDate"
-                          @input="iterator.endMenu = false"
-                          no-title
-                          scrollable
-                          :show-current="false"
-                        >
-                        </v-date-picker>
-                      </v-menu>
-                      <template>
-                        <v-spacer></v-spacer>
-                        <v-btn-toggle
-                          v-model="iterator.sortDesc"
-                          mandatory>
-                          <v-btn
-                            small
-                            depressed
-                            :value="false"
+                        <v-col cols="12" lg="4">
+                          <v-menu
+                            ref="startMenu"
+                            v-model="iterator.startMenu"
+                            :close-on-content-click="false"
+                            transition="scale-transition"
+                            offset-y
+                            min-width="auto"
+                            @input="initializeStartDate"
                           >
-                            <v-icon>mdi-arrow-up</v-icon>
-                          </v-btn>
-                          <v-btn
-                            small
-                            depressed
-                            :value="true">
-                            <v-icon>mdi-arrow-down</v-icon>
-                          </v-btn>
-                        </v-btn-toggle>
-                      </template>
-                    </v-toolbar>
-                    <v-toolbar dense
-                      class="mb-2"
-                      elevation="0">
-                      <v-simple-checkbox v-model="piiOnly"></v-simple-checkbox>Only Photos with Detected PII (Person or Vehicle)
-                    </v-toolbar>
+                            <template v-slot:activator="{ on, attrs }">
+                              <v-text-field
+                                v-model="iterator.startDate"
+                                class=""
+                                label="Select start date"
+                                prepend-icon="mdi-calendar"
+                                readonly
+                                v-bind="attrs"
+                                v-on="on"
+                                clearable
+                                light
+                                hide-details
+                                @click:clear="iterator.startDate = null"
+                              ></v-text-field>
+                            </template>
+                            <v-date-picker
+                              v-model="iterator.startDate"
+                              @input="iterator.startMenu = false"
+                              no-title
+                              scrollable
+                              :show-current="false"
+                            >
+                            </v-date-picker>
+                          </v-menu>
+                        </v-col>
+                        <v-col cols="12" lg="4">
+                          <v-menu
+                            ref="endMenu"
+                            v-model="iterator.endMenu"
+                            :close-on-content-click="false"
+                            transition="scale-transition"
+                            offset-y
+                            min-width="auto"
+                            @input="initializeEndDate"
+                          >
+                            <template v-slot:activator="{ on, attrs }">
+                              <v-text-field
+                                v-model="iterator.endDate"
+                                class=""
+                                label="Select end date"
+                                prepend-icon="mdi-calendar"
+                                readonly
+                                v-bind="attrs"
+                                v-on="on"
+                                clearable
+                                light
+                                hide-details
+                                @click:clear="iterator.endDate = null"
+                              ></v-text-field>
+                            </template>
+                            <v-date-picker
+                              v-model="iterator.endDate"
+                              @input="iterator.endMenu = false"
+                              no-title
+                              scrollable
+                              :show-current="false"
+                            >
+                            </v-date-picker>
+                          </v-menu>
+                        </v-col>
+                        <v-col cols="12" lg="4" class="align-self-end">
+                          <span class="body-1 mr-2">Sort:</span>
+                          <v-btn-toggle
+                            v-model="iterator.sortDesc"
+                            mandatory>
+                            <v-btn
+                              small
+                              depressed
+                              :value="false"
+                            >
+                              <v-icon>mdi-arrow-up</v-icon>
+                            </v-btn>
+                            <v-btn
+                              small
+                              depressed
+                              :value="true">
+                              <v-icon>mdi-arrow-down</v-icon>
+                            </v-btn>
+                          </v-btn-toggle>
+                        </v-col>
+                        <v-col cols="12" lg="4" class="py-0">
+                          <v-checkbox label="Person Detected" hide-details class="mt-0" v-model="piiFilters.person"></v-checkbox>
+                        </v-col>
+                        <v-col cols="12" lg="4" class="py-0">
+                          <v-checkbox label="Vehicle Detected" hide-details class="mt-0" v-model="piiFilters.vehicle"></v-checkbox>
+                        </v-col>
+                        <v-col cols="12" lg="4" class="py-0">
+                          <v-checkbox label="Animal Detected" hide-details class="mt-0" v-model="piiFilters.animal"></v-checkbox>
+                        </v-col>
+                        <v-col cols="12" lg="4" class="py-0">
+                          <v-checkbox label="Manual PII Flag" hide-details class="mt-0" v-model="piiFilters.on"></v-checkbox>
+                        </v-col>
+                        <v-col cols="12" lg="4" class="py-0">
+                          <v-checkbox label="PII Detection Ignored" hide-details class="mt-0" v-model="piiFilters.off"></v-checkbox>
+                        </v-col>
+                      </v-row>
+                    </v-container>
                     <v-divider class="mb-4 pt-0"></v-divider>
                   </template>
 
@@ -347,21 +363,12 @@
                         lg="4"
                       >
                         <v-card class="pa-2" elevation="1">
-                          <!-- <v-card-actions>
-                            <v-btn x-small color="info" icon @click="showImage(item)">
-                              <v-icon>mdi-eye</v-icon>
-                            </v-btn>
-                            <v-spacer></v-spacer>
-                            <v-btn x-small color="error" icon @click="deleteImage(item)">
-                              <v-icon>mdi-close-circle</v-icon>
-                            </v-btn>
-                          </v-card-actions> -->
                           <ImagePreview
                             :image="item"
                             :timezone="station.timezone"
                             @click="showImage(item)"
                             @delete="confirmDeleteImage"
-                            @flag="flagImage"
+                            @flag="toggleImageFlag"
                           ></ImagePreview>
                         </v-card>
                       </v-col>
@@ -427,17 +434,7 @@
                     </v-row>
                   </template>
                 </v-data-iterator>
-                <v-overlay absolute class="text-center py-8" color="black" v-if="imageDeleter.loading">
-                  <div class="text-h5 font-weight-bold mb-8 white--text">Deleting Image...</div>
-                  <v-progress-circular
-                    color="white"
-                    indeterminate
-                    size="32"
-                    width="4"
-                  ></v-progress-circular>
-                </v-overlay>
-                <v-overlay absolute class="text-center py-8" color="black" v-if="imageFlagger.loading">
-                  <div class="text-h5 font-weight-bold mb-8 white--text">Updating PII Flag for Image...</div>
+                <v-overlay absolute class="text-center py-8" color="black" v-if="imageDeleter.loading || imageFlagger.loading">
                   <v-progress-circular
                     color="white"
                     indeterminate
@@ -495,7 +492,6 @@ import ConfirmDialog from '@/components/ConfirmDialog'
 import ImageDialog from '@/components/ImageDialog'
 import ImagePreview from '@/components/ImagePreview'
 import StatusChip from '@/components/StatusChip'
-
 import evt from '@/events'
 import { mapGetters } from 'vuex'
 
@@ -538,7 +534,13 @@ export default {
         endDate: null
       },
       hideConfirmDeleteImage: false,
-      piiOnly: false
+      piiFilters: {
+        person: false,
+        vehicle: false,
+        animal: false,
+        on: false,
+        off: false
+      }
     }
   },
   computed: {
@@ -551,6 +553,7 @@ export default {
       return Math.ceil(this.filteredImages.length / this.iterator.itemsPerPage)
     },
     filteredImages () {
+      console.log('filteredImages')
       if (!this.imageset) return []
 
       const start = this.iterator.startDate
@@ -569,8 +572,11 @@ export default {
           return this.$date(d.timestamp).tz(this.station.timezone).startOf('day').isSameOrBefore(end)
         })
         .filter(d => {
-          if (!this.piiOnly) return true
-          return d.pii_person >= 0.8 || d.pii_vehicle >= 0.8 || d.pii_user
+          return (!this.piiFilters.person || d.pii_person >= 0.8) &&
+            (!this.piiFilters.vehicle || d.pii_vehicle >= 0.8) &&
+            (!this.piiFilters.animal || d.pii_animal >= 0.8) &&
+            (!this.piiFilters.on || d.pii_on) &&
+            (!this.piiFilters.off || d.pii_off)
         })
       return images
     }
@@ -698,11 +704,25 @@ export default {
         this.imageDeleter.loading = false
       }
     },
-    async flagImage (image) {
+    async toggleImageFlag (image) {
       if (!image) return
       this.imageFlagger.loading = true
       try {
-        await this.$http.restricted.put(`/stations/${this.imageset.station_id}/imagesets/${this.imageset.id}/images/${image.id}`, { pii_user: !image.pii_user })
+        const payload = {}
+        if (image.pii_on) {
+          // remove on flag
+          payload.pii_on = false
+        } else if (image.pii_off) {
+          // remove off flag
+          payload.pii_off = false
+        } else if (image.pii_person >= 0.8 || image.pii_vehicle >= 0.8) {
+          // ignore detector
+          payload.pii_off = true
+        } else {
+          // add on flag
+          payload.pii_on = true
+        }
+        await this.$http.restricted.put(`/stations/${this.imageset.station_id}/imagesets/${this.imageset.id}/images/${image.id}`, payload)
         evt.$emit('notify', 'success', `Photo (${image.id}) has been flagged for PII`)
         this.refresh()
       } catch (err) {
@@ -710,7 +730,6 @@ export default {
       } finally {
         this.imageFlagger.loading = false
       }
-      // image.pii_user = result.pii_user
     },
     initializeStartDate () {
       if (this.iterator.startDate === null) {
