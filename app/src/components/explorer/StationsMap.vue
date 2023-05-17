@@ -26,10 +26,10 @@
         :key="s.id"
         :lat-lng="[s.latitude, s.longitude]"
         color="#3388ff"
-        radius="6"
-        weight="3"
-        opacity="0.8"
-        fill-opacity="0.05"
+        :radius="6"
+        :weight="3"
+        :opacity="0.8"
+        :fill-opacity="0.05"
         @click="$emit('select', s)"
       >
         <l-tooltip>
@@ -42,8 +42,8 @@
         key="selected"
         :lat-lng="[station.latitude, station.longitude]"
         color="orangered"
-        radius="6"
-        weight="3"
+        :radius="6"
+        :weight="3"
         @click="$emit('select')"
       >
         <l-tooltip>
