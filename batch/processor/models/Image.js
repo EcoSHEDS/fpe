@@ -1,3 +1,4 @@
+const { raw } = require('objection')
 const Base = require('./Base')
 
 class Image extends Base {
@@ -20,11 +21,7 @@ class Image extends Base {
         )
       },
       excludePii (builder) {
-        builder
-          .where('pii_person', '<', 0.8)
-          .andWhere('pii_vehicle', '<', 0.8)
-          .andWhere('pii_on', false)
-          .orWhere('pii_off', true)
+        builder.whereNot(raw('image_has_pii(pii_person, pii_vehicle, pii_on, pii_off)'))
       },
       daily (builder) {
         builder

@@ -6,7 +6,7 @@ const { Station, Imageset } = require('../db/models')
 
 const attachImageset = async (req, res, next) => {
   const row = await Imageset.query()
-    .withGraphFetched('images(defaultSelect,defaultOrderBy)')
+    .withGraphFetched('images(defaultSelect,defaultOrderBy,excludePii)')
     .findById(req.params.imagesetId)
 
   if (!row) {

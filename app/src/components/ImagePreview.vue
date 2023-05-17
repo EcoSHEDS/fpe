@@ -18,7 +18,7 @@
         {{ timestampLocal }}
       </div>
       <div>
-        <v-chip :color="image.pii_off ? 'gray' : 'error'" v-if="image.pii_person >= 0.8" class="my-1 mr-1" small>Person Detected ({{image.pii_person.toFixed(2)}})</v-chip>
+        <v-chip :color="image.pii_off ? 'gray' : 'error'" v-if="image.pii_person >= 0.2" class="my-1 mr-1" small>Person Detected ({{image.pii_person.toFixed(2)}})</v-chip>
         <v-chip :color="image.pii_off ? 'gray' : 'error'" v-if="image.pii_vehicle >= 0.8" class="my-1 mr-1" small>Vehicle Detected ({{image.pii_vehicle.toFixed(2)}})</v-chip>
         <v-chip color="gray" v-if="image.pii_animal >= 0.8" class="my-1 mr-1" small>Animal Detected ({{image.pii_animal.toFixed(2)}})</v-chip>
         <v-chip color="error" v-if="image.pii_on" class="my-1 mr-1" small>Manual PII Flag</v-chip>

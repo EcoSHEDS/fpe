@@ -572,7 +572,7 @@ export default {
           return this.$date(d.timestamp).tz(this.station.timezone).startOf('day').isSameOrBefore(end)
         })
         .filter(d => {
-          return (!this.piiFilters.person || d.pii_person >= 0.8) &&
+          return (!this.piiFilters.person || d.pii_person >= 0.2) &&
             (!this.piiFilters.vehicle || d.pii_vehicle >= 0.8) &&
             (!this.piiFilters.animal || d.pii_animal >= 0.8) &&
             (!this.piiFilters.on || d.pii_on) &&
@@ -715,7 +715,7 @@ export default {
         } else if (image.pii_off) {
           // remove off flag
           payload.pii_off = false
-        } else if (image.pii_person >= 0.8 || image.pii_vehicle >= 0.8) {
+        } else if (image.pii_person >= 0.2 || image.pii_vehicle >= 0.8) {
           // ignore detector
           payload.pii_off = true
         } else {
