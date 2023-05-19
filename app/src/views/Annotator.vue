@@ -13,7 +13,7 @@
           <v-card-text class="body-1 black--text" v-if="loading.stations">
             Loading...
           </v-card-text>
-          <v-card-text class="body-1 black--text" v-else>
+          <v-card-text class="body-1 black--text mb-0" v-else>
             <v-row class="justify-space-around">
               <v-col cols="6" class="text-center">
                 <v-row class="justify-space-around">
@@ -45,8 +45,9 @@
               </v-col>
               <v-divider vertical></v-divider>
               <v-col cols="6">
-                <v-sheet max-height="250" style="overflow-y:auto;">
+                <v-sheet max-height="250" elevation="2" class="pa-4" style="overflow-y:scroll;">
                   <div class="text-h6">Instructions</div>
+                  <v-divider class="mb-2"></v-divider>
                   <ol>
                     <li>Select a station, enter the number of annotations you would like to perform, and click <code>Start Annotating</code>.</li>
                     <li>For each photo pair:
@@ -58,7 +59,7 @@
                               <code><v-icon left>mdi-water-off-outline</v-icon>Dry</code>: stream is completely dry (no water visible)
                             </li>
                             <li>
-                              <code><v-icon left>mdi-snowflake</v-icon> Ice/Snow</code>: stream is fully covered by snow and/or ice (cannot see water surface)
+                              <code><v-icon left>mdi-snowflake</v-icon>Ice/Snow</code>: stream is fully covered by snow and/or ice (cannot see water surface)
                             </li>
                             <li>
                               <code><v-icon left>mdi-image-remove</v-icon>Bad Photo</code>: cannot see the water level because the photo is not clear (e.g., too blurry, too dark, too much glare, etc.)
@@ -84,6 +85,7 @@
                     </li>
                   </ol>
                 </v-sheet>
+                <div class="text-right text-caption mb-0">Scroll down to see all instructions</div>
               </v-col>
             </v-row>
           </v-card-text>
@@ -102,58 +104,60 @@
             <v-divider class="mb-4"></v-divider>
             <v-row v-if="currentPair">
               <v-col cols="6">
-                <!-- <pre>Image ID: {{ currentPair.left.image.image_id }}</pre> -->
-                <div class="fpe-image-url text-center"><a :href="currentPair.left.image.thumb_url">{{ currentPair.left.image.filename }}</a></div>
-                <div class="text-center">{{ currentPair.left.image.timestamp | timestampLocalFormat(station ? station.timezone : 'US/Eastern', 'lll z') }}</div>
-                <v-img
-                  lazy-src="img/placeholder.png"
-                  max-height="400"
-                  :src="currentPair.left.image.thumb_url"
-                  :alt="currentPair.left.image.filename"
-                  :transition="false"
-                  contain
-                >
-                </v-img>
-                <div class="d-flex justify-space-around my-4" v-on:keyup.left="selectLeft">
-                  <v-btn-toggle v-model="currentPair.left.attributes" multiple color="error">
-                    <v-btn value="DRY" class="px-4" small>
-                      <v-icon left>mdi-water-off-outline</v-icon>Dry
-                    </v-btn>
-                    <v-btn value="ICE" class="px-4" small>
-                      <v-icon left>mdi-snowflake</v-icon> Ice/Snow
-                    </v-btn>
-                    <v-btn value="BAD" class="px-4" small>
-                      <v-icon left>mdi-image-remove</v-icon>Bad Photo
-                    </v-btn>
-                  </v-btn-toggle>
-                </div>
+                <v-sheet elevation="2" class="pa-4">
+                  <div class="fpe-image-url text-center"><a :href="currentPair.left.image.thumb_url">{{ currentPair.left.image.filename }}</a></div>
+                  <div class="text-center">{{ currentPair.left.image.timestamp | timestampLocalFormat(station ? station.timezone : 'US/Eastern', 'lll z') }}</div>
+                  <v-img
+                    lazy-src="img/placeholder.png"
+                    max-height="400"
+                    :src="currentPair.left.image.thumb_url"
+                    :alt="currentPair.left.image.filename"
+                    :transition="false"
+                    contain
+                  >
+                  </v-img>
+                  <div class="d-flex justify-space-around mt-4" v-on:keyup.left="selectLeft">
+                    <v-btn-toggle v-model="currentPair.left.attributes" multiple color="error">
+                      <v-btn value="DRY" class="px-4" small>
+                        <v-icon left>mdi-water-off-outline</v-icon>Dry
+                      </v-btn>
+                      <v-btn value="ICE" class="px-4" small>
+                        <v-icon left>mdi-snowflake</v-icon> Ice/Snow
+                      </v-btn>
+                      <v-btn value="BAD" class="px-4" small>
+                        <v-icon left>mdi-image-remove</v-icon>Bad Photo
+                      </v-btn>
+                    </v-btn-toggle>
+                  </div>
+                </v-sheet>
               </v-col>
               <v-col cols="6">
-                <!-- <pre>Image ID: {{ currentPair.right.image.image_id }}</pre> -->
-                <div class="fpe-image-url text-center"><a :href="currentPair.right.image.thumb_url">{{ currentPair.right.image.filename }}</a></div>
-                <div class="text-center">{{ currentPair.right.image.timestamp | timestampLocalFormat(station ? station.timezone : 'US/Eastern', 'lll z') }}</div>
-                <v-img
-                  lazy-src="img/placeholder.png"
-                  max-height="400"
-                  :src="currentPair.right.image.thumb_url"
-                  :alt="currentPair.right.image.filename"
-                  :transition="false"
-                  contain
-                >
-                </v-img>
-                <div class="d-flex justify-space-around my-4">
-                  <v-btn-toggle v-model="currentPair.right.attributes" multiple color="error">
-                    <v-btn value="DRY" class="px-4" small>
-                      <v-icon left>mdi-water-off-outline</v-icon>Dry
-                    </v-btn>
-                    <v-btn value="ICE" class="px-4" small>
-                      <v-icon left>mdi-snowflake</v-icon> Ice/Snow
-                    </v-btn>
-                    <v-btn value="BAD" class="px-4" small>
-                      <v-icon left>mdi-image-remove</v-icon>Bad Photo
-                    </v-btn>
-                  </v-btn-toggle>
-                </div>
+                <v-sheet elevation="2" class="pa-4">
+                  <div class="fpe-image-url text-center"><a :href="currentPair.right.image.thumb_url">{{ currentPair.right.image.filename }}</a></div>
+                  <div class="text-center">{{ currentPair.right.image.timestamp | timestampLocalFormat(station ? station.timezone : 'US/Eastern', 'lll z') }}</div>
+                  <v-img
+                    lazy-src="img/placeholder.png"
+                    max-height="400"
+                    :src="currentPair.right.image.thumb_url"
+                    :alt="currentPair.right.image.filename"
+                    :transition="false"
+                    contain
+                  >
+                  </v-img>
+                  <div class="d-flex justify-space-around mt-4">
+                    <v-btn-toggle v-model="currentPair.right.attributes" multiple color="error">
+                      <v-btn value="DRY" class="px-4" small>
+                        <v-icon left>mdi-water-off-outline</v-icon>Dry
+                      </v-btn>
+                      <v-btn value="ICE" class="px-4" small>
+                        <v-icon left>mdi-snowflake</v-icon> Ice/Snow
+                      </v-btn>
+                      <v-btn value="BAD" class="px-4" small>
+                        <v-icon left>mdi-image-remove</v-icon>Bad Photo
+                      </v-btn>
+                    </v-btn-toggle>
+                  </div>
+                </v-sheet>
               </v-col>
             </v-row>
 
