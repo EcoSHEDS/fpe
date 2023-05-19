@@ -430,16 +430,16 @@
             <v-tab-item>
               <v-card flat>
                 <v-card-text class="black--text body-1">
-                  <div class="text-h5">Uploading Photos</div>
                   <p>To upload photos to the USGS Flow Photo Explorer, please follow these three steps.</p>
                   <ol class="font-weight-bold">
-                    <li>Create Account</li>
-                    <li>Create Station</li>
-                    <li>Upload Photos</li>
+                    <li><a @click="$vuetify.goTo('#upload-account', { offset: 0 })">Create Account</a></li>
+                    <li><a @click="$vuetify.goTo('#upload-station', { offset: 0 })">Create Station</a></li>
+                    <li><a @click="$vuetify.goTo('#upload-photos', { offset: 0 })">Upload Photos</a></li>
+                    <li><a @click="$vuetify.goTo('#upload-pii', { offset: 0 })">Review PII Detections</a></li>
                   </ol>
 
                   <v-divider class="my-4"></v-divider>
-                  <div class="text-h6" id="create-account">Step 1: Create Account</div>
+                  <div class="text-h5" id="upload-account">Step 1: Create Account</div>
                   <p>To upload photos to FPE, you must first <strong>request an account</strong> by going to <code>Account > Request Account</code> on the navigation bar.</p>
 
                   <v-img src="img/user-guide/upload/account-request-button.png" alt="Screenshot of Account Request button" class="my-4 mx-auto elevation-2" style="border-radius:5px" max-width="500px"></v-img>
@@ -463,7 +463,7 @@
                   <p>You will then be logged in to you account, and taken to the <code>Upload</code> page.</p>
 
                   <v-divider class="my-4"></v-divider>
-                  <div class="text-h6" id="create-station">Step 2: Create Station</div>
+                  <div class="text-h5" id="upload-station">Step 2: Create Station</div>
 
                   <p>To create a station, <strong>click the <code>+ NEW STATION</code> button</strong> on the <code>Upload</code> page.</p>
 
@@ -478,7 +478,7 @@
                   <v-img src="img/user-guide/upload/station-new-row.png" alt="Screenshot of New Station added to Stations table" class="my-4"></v-img>
 
                   <v-divider class="my-4"></v-divider>
-                  <div class="text-h6" id="upload-photos">Step 3: Upload Photos</div>
+                  <div class="text-h5" id="upload-photos">Step 3: Upload Photos</div>
 
                   <p>To upload photos for a station, <strong>click on it's row</strong> in the <code>Stations</code> table on the <code>Upload</code> page, which will take you to the <code>Manage Station</code> page. Here, you can edit the station information, delete the station, and upload photos or observed flow data for that station.</p>
 
@@ -544,11 +544,30 @@
 
                   <v-img src="img/user-guide/upload/photos-processing.png" alt="Screenshot of photo set processing stage" class="my-4 mx-auto"></v-img>
 
-                  <p>After all photos are processed, FPE show the status of this set as <code>Done</code> and the page will show a thumbnail preview along with the filename and local timestamp of each photo in this set. Use the start/end filters to see photos during a specific range, and the up/down arrow buttons to change the order. Click the X icon in the top right of each thumbnail to delete an individual photo (e.g., in the event it contains personal identifying information), or click the <code>Delete Photo Set</code> button to delete this entire batch.</p>
+                  <p>After all photos are processed, FPE show the <code>Upload Status</code> as <code>Done</code> and the page will show a thumbnail preview along with the filename and local timestamp of each photo in this set. Use the start/end filters to see photos during a specific range, and the up/down arrow buttons to change the order. Click the <v-icon small>mdi-delete</v-icon> button to delete an individual photo, or click the <code>Delete Photo Set</code> button to delete this entire batch.</p>
 
-                  <v-img src="img/user-guide/upload/photos-done.png" alt="Screenshot of photo set after processing is complete" class="my-4 mx-auto"></v-img>
+                  <v-img src="img/user-guide/upload/photos-done.jpg" alt="Screenshot of photo set after processing is complete" class="my-4 mx-auto"></v-img>
 
-                  <p><strong>Congratulations!</strong> The upload process is now complete and the photos for this station will appear on the Photo Explorer (unless the station is marked as private).</p>
+                  <v-divider class="my-4"></v-divider>
+                  <div class="text-h5" id="upload-pii">Step 4: Review Personal Identifying Information (PII) Detections</div>
+
+                  <p>After the photos are initially processed, they will be scanned for the presence of people or vehicles, which are forms of Personal Identifying Information (PII), using the <a href="https://github.com/microsoft/CameraTraps/blob/main/megadetector.md">MegaDetector</a> objection detection model. The <code>PII Status</code> of the photo set will initially show <code>QUEUED</code> as the PII detector is being loaded. The <code>PII Status</code> will then change to <code>PROCESSING</code> while the photos are being scanned, and finally <code>DONE</code> when the scan is complete.</p>
+
+                  <p>Because PII scanning can take many hours for a large batch of photos, all photos will initially be shown on the public Photo Explorer (unless the station is marked as private). After the scan is complete, photos containing detected PII will <strong>be excluded</strong> from the public Photo Explorer.</p>
+
+                  <p>After the PII scanning is complete (<code>PII Status=DONE</code>), you can review the results by filtering the images for different types of PII using the check boxes above the photo array.</p>
+
+                  <v-img src="img/user-guide/upload/pii-detected.jpg" alt="Screenshot of photo set with PII detection results" class="my-4 mx-auto"></v-img>
+
+                  <p>If the PII detector failed to correctly identify a person or vehicle (false negative), click the PII flag icon to <strong>manually flag the photo</strong>. When a photo is manually flagged, it will not be shown in the public Photo Explorer, similar to photos with auto-detected PII.</p>
+
+                  <v-img src="img/user-guide/upload/photo-pii-on.jpg" alt="Screenshot of photo with manual PII flag" class="my-4 mx-auto" max-width="800"></v-img>
+
+                  <p>If the PII detector incorrectly identified a person or vehicle when there wasn't one (false positive), click the PII flag icon to <strong>ignore the detection</strong>. When a PII detection is ignored, the photo will be shown in the public Photo Explorer.</p>
+
+                  <v-img src="img/user-guide/upload/photo-pii-off.jpg" alt="Screenshot of photo with PII flag ignored" class="my-4 mx-auto" max-width="800"></v-img>
+
+                  <p><strong>Congratulations!</strong> The upload process is complete and you can now view the photos on the <router-link :to="{ name: 'explorer' }">Photo Explorer</router-link> (unless the station is private).</p>
                 </v-card-text>
               </v-card>
             </v-tab-item>
@@ -564,7 +583,7 @@ export default {
   name: 'UserGuide',
   data () {
     return {
-      tab: 0
+      tab: 3
     }
   }
 }
