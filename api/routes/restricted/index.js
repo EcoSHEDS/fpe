@@ -11,6 +11,7 @@ router.get('/', function (req, res, next) {
 })
 
 router.use('/admin', require('./admin'))
+router.use('/annotations', require('./annotations'))
 router.use('/stations', require('./stations'))
 router.use('/users', require('./users'))
 

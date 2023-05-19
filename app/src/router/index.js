@@ -7,7 +7,7 @@ import { getUser } from '@/lib/auth'
 import Home from '@/views/Home.vue'
 import About from '@/views/About.vue'
 import UserGuide from '@/views/UserGuide.vue'
-import Models from '@/views/Models.vue'
+import Annotator from '@/views/Annotator.vue'
 
 import AuthRoutes from '@/router/auth'
 import AdminRoutes from '@/router/admin'
@@ -35,9 +35,12 @@ const routes = [
     component: UserGuide
   },
   {
-    path: '/models',
-    name: 'models',
-    component: Models
+    path: '/annotator',
+    name: 'annotator',
+    component: Annotator,
+    meta: {
+      requiresAnnotator: true
+    }
   },
   ...ExplorerRoutes,
   ...ManageRoutes,
@@ -66,6 +69,19 @@ router.beforeEach(async (to, from, next) => {
       user = await getUser()
     }
     if (!user) {
+      next({
+        name: 'login',
+        query: { redirect: to.fullPath }
+      })
+    } else {
+      next()
+    }
+  } else if (to.matched.some(record => record.meta.requiresAnnotator)) {
+    let user = store.getters.user
+    if (!user) {
+      user = await getUser()
+    }
+    if (!user || !user.isAnnotator) {
       next({
         name: 'login',
         query: { redirect: to.fullPath }

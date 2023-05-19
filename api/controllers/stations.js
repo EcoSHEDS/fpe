@@ -154,6 +154,16 @@ const getStationValues = async (req, res, next) => {
   return res.status(200).json(rows)
 }
 
+const getStationRandomImagePairs = async (req, res, next) => {
+  const n_pairs = Math.min(req.query.n_pairs || 100, 10000)
+  const result = await knex.raw(
+    'select * from f_station_random_image_pairs(?,?)',
+    [res.locals.station.id, n_pairs]
+  )
+  const rows = result.rows
+  return res.status(200).json(rows)
+}
+
 module.exports = {
   getPublicStations,
   getAllStations,
@@ -169,5 +179,7 @@ module.exports = {
 
   getStationDaily,
   getStationDailyValues,
-  getStationDailyImages
+  getStationDailyImages,
+
+  getStationRandomImagePairs
 }

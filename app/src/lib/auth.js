@@ -11,7 +11,7 @@ evt.$on('authState', async ({ state, redirect }) => {
   switch (state) {
     case 'signedOut':
       store.dispatch('setUser', null)
-      store.dispatch('setAffiliation', null)
+      store.dispatch('setDbUser', null)
       break
     case 'signIn':
       await getUser()
@@ -29,7 +29,7 @@ export async function getAuthToken () {
   return session.getIdToken().getJwtToken()
 }
 
-export async function getUserAffiliation (userId) {
+export async function getDbUser (userId) {
   try {
     const response = await Vue.prototype.$http.restricted.get(`/users/${userId}`)
     return response.data
@@ -42,20 +42,21 @@ export async function getUser (refresh) {
   try {
     const user = await Auth.currentAuthenticatedUser({ bypassCache: !!refresh })
     if (user) {
-      const affiliation = await getUserAffiliation(user.username)
+      const dbUser = await getDbUser(user.username)
       if (user.signInUserSession) {
         user.UserGroups = user.signInUserSession.accessToken.payload['cognito:groups'] || []
       } else {
         user.UserGroups = []
       }
       user.isAdmin = user.UserGroups.includes('admins')
+      user.isAnnotator = user.isAdmin || dbUser.annotator
 
       if (!refresh) {
         evt.$emit('notify', 'success', `Logged in as ${user.attributes.email}`)
       }
 
       store.dispatch('setUser', user)
-      store.dispatch('setAffiliation', affiliation)
+      store.dispatch('setDbUser', dbUser)
 
       return user
     } else {

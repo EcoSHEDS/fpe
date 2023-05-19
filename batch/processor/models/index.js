@@ -1,3 +1,4 @@
+exports.Annotation = require('./Annotation')
 exports.Dataset = require('./Dataset')
 exports.Image = require('./Image')
 exports.Imageset = require('./Imageset')

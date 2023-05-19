@@ -70,9 +70,34 @@ const requireUserOwnerOrAdmin = (req, res, next) => {
   next()
 }
 
+const requireAnnotationOwnerOrAdmin = (req, res, next) => {
+  // no annotation
+  if (!res.locals.annotation) {
+    return next(createError(404, 'Annotation not found'))
+  }
+
+  // no user
+  if (!req.auth) {
+    return next(createError(401, 'Unauthorized'))
+  }
+
+  // local override
+  if (req.auth.isLocal) {
+    return next()
+  }
+
+  // user is not owner
+  if (res.locals.annotation.user_id !== req.auth.id && !req.auth.isAdmin) {
+    return next(createError(401, 'Unauthorized'))
+  }
+
+  next()
+}
+
 module.exports = {
   attachUser,
   requireAdmin,
   requireStationOwnerOrAdmin,
+  requireAnnotationOwnerOrAdmin,
   requireUserOwnerOrAdmin
 }
