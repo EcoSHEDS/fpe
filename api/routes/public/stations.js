@@ -19,7 +19,7 @@ const {
   listDatasetFiles
 } = require('../../controllers/datasets')
 const {
-  attachImageset,
+  attachPublicImageset,
   getImagesets,
   getImageset,
   listImagesetFiles
@@ -81,18 +81,18 @@ router.route('/:stationId/imagesets')
   .get(asyncHandler(getImagesets))
 
 router.route('/:stationId/imagesets/:imagesetId')
-  .all(asyncHandler(attachStation), asyncHandler(attachImageset))
+  .all(asyncHandler(attachStation), asyncHandler(attachPublicImageset))
   .get(asyncHandler(getImageset))
 
 router.route('/:stationId/imagesets/:imagesetId/process')
-  .all(asyncHandler(attachStation), asyncHandler(attachImageset))
+  .all(asyncHandler(attachStation), asyncHandler(attachPublicImageset))
 
 router.route('/:stationId/imagesets/:imagesetId/images')
-  .all(asyncHandler(attachStation), asyncHandler(attachImageset))
+  .all(asyncHandler(attachStation), asyncHandler(attachPublicImageset))
   .get(asyncHandler(getImages))
 
 router.route('/:stationId/imagesets/:imagesetId/list')
-  .all(asyncHandler(attachStation), asyncHandler(attachImageset))
+  .all(asyncHandler(attachStation), asyncHandler(attachPublicImageset))
   .get(asyncHandler(listImagesetFiles))
 
 module.exports = router

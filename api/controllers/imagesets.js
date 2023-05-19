@@ -4,9 +4,22 @@ const { v4: uuidv4 } = require('uuid')
 const { batch, invokeWorker, createPresignedPostPromise } = require('../aws')
 const { Station, Imageset } = require('../db/models')
 
-const attachImageset = async (req, res, next) => {
+const attachPublicImageset = async (req, res, next) => {
   const row = await Imageset.query()
     .withGraphFetched('images(defaultSelect,defaultOrderBy,excludePii)')
+    .findById(req.params.imagesetId)
+
+  if (!row) {
+    throw createError(404, `Imageset not found (id=${req.params.imagesetId})`)
+  }
+
+  res.locals.imageset = row
+  return next()
+}
+
+const attachRestrictedImageset = async (req, res, next) => {
+  const row = await Imageset.query()
+    .withGraphFetched('images(defaultSelect,defaultOrderBy)')
     .findById(req.params.imagesetId)
 
   if (!row) {
@@ -149,7 +162,8 @@ const listImagesetFiles = async (req, res, next) => {
 }
 
 module.exports = {
-  attachImageset,
+  attachPublicImageset,
+  attachRestrictedImageset,
   getImagesets,
   getImageset,
   postImagesets,

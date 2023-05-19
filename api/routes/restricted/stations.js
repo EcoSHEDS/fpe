@@ -21,7 +21,7 @@ const {
   listDatasetFiles
 } = require('../../controllers/datasets')
 const {
-  attachImageset,
+  attachRestrictedImageset,
   getImagesets,
   getImageset,
   postImagesets,
@@ -82,35 +82,35 @@ router.route('/:stationId/imagesets')
   .post(requireStationOwnerOrAdmin, asyncHandler(postImagesets))
 
 router.route('/:stationId/imagesets/:imagesetId')
-  .all(asyncHandler(attachStation), asyncHandler(attachImageset))
+  .all(asyncHandler(attachStation), asyncHandler(attachRestrictedImageset))
   .get(asyncHandler(getImageset))
   .put(requireStationOwnerOrAdmin, asyncHandler(putImageset))
   .delete(requireStationOwnerOrAdmin, asyncHandler(deleteImageset))
 
 router.route('/:stationId/imagesets/:imagesetId/presigned')
-  .all(asyncHandler(attachStation), asyncHandler(attachImageset))
+  .all(asyncHandler(attachStation), asyncHandler(attachRestrictedImageset))
   .get(requireStationOwnerOrAdmin, asyncHandler(presignImageset))
 
 router.route('/:stationId/imagesets/:imagesetId/process')
-  .all(asyncHandler(attachStation), asyncHandler(attachImageset))
+  .all(asyncHandler(attachStation), asyncHandler(attachRestrictedImageset))
   .post(requireStationOwnerOrAdmin, asyncHandler(processImageset))
 
 router.route('/:stationId/imagesets/:imagesetId/pii')
-  .all(asyncHandler(attachStation), asyncHandler(attachImageset))
+  .all(asyncHandler(attachStation), asyncHandler(attachRestrictedImageset))
   .post(requireStationOwnerOrAdmin, asyncHandler(piiImageset))
 
 router.route('/:stationId/imagesets/:imagesetId/images')
-  .all(asyncHandler(attachStation), asyncHandler(attachImageset))
+  .all(asyncHandler(attachStation), asyncHandler(attachRestrictedImageset))
   .get(asyncHandler(getImages))
   .post(requireStationOwnerOrAdmin, asyncHandler(postImage))
 
 router.route('/:stationId/imagesets/:imagesetId/images/:imageId')
-  .all(asyncHandler(attachStation), asyncHandler(attachImageset), asyncHandler(attachImage))
+  .all(asyncHandler(attachStation), asyncHandler(attachRestrictedImageset), asyncHandler(attachImage))
   .put(requireStationOwnerOrAdmin, asyncHandler(putImage))
   .delete(requireStationOwnerOrAdmin, asyncHandler(deleteImage))
 
 router.route('/:stationId/imagesets/:imagesetId/list')
-  .all(asyncHandler(attachStation), asyncHandler(attachImageset))
+  .all(asyncHandler(attachStation), asyncHandler(attachRestrictedImageset))
   .get(asyncHandler(listImagesetFiles))
 
 module.exports = router

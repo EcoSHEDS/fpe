@@ -49,7 +49,7 @@
                   <tr>
                     <td
                       class="text-right text--secondary"
-                      style="width:110px">
+                      style="width:130px">
                       ID
                     </td>
                     <td class="font-weight-bold">{{ imageset.id }}</td>
@@ -57,7 +57,7 @@
                   <tr>
                     <td
                       class="text-right text--secondary"
-                      style="width:110px">
+                      style="width:130px">
                       Uploaded
                     </td>
                     <td class="font-weight-bold">{{imageset.created_at | timestampFormat('lll') }} ({{ imageset.created_at | timestampFromNow }})</td>
@@ -65,7 +65,7 @@
                   <tr>
                     <td
                       class="text-right text--secondary"
-                      style="width:110px">
+                      style="width:130px">
                       # Photos
                     </td>
                     <td class="font-weight-bold">
@@ -75,7 +75,7 @@
                   <tr v-if="imageset.status === 'DONE'">
                     <td
                       class="text-right text--secondary"
-                      style="width:110px">
+                      style="width:130px">
                       Start
                     </td>
                     <td class="font-weight-bold">
@@ -85,7 +85,7 @@
                   <tr v-if="imageset.status === 'DONE'">
                     <td
                       class="text-right text--secondary"
-                      style="width:110px">
+                      style="width:130px">
                       End
                     </td>
                     <td class="font-weight-bold">
@@ -95,7 +95,7 @@
                   <tr>
                     <td
                       class="text-right text--secondary"
-                      style="width:110px">
+                      style="width:130px">
                       Description
                     </td>
                     <td class="font-weight-bold">{{ imageset.metadata && imageset.metadata.description ? imageset.metadata.description : 'None' | truncate(100) }}</td>
@@ -103,7 +103,7 @@
                   <tr>
                     <td
                       class="text-right text--secondary"
-                      style="width:110px">
+                      style="width:130px">
                       Upload Status
                     </td>
                     <td class="font-weight-bold"><StatusChip :status="imageset.status"></StatusChip></td>
@@ -111,7 +111,7 @@
                   <tr>
                     <td
                       class="text-right text--secondary"
-                      style="width:110px">
+                      style="width:130px">
                       PII Status
                     </td>
                     <td class="font-weight-bold"><StatusChip :status="imageset.pii_status"></StatusChip></td>
@@ -119,7 +119,7 @@
                 </tbody>
               </v-simple-table>
               <div>
-                <v-btn
+                <!-- <v-btn
                   v-if="user && user.isAdmin"
                   color="warning"
                   class="mt-4"
@@ -129,7 +129,7 @@
                   @click="processImageset"
                 >
                   <v-icon left>mdi-refresh</v-icon> Re-Process Photo Set (Admin Only)
-                </v-btn>
+                </v-btn> -->
                 <v-btn
                   color="error"
                   class="mt-4"
@@ -333,13 +333,13 @@
                           </v-btn-toggle>
                         </v-col>
                         <v-col cols="12" lg="4" class="py-0">
-                          <v-checkbox label="Person Detected" hide-details class="mt-0" v-model="piiFilters.person"></v-checkbox>
+                          <v-checkbox label="Person Detected (p > 0.2)" hide-details class="mt-0" v-model="piiFilters.person"></v-checkbox>
                         </v-col>
                         <v-col cols="12" lg="4" class="py-0">
-                          <v-checkbox label="Vehicle Detected" hide-details class="mt-0" v-model="piiFilters.vehicle"></v-checkbox>
+                          <v-checkbox label="Vehicle Detected (p > 0.8)" hide-details class="mt-0" v-model="piiFilters.vehicle"></v-checkbox>
                         </v-col>
                         <v-col cols="12" lg="4" class="py-0">
-                          <v-checkbox label="Animal Detected" hide-details class="mt-0" v-model="piiFilters.animal"></v-checkbox>
+                          <v-checkbox label="Animal Detected (p > 0.8)" hide-details class="mt-0" v-model="piiFilters.animal"></v-checkbox>
                         </v-col>
                         <v-col cols="12" lg="4" class="py-0">
                           <v-checkbox label="Manual PII Flag" hide-details class="mt-0" v-model="piiFilters.on"></v-checkbox>
@@ -597,7 +597,7 @@ export default {
       this.error = null
       try {
         const url = `/stations/${this.$route.params.stationId}/imagesets/${this.$route.params.imagesetId}`
-        const response = await this.$http.public.get(url)
+        const response = await this.$http.restricted.get(url)
         this.imageset = response.data
         if (this.imageset.status === 'QUEUED' || this.imageset.status === 'PROCESSING') {
           this.queueRefresh()
@@ -618,7 +618,7 @@ export default {
       this.refresher.loading = true
       try {
         const url = `/stations/${this.$route.params.stationId}/imagesets/${this.$route.params.imagesetId}`
-        const response = await this.$http.public.get(url)
+        const response = await this.$http.restricted.get(url)
         const prevStatus = this.imageset && this.imageset.status
         this.imageset = response.data
         if (this.imageset.status === 'QUEUED' || this.imageset.status === 'PROCESSING') {

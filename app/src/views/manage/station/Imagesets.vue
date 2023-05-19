@@ -41,7 +41,7 @@
                       style="width:100px">
                       Source
                     </td>
-                    <td class="font-weight-medium">{{ station.metadata.imageset.useAffiliation ? affiliation.affiliation_name : station.metadata.imageset.source | truncate(80) }}</td>
+                    <td class="font-weight-medium">{{ station.metadata.imageset.useAffiliation ? dbUser.affiliation_name : station.metadata.imageset.source | truncate(80) }}</td>
                   </tr>
                   <tr>
                     <td
@@ -220,7 +220,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['affiliation']),
+    ...mapGetters(['dbUser']),
     station () {
       return this.$parent.$parent.station
     },

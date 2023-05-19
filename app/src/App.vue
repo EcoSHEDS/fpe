@@ -59,6 +59,8 @@
             </v-list-item-content>
           </v-list-item>
 
+          <v-divider></v-divider>
+
           <v-list-item v-if="user && user.isAnnotator" :to="{ name: 'annotator' }" class="pr-8">
             <v-list-item-icon>
               <v-icon>mdi-image-multiple-outline</v-icon>
@@ -67,8 +69,6 @@
               <v-list-item-title>Annotate</v-list-item-title>
             </v-list-item-content>
           </v-list-item>
-
-          <v-divider></v-divider>
 
           <v-list-item v-if="!user" :to="{ name: 'request' }" class="pr-8">
             <v-list-item-icon>
@@ -159,11 +159,12 @@
       <v-btn text :to="{ name: 'explorer' }" class="mx-2">
         <v-icon small left>mdi-image-multiple-outline</v-icon> Photo Explorer
       </v-btn>
+
+      <v-divider vertical class="mx-4"></v-divider>
+
       <v-btn text v-if="user && user.isAnnotator" :to="{ name: 'annotator' }" class="mx-2">
         <v-icon small left>mdi-pencil-box-outline</v-icon> Annotate
       </v-btn>
-
-      <v-divider vertical class="mx-4"></v-divider>
 
       <v-btn text class="mx-2" v-if="user" :to="{ name: 'manage' }">
         <v-icon small left>mdi-upload</v-icon> Upload

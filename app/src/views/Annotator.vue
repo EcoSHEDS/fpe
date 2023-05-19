@@ -1,7 +1,7 @@
 <template>
   <v-container fluid>
     <v-row justify="space-around">
-      <v-col cols="12" lg="10" xl="8">
+      <v-col cols="12" lg="10" xl="10">
         <v-card elevation="4">
 
           <v-toolbar flat dense color="grey lighten-3">

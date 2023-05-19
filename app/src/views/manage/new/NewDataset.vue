@@ -749,7 +749,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['affiliation']),
+    ...mapGetters(['dbUser']),
     columnOptions () {
       return this.file.parsed ? this.file.parsed.meta.fields : []
     },

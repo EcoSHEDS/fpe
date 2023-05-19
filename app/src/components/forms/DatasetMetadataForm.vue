@@ -160,7 +160,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['affiliation']),
+    ...mapGetters(['dbUser']),
     stationHasMetadata () {
       return !!(this.station && this.station.metadata && this.station.metadata.dataset)
     },
@@ -214,7 +214,7 @@ export default {
     },
     reset () {
       if (!this.$refs.form) return
-      if (!this.affiliation) return
+      if (!this.dbUser) return
       this.$refs.form.resetValidation()
       this.loading = false
       this.error = null
@@ -233,7 +233,7 @@ export default {
     },
     updateSourceValue () {
       this.source.value = this.useAffiliation.value
-        ? this.affiliation.affiliation_name
+        ? this.dbUser.affiliation_name
         : this.stationHasMetadata
           ? this.stationMetadata.source
           : ''
