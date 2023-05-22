@@ -35,8 +35,24 @@ export default {
       if (!this.variable || !this.variable.id) return null
       return this.variable.id
     },
+    nValues () {
+      let n = 0
+      if (this.daily && this.daily.values) {
+        n += this.daily.values.length
+      }
+      if (this.daily && this.daily.nwis) {
+        n += this.daily.nwis.length
+      }
+      if (this.instantaneous && this.instantaneous.values) {
+        n += this.instantaneous.values.length
+      }
+      if (this.instantaneous && this.instantaneous.nwis) {
+        n += this.instantaneous.nwis.length
+      }
+      return n
+    },
     minValue () {
-      if ((this.daily.values.length + this.daily.nwis.length === 0) || !this.variableId || this.variableId === 'FLOW_CFS') return 0
+      if (this.nValues === 0 || !this.variableId || this.variableId === 'FLOW_CFS') return 0
       const values = [
         this.daily.values.map(d => d.min),
         this.daily.nwis.map(d => d.mean)
@@ -44,7 +60,7 @@ export default {
       return d3.min(values)
     },
     maxValue () {
-      if ((this.daily.values.length + this.daily.nwis.length === 0) || !this.variableId) return 0
+      if (this.nValues === 0 || !this.variableId) return 0
       const valuesMax = d3.max(this.dailyValues, d => d.max)
       const nwisMax = d3.max(this.dailyNwis, d => d.mean)
       const maxValues = [valuesMax, nwisMax]

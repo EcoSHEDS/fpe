@@ -364,8 +364,18 @@ export default {
       if (this.variable.selected.id === 'OTHER') return this.variable.selected.label
       return `${this.variable.selected.label} (${this.variable.selected.units})`
     },
+    nValues () {
+      let n = 0
+      if (this.daily && this.daily.values) {
+        n += this.daily.values.length
+      }
+      if (this.daily && this.daily.nwis) {
+        n += this.daily.nwis.length
+      }
+      return n
+    },
     minValue () {
-      if ((this.daily.values.length + this.daily.nwis.length === 0) || this.variableId === 'FLOW_CFS') return 0
+      if (this.nValues === 0 || this.variableId === 'FLOW_CFS') return 0
       const values = [
         this.daily.values.map(d => d.min),
         this.daily.nwis.map(d => d.mean)
@@ -373,7 +383,7 @@ export default {
       return d3.min(values)
     },
     maxValue () {
-      if ((this.daily.values.length + this.daily.nwis.length === 0) || !this.variableId) return 0
+      if (this.nValues === 0 || !this.variableId) return 0
       const valuesMax = d3.max(this.daily.values, d => d.max)
       const nwisMax = d3.max(this.daily.nwis, d => d.mean)
       return d3.max([valuesMax, nwisMax])

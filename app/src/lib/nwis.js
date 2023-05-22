@@ -25,8 +25,12 @@ async function getStation (id) {
 }
 
 async function getFlows (service, stationId, startDate, endDate) {
-  const url = `https://nwis.waterservices.usgs.gov/nwis/${service}/?format=json&sites=${stationId}&startDT=${startDate}&endDT=${endDate}&parameterCd=00060&siteStatus=all`
+  let url = `https://nwis.waterservices.usgs.gov/nwis/${service}/?format=json&sites=${stationId}&startDT=${startDate}&endDT=${endDate}&parameterCd=00060&siteStatus=all`
+  if (service === 'dv') {
+    url += '&statCd=00003'
+  }
   const json = await http.get(url).then(d => d.data)
+  console.log(json)
 
   if (json.value.timeSeries.length === 0) return []
 
