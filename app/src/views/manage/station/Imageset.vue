@@ -723,10 +723,10 @@ export default {
           payload.pii_on = true
         }
         await this.$http.restricted.put(`/stations/${this.imageset.station_id}/imagesets/${this.imageset.id}/images/${image.id}`, payload)
-        evt.$emit('notify', 'success', `Photo (${image.id}) has been flagged for PII`)
+        evt.$emit('notify', 'success', `PII flag has been updated for photo (id=${image.id})`)
         this.refresh()
       } catch (err) {
-        evt.$emit('notify', 'error', `Failed to flag photo (${image.id}) for PII`)
+        evt.$emit('notify', 'error', `Failed to update PII flag for photo (id=${image.id})`)
       } finally {
         this.imageFlagger.loading = false
       }

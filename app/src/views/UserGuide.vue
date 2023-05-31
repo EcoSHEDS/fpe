@@ -583,7 +583,7 @@ export default {
   name: 'UserGuide',
   data () {
     return {
-      tab: 3
+      tab: 0
     }
   }
 }
