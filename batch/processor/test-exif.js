@@ -28,8 +28,9 @@ dayjs.tz.setDefault('UTC')
 // ]
 
 const files = [
-  ['/Users/jeff/Downloads/DSCF0001_crew.JPG', -4],
-  ['/Users/jeff/data/ecosheds/fpe/browns-brook/img/20190109_1434_BrownsBrook.jpg', -4]
+  // ['/Users/jeff/Downloads/DSCF0001_crew.JPG', -4],
+  // ['/Users/jeff/data/ecosheds/fpe/browns-brook/img/20190109_1434_BrownsBrook.jpg', -4]
+  ['/Users/jeff/Downloads/27.jpg', -4]
 ]
 
 for (let i = 0; i < files.length; i++) {
@@ -37,7 +38,7 @@ for (let i = 0; i < files.length; i++) {
   const buffer = fs.readFileSync(file)
   const parser = ExifParser.create(buffer)
   const exif = parser.enableSimpleValues(true).parse()
-  // console.log(exif)
+  console.log(exif)
   // console.log(exif.tags.DateTimeOriginal, exif.tags.CreateDate)
   const exifDatetime = exif.tags.DateTimeOriginal || exif.tags.CreateDate
   const rawDate = new Date(exifDatetime * 1000)

@@ -4,6 +4,8 @@ import VueRouter from 'vue-router'
 import store from '@/store'
 import { getUser } from '@/lib/auth'
 
+import Avery from '@/views/Avery.vue'
+
 import Home from '@/views/Home.vue'
 import About from '@/views/About.vue'
 import UserGuide from '@/views/UserGuide.vue'
@@ -23,6 +25,11 @@ const routes = [
     path: '/',
     name: 'home',
     component: Home
+  },
+  {
+    path: '/avery',
+    name: 'avery',
+    component: Avery
   },
   {
     path: '/about',
