@@ -3,9 +3,10 @@ library(jsonlite)
 library(lubridate)
 library(janitor)
 
-# westbrook
-
-
+user_ids <- c(
+  "a280a13e-7c8d-4727-9d09-f7eb32f5f415",
+  "f2be13dd-29c8-4d06-8063-a64c39b880bf"
+)
 
 config <- config::get()
 
@@ -28,7 +29,8 @@ flow_images <- bind_rows(
 
 annotations_db <- tbl(con, "annotations") %>%
   filter(
-    n > 500
+    station_id %in% local(flow_images$station_id),
+    user_id %in% local(user_ids)
   ) %>%
   left_join(
     select(tbl(con, "stations"), station_id = id, station_name = name),
@@ -40,7 +42,12 @@ annotations_db <- tbl(con, "annotations") %>%
 annotations_raw <- annotations_db %>%
   rowwise() %>%
   mutate(
-    data = list(as_tibble(read_json(url, simplifyVector = TRUE, flatten = TRUE)))
+    data = list({
+      url %>%
+        read_json(simplifyVector = TRUE, flatten = TRUE) %>%
+        as_tibble() %>%
+        mutate(pair_id = row_number())
+    })
   )
 
 annotations <- annotations_raw %>%
@@ -82,11 +89,14 @@ annotations <- annotations_raw %>%
 annotations %>%
   tabyl(rank, true_rank, station_name) %>%
   adorn_totals(where = "both")
+  # adorn_percentages(denominator = "all")
 
 annotations %>%
   tabyl(rank, station_name) %>%
-  adorn_totals(where = "both") %>%
-  adorn_percentages(denominator = "col")
+  adorn_totals(where = "row") %>%
+  adorn_percentages(denominator = "col") %>%
+  adorn_pct_formatting(digits = 0) %>%
+  write_csv("~/tbl.csv")
 
 annotations %>%
   filter(rank %in% c("LEFT", "RIGHT")) %>%
@@ -113,7 +123,8 @@ annotations %>%
   mutate(correct = rank == true_rank) %>%
   tabyl(user_id, correct, station_name) %>%
   # adorn_totals(where = "col") %>%
-  adorn_percentages()
+  adorn_percentages() %>%
+  adorn_pct_formatting(digits = 1)
 
 annotations %>%
   filter(rank %in% c("LEFT", "RIGHT")) %>%
@@ -135,6 +146,27 @@ annotations %>%
   theme_bw()
 
 annotations %>%
+  filter(rank %in% c("LEFT", "RIGHT")) %>%
+  mutate(correct = rank == true_rank) %>%
+  ggplot(aes(pair_id, rank)) +
+  geom_point(
+    data = ~ subset(., correct),
+    aes(color = correct),
+    size = 2, alpha = 0.5
+  ) +
+  geom_point(
+    data = ~ subset(., !correct),
+    aes(color = correct),
+    size = 2, alpha = 1
+  ) +
+  scale_color_manual(
+    "Annotation\nAccuracy",
+    labels = c("TRUE" = "Correct", "FALSE" = "Incorrect"),
+    values = c("TRUE" = "gray50", "FALSE" = "orangered")
+  ) +
+  facet_wrap(vars(annotation_id), scales = "free")
+
+annotations %>%
   filter(rank != "UNKNOWN") %>%
   ggplot(aes(avg_flow_cfs, rel_delta_flow_cfs, color = rank)) +
   geom_point(aes(y = if_else(rank != "SAME", rel_delta_flow_cfs, NA_real_), color = rank), size = 3, alpha = 0.5) +
@@ -154,13 +186,13 @@ annotations %>%
   ggplot(aes(rel_delta_flow_cfs, linetype = user_id, color = station_name)) +
   stat_ecdf() +
   scale_color_brewer("Station", palette = "Set1") +
-  scale_x_continuous(labels = scales::percent, breaks = scales::pretty_breaks(n = 8)) +
-  scale_y_continuous(labels = scales::percent, breaks = scales::pretty_breaks(n = 8), expand = expansion()) +
+  scale_x_continuous(labels = scales::percent, breaks = scales::pretty_breaks(n = 8), limits = c(0, NA), expand = expansion(mult = c(0, 0.05))) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1), breaks = scales::pretty_breaks(n = 8), expand = expansion()) +
   labs(
     x = "Relative Flow Difference (%)\nabs(Left Flow - Right Flow) / Average Flow",
     y = "Cumulative Frequency",
     linetype = "User ID",
-    subtitle = "EPA Intern Margin Distribution (excludes UNKNOWN)\nShows cumulative frequency distribution of relative flow difference when annotator chose SAME (medians are ~35-40% relative flow difference)"
+    subtitle = "EPA Intern Margin Distribution (excludes UNKNOWN)\nShows cumulative frequency distribution of relative flow difference when annotator chose SAME (medians are ~35-45% relative flow difference)"
   ) +
   # facet_grid(vars(user_id), vars(station_name), labeller = "label_both") +
   theme_bw()
@@ -171,5 +203,5 @@ annotations %>%
   slice(2) %>%
   as.list()
 
-write_csv(x, "~/westbrook0-annotations-20230523.csv")
+write_csv(annotations, "~/annotations-20230531.csv")
 
