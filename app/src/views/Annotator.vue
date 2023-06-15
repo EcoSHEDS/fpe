@@ -10,67 +10,94 @@
             </v-toolbar-title>
           </v-toolbar>
 
-          <v-card-text class="body-1 black--text" v-if="loading.stations">
-            Loading...
-          </v-card-text>
-          <v-card-text class="body-1 black--text mb-0" v-else>
+          <!-- SELECT STATION / INSTRUCTIONS -->
+          <v-card-text class="body-1 black--text mb-0">
             <v-row class="justify-space-around">
-              <v-col cols="6" class="text-center">
+              <!-- SELECT STATION -->
+              <v-col cols="6">
                 <v-row class="justify-space-around">
-                  <v-col cols="8">
-                    <v-autocomplete
-                      v-model="station"
-                      :items="stations"
-                      item-text="name"
-                      return-object
-                      hide-details
-                      label="Select a station"
-                      outlined
-                      class="my-4"
-                      clearable
-                    ></v-autocomplete>
+                  <v-col cols="12">
+                    <v-card>
+                      <v-card-title>
+                        Stations
+                        <v-spacer></v-spacer>
+                        <v-text-field
+                          v-model="search"
+                          append-icon="mdi-magnify"
+                          label="Search"
+                          single-line
+                          hide-details
+                          dense
+                          clearable
+                        ></v-text-field>
+                      </v-card-title>
+                      <v-data-table
+                        v-model="stationArray"
+                        :loading="loading.stations"
+                        :headers="headers"
+                        :items="stations"
+                        :search="search"
+                        :items-per-page="5"
+                        :sort-by="['n_annotations']"
+                        :sort-desc="[true]"
+                        single-select
+                        dense
+                        @click:row="selectStation"
+                      ></v-data-table>
+                    </v-card>
                     <v-text-field
                       v-model.number="nPairs"
-                      label="Number of annotations"
+                      label="Number of photo pairs"
                       outlined
                       hide-details
-                      class="my-4"
+                      class="mb-4 mt-8"
                     ></v-text-field>
                   </v-col>
                 </v-row>
 
-                <div class="text-center my-4">
-                  <v-btn large color="primary" :disabled="!station" @click="start" :loading="loading.pairs">Start Annotating</v-btn>
+                <div class="text-center">
+                  <v-btn large color="primary" @click="start" :loading="loading.station">Start Annotating<v-icon right>mdi-chevron-right</v-icon></v-btn>
                 </div>
+
+                <Alert type="error" class="mt-8 mb-0" v-if="error.start">{{ error.start }}</Alert>
               </v-col>
+
               <v-divider vertical></v-divider>
+
+              <!-- INSTRUCTIONS -->
               <v-col cols="6">
-                <v-sheet max-height="250" elevation="2" class="pa-4" style="overflow-y:scroll;">
+                <v-sheet max-height="400" elevation="2" class="pa-4" style="overflow-y:scroll;">
                   <div class="text-h6">Instructions</div>
                   <v-divider class="mb-2"></v-divider>
                   <ol>
-                    <li>Select a station, enter the number of annotations you would like to perform, and click <code>Start Annotating</code>.</li>
+                    <li>Select a station, enter the number of photo pairs you would like to annotate, and click <code>Start Annotating</code>.</li>
                     <li>For each photo pair:
                       <ol>
                         <li>
                           Click the appropriate button below each photo to indicate the following:
                           <ul>
                             <li>
-                              <code><v-icon left>mdi-water-off-outline</v-icon>Dry</code>: stream is completely dry (no water visible)
+                              <code>Dry</code>: stream is completely dry (no water visible)
                             </li>
                             <li>
-                              <code><v-icon left>mdi-snowflake</v-icon>Ice/Snow</code>: stream is fully covered by snow and/or ice (cannot see water surface)
+                              <code>Disconnected</code>: stream is partially dry with disconnected pools of water
                             </li>
                             <li>
-                              <code><v-icon left>mdi-image-remove</v-icon>Bad Photo</code>: cannot see the water level because the photo is not clear (e.g., too blurry, too dark, too much glare, etc.)
+                              <code>Partial Ice/Snow</code>: stream is partially covered by ice/snow (can see some water)
+                            </li>
+                            <li>
+                              <code>Full Ice/Snow</code>: stream is fully covered by ice/snow (cannot see any water)
+                            </li>
+                            <li>
+                              <code>Bad Photo</code>: cannot see water because the photo is not clear (e.g., blurry, too dark, glare)
                             </li>
                           </ul>
                         </li>
                         <li>
-                          Indicate which which of the two photos has more water (<code>Left</code> or <code>Right</code>). Choose <code>About the Same</code> if the photos show similar amounts of water. Choose <code>Can't Tell</code> if one or both photos is a bad photo (too blurry, dark, glare, etc.). Note these options can be selected using keyboard shortcuts (<code>j</code> = Left, <code>k</code> = About the Same, <code>l</code> = Right, <code>m</code> = Can't Tell).
+                          Indicate which of the two photos has more water (<code>Left</code> or <code>Right</code>). Choose <code>About the Same</code> if the photos show similar amounts of water. Choose <code>Don't Know</code> if you cannot make a valid comparison (e.g., one or both is a bad photo or the camera angle is too different). Keyboard shortcuts: <code>j</code> = Left, <code>k</code> = About the Same, <code>l</code> = Right, <code>m</code> = Don't Know.
                         </li>
                         <li>
-                          If you had any questions or noteable observations about these photos, enter them in the <code>Comments</code> field.
+                          If you were unsure about which option(s) to select or had any other questions about this pair of photos, let us know in the <code>Comments</code> field.
                         </li>
                         <li>
                           When finished with this pair, click <code>Next</code> (or press your Enter key) to load the next pair and repeat these steps.
@@ -78,7 +105,10 @@
                       </ol>
                     </li>
                     <li>
-                      After you have annotated all of the pairs, a new <code>Submit</code> button will appear. Click this button to save your annotations to the server. Note that none of the annotations will be saved until they are submitted!
+                      When you are finished, click the <code>Submit</code> button to save your annotations to the server.
+                    </li>
+                    <li>
+                      If you need to stop early, go ahead and submit the annotations you have already completed.
                     </li>
                     <li>
                       Once you have completed a batch of annotations, you can do another batch by repeating step 1 above.
@@ -90,18 +120,16 @@
             </v-row>
           </v-card-text>
 
-          <v-card-text v-if="pairs.length === 0 && error">
-            <v-row>
-              <v-col cols="6">
-                <Alert type="error" title="Error" class="mb-0">
-                  {{ error }}
-                </Alert>
-              </v-col>
-            </v-row>
+          <!-- STATION ANNOTATION -->
+          <v-card-text class="body-1 black--text" v-if="error.station">
+            <v-divider class="my-4"></v-divider>
+            <Alert type="error" title="Failed to Get Photos for Selected Station" class="mx-auto" style="max-width:600px">
+              {{ error.station }}
+            </Alert>
           </v-card-text>
-
           <v-card-text class="body-1 black--text" v-if="pairs.length > 0">
             <v-divider class="mb-4"></v-divider>
+
             <v-row v-if="currentPair">
               <v-col cols="6">
                 <v-sheet elevation="2" class="pa-4">
@@ -116,16 +144,27 @@
                     contain
                   >
                   </v-img>
-                  <div class="d-flex justify-space-around mt-4" v-on:keyup.left="selectLeft">
-                    <v-btn-toggle v-model="currentPair.left.attributes" multiple color="error">
-                      <v-btn value="DRY" class="px-4" small>
-                        <v-icon left>mdi-water-off-outline</v-icon>Dry
+                  <div class="d-flex justify-space-around mt-4 mx-auto" style="max-width:500px">
+                    <v-btn-toggle v-model="currentPair.left.attributes" multiple color="error" @change="onClickPhotoAttributes('left')" class="d-block">
+                      <v-btn value="DRY" class="px-4 fpe-annotation-class-button-left" large style="width:50%;">
+                        <img src="img/annotation/dry.PNG" style="height:32px;margin-right:12px">
+                        <span class="text-caption fpe-annotation-class-button-label">Dry</span>
                       </v-btn>
-                      <v-btn value="ICE" class="px-4" small>
-                        <v-icon left>mdi-snowflake</v-icon> Ice/Snow
+                      <v-btn value="DISCONNECTED" class="px-4 fpe-annotation-class-button-left" large style="width:50%">
+                        <img src="img/annotation/disconnected.PNG" style="height:32px;margin-right:12px">
+                        <span class="text-caption">Disconnected</span>
                       </v-btn>
-                      <v-btn value="BAD" class="px-4" small>
-                        <v-icon left>mdi-image-remove</v-icon>Bad Photo
+                      <v-btn value="ICE_PARTIAL" class="px-4 fpe-annotation-class-button-left" large style="width:50%">
+                        <img src="img/annotation/ice-partial.PNG" style="height:32px;margin-right:12px">
+                        <span class="text-caption">Partial Ice/Snow</span>
+                      </v-btn>
+                      <v-btn value="ICE" class="px-4 fpe-annotation-class-button-left" large style="width:50%">
+                        <img src="img/annotation/ice-full.PNG" style="height:32px;margin-right:12px">
+                        <span class="text-caption">Full Ice/Snow</span>
+                      </v-btn>
+                      <v-btn value="BAD" class="px-4 fpe-annotation-class-button-center" large style="width:100%">
+                        <img src="img/annotation/bad-photo.PNG" style="height:32px;margin-right:12px">
+                        <span class="text-caption">Bad Photo</span>
                       </v-btn>
                     </v-btn-toggle>
                   </div>
@@ -144,16 +183,27 @@
                     contain
                   >
                   </v-img>
-                  <div class="d-flex justify-space-around mt-4">
-                    <v-btn-toggle v-model="currentPair.right.attributes" multiple color="error">
-                      <v-btn value="DRY" class="px-4" small>
-                        <v-icon left>mdi-water-off-outline</v-icon>Dry
+                  <div class="d-flex justify-space-around mt-4 mx-auto" style="max-width:500px">
+                    <v-btn-toggle v-model="currentPair.right.attributes" multiple color="error" @change="onClickPhotoAttributes('right')" class="d-block">
+                      <v-btn value="DRY" class="px-4 fpe-annotation-class-button-left" large style="width:50%;">
+                        <img src="img/annotation/dry.PNG" style="height:32px;margin-right:12px">
+                        <span class="text-caption fpe-annotation-class-button-label">Dry</span>
                       </v-btn>
-                      <v-btn value="ICE" class="px-4" small>
-                        <v-icon left>mdi-snowflake</v-icon> Ice/Snow
+                      <v-btn value="DISCONNECTED" class="px-4 fpe-annotation-class-button-left" large style="width:50%">
+                        <img src="img/annotation/disconnected.PNG" style="height:32px;margin-right:12px">
+                        <span class="text-caption">Disconnected</span>
                       </v-btn>
-                      <v-btn value="BAD" class="px-4" small>
-                        <v-icon left>mdi-image-remove</v-icon>Bad Photo
+                      <v-btn value="ICE_PARTIAL" class="px-4 fpe-annotation-class-button-left" large style="width:50%">
+                        <img src="img/annotation/ice-partial.PNG" style="height:32px;margin-right:12px">
+                        <span class="text-caption">Partial Ice/Snow</span>
+                      </v-btn>
+                      <v-btn value="ICE" class="px-4 fpe-annotation-class-button-left" large style="width:50%">
+                        <img src="img/annotation/ice-full.PNG" style="height:32px;margin-right:12px">
+                        <span class="text-caption">Full Ice/Snow</span>
+                      </v-btn>
+                      <v-btn value="BAD" class="px-4 fpe-annotation-class-button-center" large style="width:100%">
+                        <img src="img/annotation/bad-photo.PNG" style="height:32px;margin-right:12px">
+                        <span class="text-caption">Bad Photo</span>
                       </v-btn>
                     </v-btn-toggle>
                   </div>
@@ -161,10 +211,10 @@
               </v-col>
             </v-row>
 
-            <div class="text-h6 text-center mb-8 mt-4">Which photo has more water?</div>
+            <div class="text-h6 text-center mb-8 mt-8">Which photo has more water?</div>
             <v-item-group v-model="currentPair.rank" color="primary" class="mt-4 d-flex justify-space-around">
               <v-row>
-                <v-col cols="4" class="text-center">
+                <v-col cols="4" class="text-right">
                   <v-item v-slot="{ active, toggle }" value="LEFT">
                     <v-btn :color="active ? 'primary' : 'default'" :depressed="active" @click="toggle" large>Left (j)</v-btn>
                   </v-item>
@@ -177,11 +227,11 @@
                   </div>
                   <div>
                     <v-item v-slot="{ active, toggle }" value="UNKNOWN" class="mt-4">
-                      <v-btn :color="active ? 'primary' : 'default'" :depressed="active" @click="toggle" large>Can't Tell (m)</v-btn>
+                      <v-btn :color="active ? 'primary' : 'default'" :depressed="active" @click="toggle" large>Don't Know (m)</v-btn>
                     </v-item>
                   </div>
                 </v-col>
-                <v-col cols="4" class="text-center">
+                <v-col cols="4" class="text-left">
                   <v-item v-slot="{ active, toggle }" value="RIGHT">
                     <v-btn :color="active ? 'primary' : 'default'" :depressed="active" @click="toggle" large>Right (l)</v-btn>
                   </v-item>
@@ -195,40 +245,70 @@
               </v-col>
             </v-row>
 
-            <v-row v-if="error" justify="center">
+            <v-row v-if="error.annotation" justify="center">
               <v-col cols="6">
-                <Alert type="error" title="Error">
-                  {{ error }}
+                <Alert type="error">
+                  {{ error.annotation }}
                 </Alert>
               </v-col>
             </v-row>
 
-            <v-row v-if="(currentIndex === pairs.length - 1 && currentPair.rank !== null)" justify="center" class="mt-4">
-              <v-col cols="6">
-                <v-alert type="success">
-                  <div class="text-h6">All Done!</div>
-                  <p>Click submit to save your data to the server</p>
-                  <v-btn @click="submit" light :loading="loading.submit"><v-icon left>mdi-upload</v-icon>Submit</v-btn>
-                </v-alert>
-              </v-col>
-            </v-row>
-
-            <v-divider class="my-4"></v-divider>
-
-            <div class="d-flex justify-space-around align-center">
-              <v-btn @click="currentIndex -= 1" :disabled="currentIndex === 0"><v-icon left>mdi-chevron-left</v-icon>Prev</v-btn>
-              <div class="text-center" style="width:200px">
-                Photo Pair: {{ currentIndex + 1 }} of {{ pairs.length }}
-                <v-progress-linear
-                  color="primary"
-                  height="10"
-                  :value="currentIndex / (pairs.length - 1) * 100"
-                  striped
-                ></v-progress-linear>
-              </div>
-              <v-btn @click="nextPair()" :disabled="currentIndex === pairs.length - 1">Next (Enter)<v-icon right>mdi-chevron-right</v-icon></v-btn>
+            <div class="d-flex align-center mt-6">
+              <v-row>
+                <v-col cols="4" class="text-right">
+                  <v-btn @click="prevPair()" :disabled="currentIndex === 0"><v-icon left>mdi-chevron-left</v-icon>Prev</v-btn>
+                </v-col>
+                <v-col cols="4" class="text-center">
+                  <div class="text-center mx-auto" style="width:200px">
+                    Photo Pair: {{ currentIndex + 1 }} of {{ pairs.length }}
+                    <v-progress-linear
+                      color="primary"
+                      height="10"
+                      :value="currentIndex / (pairs.length - 1) * 100"
+                      striped
+                    ></v-progress-linear>
+                  </div>
+                </v-col>
+                <v-col cols="4" class="text-left">
+                  <v-btn @click="nextPair()" :disabled="currentIndex === pairs.length - 1">Next (Enter)<v-icon right>mdi-chevron-right</v-icon></v-btn>
+                </v-col>
+              </v-row>
             </div>
           </v-card-text>
+
+          <v-divider v-if="pairs.length > 0"></v-divider>
+
+          <!-- SUBMIT -->
+          <v-card-actions class="pa-4 d-block" v-if="pairs.length > 0">
+            <div v-if="error.submit" class="mb-8">
+              <Alert type="error" title="Submission Error" class="mx-auto" style="max-width:600px">
+                {{ error.submit }}
+              </Alert>
+            </div>
+            <div v-if="submitEarly && completedPairs.length < pairs.length" class="mb-4">
+              <Alert type="warning" title="Need to Finish Early?" class="mx-auto" style="max-width:600px">
+                <p>
+                  It looks like you have annotated {{ completedPairs.length.toLocaleString() }} of the {{ pairs.length.toLocaleString() }} total photo pairs for this station.
+                </p>
+                <p>
+                  If you need to finish early, click <code>Submit</code> again to save the {{ completedPairs.length.toLocaleString() }} annotations you have completed so far.
+                </p>
+                <div class="text-right">
+                  <v-btn @click="submitEarly = false">Close</v-btn>
+                </div>
+              </Alert>
+            </div>
+            <div v-if="completedPairs.length === pairs.length">
+              <Alert type="success" title="All Done!" class="mx-auto" style="max-width:600px">
+                Click submit to save your data to the server
+              </Alert>
+            </div>
+            <div class="text-center">
+              <v-btn @click="submit" color="primary" :loading="loading.submit" large>
+                <v-icon left>mdi-upload</v-icon>Submit
+              </v-btn>
+            </div>
+          </v-card-actions>
         </v-card>
       </v-col>
     </v-row>
@@ -245,29 +325,59 @@ export default {
     return {
       loading: {
         stations: false,
-        pairs: false,
+        station: false,
         submit: false
       },
-      error: null,
+      error: {
+        start: null,
+        station: null,
+        annotation: null,
+        submit: null
+      },
       stations: [],
-      station: null,
+      stationArray: [],
+      search: '',
       nPairs: 100,
       currentIndex: null,
       startedAt: new Date(),
       pairs: [],
-      annotating: false
+      submitEarly: false,
+      headers: [
+        {
+          text: 'Station',
+          align: 'start',
+          sortable: true,
+          value: 'name'
+        },
+        {
+          text: '# Annotations',
+          value: 'n_annotations',
+          align: 'end',
+          sortable: true
+        }
+      ]
     }
   },
   computed: {
     ...mapGetters(['user']),
+    station () {
+      return this.stationArray.length > 0 ? this.stationArray[0] : null
+    },
     currentPair () {
       if (this.currentIndex === null) return null
       return this.pairs[this.currentIndex]
+    },
+    completedPairs () {
+      return this.pairs.filter(d => !!d.rank)
     }
   },
-  mounted () {
-    this.fetchStations()
-    // this.fetchPairs()
+  async mounted () {
+    await this.fetchStations()
+    // TEMPORARY --------------------
+    // this.selectStation(this.stations[0])
+    // this.nPairs = 2
+    // this.fetchStationPairs()
+    // ------------------------------
     window.addEventListener('keyup', this.onKeyUp)
   },
   beforeDestroy () {
@@ -277,11 +387,15 @@ export default {
     async fetchStations () {
       this.loading.stations = true
       try {
-        const response = await this.$http.public.get('/stations')
-        this.stations = response.data.sort((a, b) => ascending(a.name, b.name))
+        const response = await this.$http.restricted.get('/annotations/stations')
+        const stations = response.data.sort((a, b) => ascending(a.name, b.name))
+        stations.forEach(d => {
+          d.n_annotations = d.n_annotations || 0
+        })
+        this.stations = stations
       } catch (err) {
         console.error(err)
-        this.error = 'Failed to get stations from server'
+        evt.$emit('notify', 'error', 'Failed to get stations from server')
       } finally {
         this.loading.stations = false
       }
@@ -300,9 +414,9 @@ export default {
         this.nextPair()
       }
     },
-    async fetchPairs () {
+    async fetchStationPairs () {
       if (!this.station) return
-      this.loading.pairs = true
+      this.loading.station = true
       try {
         const response = await this.$http.public.get(`/stations/${this.station.id}/image-pairs?n_pairs=${this.nPairs}`)
         this.pairs = response.data.map(d => {
@@ -324,29 +438,51 @@ export default {
         }
       } catch (err) {
         console.error(err)
-        this.error = err.message || err.toString()
+        this.error.station = err.message || err.toString()
       } finally {
-        this.loading.pairs = false
+        this.loading.station = false
       }
     },
+    prevPair () {
+      this.error.annotation = null
+      this.currentIndex -= 1
+    },
     nextPair () {
+      this.error.submit = null
       if (!this.currentPair.rank) {
-        this.error = 'Select an option for which photo has more water.'
+        this.error.annotation = 'Select an option for which photo has more water.'
         return
       }
       if (this.currentIndex < this.pairs.length - 1) {
-        this.error = null
+        this.error.annotation = null
         this.currentIndex += 1
       }
     },
     reset () {
       this.pairs = []
-      this.error = null
+      this.error.start = null
+      this.error.station = null
+      this.error.annotation = null
+      this.error.submit = null
       this.currentIndex = null
+      this.submitEarly = false
       this.startedAt = new Date()
-      this.annotating = false
     },
     async submit () {
+      this.error.submit = null
+
+      if (this.completedPairs.length === 0) {
+        this.error.submit = 'At least one photo pair must be annotated been annotated'
+        return
+      }
+
+      if (!this.submitEarly && this.completedPairs.length < this.pairs.length) {
+        this.submitEarly = true
+        return
+      }
+
+      this.submitEarly = false
+
       this.loading.submit = true
       try {
         const finishedAt = new Date()
@@ -355,7 +491,7 @@ export default {
           user_id: this.user.username,
           station_id: this.station.id,
           duration_sec: durationSeconds,
-          n: this.pairs.length
+          n: this.completedPairs.length
         }
         const response = await this.$http.restricted.post('/annotations', payload)
         const annotation = response.data
@@ -367,30 +503,33 @@ export default {
         }
         await this.$http.restricted.put(`/annotations/${annotation.id}`, updatePayload)
 
+        this.station.n_annotations += payload.n
+
         this.reset()
         evt.$emit('notify', 'success', 'Annotations have been saved')
       } catch (err) {
         console.log(err)
-        this.error = err.message || err.toString()
+        this.error.submit = err.message || err.toString()
       } finally {
         this.loading.submit = false
       }
     },
     async uploadFile (annotation) {
-      const annotations = this.pairs.map(d => {
-        return {
-          left: {
-            imageId: d.left.image.image_id,
-            attributes: d.left.attributes
-          },
-          right: {
-            imageId: d.right.image.image_id,
-            attributes: d.right.attributes
-          },
-          rank: d.rank,
-          comment: d.comment
-        }
-      })
+      const annotations = this.completedPairs
+        .map(d => {
+          return {
+            left: {
+              imageId: d.left.image.image_id,
+              attributes: d.left.attributes
+            },
+            right: {
+              imageId: d.right.image.image_id,
+              attributes: d.right.attributes
+            },
+            rank: d.rank,
+            comment: d.comment
+          }
+        })
       const body = JSON.stringify(annotations)
       const formData = new FormData()
       Object.keys(annotation.presignedUrl.fields).forEach((key) => {
@@ -406,19 +545,40 @@ export default {
       }
     },
     start () {
-      this.error = null
+      this.error.start = null
+      this.error.annotation = null
+      this.error.submit = null
+
       if (!this.station) {
-        this.error = 'Select a station'
+        this.error.start = 'Select a station in the table above'
         return
       }
       if (!this.nPairs || this.nPairs <= 0 || this.nPairs > 10000) {
-        this.error = 'Number of pairs must be between 1 and 10,000'
+        this.error.start = 'Number of annotations must be between 1 and 10,000'
         return
       }
 
-      this.annotating = true
       this.startedAt = new Date()
-      this.fetchPairs()
+      this.fetchStationPairs()
+    },
+    onClickPhotoAttributes (side) {
+      if (!side) return
+      if (this.currentPair.left.attributes.includes('BAD') ||
+          this.currentPair.left.attributes.includes('ICE') ||
+          this.currentPair.right.attributes.includes('BAD') ||
+          this.currentPair.right.attributes.includes('ICE')
+      ) {
+        this.currentPair.rank = 'UNKNOWN'
+      } else if (this.currentPair.rank === 'UNKNOWN') {
+        this.currentPair.rank = null
+      }
+    },
+    selectStation (station) {
+      if (station === this.station) {
+        this.stationArray = []
+      } else {
+        this.stationArray = [station]
+      }
     }
   }
 }
@@ -430,4 +590,26 @@ export default {
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+.fpe-annotation-class-button-left {
+  border-left-width: 0.8px !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+.fpe-annotation-class-button-center {
+  border-left-width: 0.8px !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+.fpe-annotation-class-button-left > .v-btn__content {
+  justify-content: start !important;
+  align-items: center !important;
+}
+.fpe-annotation-class-button-center > .v-btn__content {
+  justify-content: middle !important;
+  align-items: center !important;
+}
+.fpe-annotation-class-button-label {
+  font-size: 0.5rem !important;
+}
+
 </style>

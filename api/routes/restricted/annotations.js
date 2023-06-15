@@ -5,14 +5,19 @@ const {
   attachAnnotation,
   postAnnotations,
   getAnnotation,
-  putAnnotation
+  putAnnotation,
+  getAnnotationStations
 } = require('../../controllers/annotations')
+
 const { requireAnnotationOwnerOrAdmin } = require('../../middleware/auth')
 
 var router = express.Router()
 
 router.route('/')
   .post(asyncHandler(postAnnotations))
+
+router.route('/stations')
+  .get(asyncHandler(getAnnotationStations))
 
 router.route('/:annotationId')
   .all(asyncHandler(attachAnnotation))

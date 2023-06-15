@@ -104,7 +104,7 @@ async function deleteUser (req, res, next) {
 }
 
 async function postUsers (req, res, next) {
-  const { email, name, affiliation, admin } = req.body // eslint-disable-line
+  const { email, name, affiliation, admin, annotator } = req.body // eslint-disable-line
 
   const cognitoUser = await createCognitoUser(email, name)
   if (admin) {
@@ -114,7 +114,8 @@ async function postUsers (req, res, next) {
   await createDatabaseUser({
     id: cognitoUser.Username,
     affiliation_name: affiliation.name,
-    affiliation_code: affiliation.code
+    affiliation_code: affiliation.code,
+    annotator
   })
 
   return res.status(201).json(cognitoUser)
@@ -145,6 +146,28 @@ async function removeUserFromGroup (id, groupname) {
   await cognitoIdentityServiceProvider.adminRemoveUserFromGroup(params).promise()
   return {
     message: `User (${id}) removed from group (${groupname})`
+  }
+}
+
+async function addUserToAnnotator (id) {
+  console.log(`addUserToAnnotator (${id})`)
+  await User.query()
+    .patchAndFetchById(id, {
+      annotator: true
+    })
+  return {
+    message: `User (${id}) added to annotators`
+  }
+}
+
+async function removeUserFromAnnotator (id) {
+  console.log(`removeUserFromAnnotator (${id})`)
+  await User.query()
+    .patchAndFetchById(id, {
+      annotator: false
+    })
+  return {
+    message: `User (${id}) removed from annotators`
   }
 }
 
@@ -289,6 +312,10 @@ async function putUser (req, res, next) {
     response = await addUserToGroup(res.locals.adminUser.id, 'admins')
   } else if (req.body.action === 'removeFromAdmin') {
     response = await removeUserFromGroup(res.locals.adminUser.id, 'admins')
+  } else if (req.body.action === 'addToAnnotator') {
+    response = await addUserToAnnotator(res.locals.adminUser.id)
+  } else if (req.body.action === 'removeFromAnnotator') {
+    response = await removeUserFromAnnotator(res.locals.adminUser.id)
   } else if (req.body.action === 'setAffiliation') {
     response = await setAffiliation(res.locals.adminUser.id, req.body.payload.affiliation)
   } else if (req.body.action === 'signOut') {

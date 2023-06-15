@@ -1,7 +1,7 @@
 const { v4: uuidv4 } = require('uuid')
 
 const { createPresignedPostPromise } = require('../aws')
-const { Annotation } = require('../db/models')
+const { Annotation, Station } = require('../db/models')
 
 const attachAnnotation = async (req, res, next) => {
   const row = await Annotation.query().findById(req.params.annotationId)
@@ -46,9 +46,20 @@ const putAnnotation = async (req, res, next) => {
   return res.status(200).json(row)
 }
 
+const getAnnotationStations = async (req, res, next) => {
+  const rows = await Station.query()
+    .modify('annotationSummary')
+    .where('private', false)
+  rows.forEach(d => {
+    d.n_annotations = Number(d.n_annotations) || 0
+  })
+  return res.status(200).json(rows)
+}
+
 module.exports = {
   attachAnnotation,
   postAnnotations,
   getAnnotation,
-  putAnnotation
+  putAnnotation,
+  getAnnotationStations
 }

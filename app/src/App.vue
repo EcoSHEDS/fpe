@@ -63,7 +63,7 @@
 
           <v-list-item v-if="user && user.isAnnotator" :to="{ name: 'annotator' }" class="pr-8">
             <v-list-item-icon>
-              <v-icon>mdi-image-multiple-outline</v-icon>
+              <v-icon>mdi-pencil-box-outline</v-icon>
             </v-list-item-icon>
             <v-list-item-content>
               <v-list-item-title>Annotate</v-list-item-title>

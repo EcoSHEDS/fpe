@@ -80,24 +80,30 @@
           </p>
           <div class="body-2"><a href="mailto:ecosheds@usgs.gov">Contact us</a> for a copy of this publication.</div>
         </div>
-
-        <v-toolbar flat dense color="grey lighten-3 mt-8 mb-4">
-          <v-toolbar-title>
-            <h2 class="text-h5">Disclaimer</h2>
-          </v-toolbar-title>
-        </v-toolbar>
-        <Alert type="error" title="Provisional Database" class="mb-0 mx-4">
-          <div style="font-family:monospace">
-            The data you have secured from the U.S. Geological Survey (USGS) database identified as the Flow Photo Explorer (FPE) have not received USGS approval and as such are provisional and subject to revision. The data are released on the condition that neither the USGS nor the U.S. Government shall be held liable for any damages resulting from its authorized or unauthorized use.
-          </div>
-        </Alert>
       </v-col>
-      <v-col cols="12" lg="6" xl="6" class="body-1 black--text">
+      <v-col cols="12" lg="6" xl="6" class="body-1 black--text" :class="{ 'px-8': $vuetify.breakpoint.lgAndUp }">
         <v-toolbar flat dense color="grey lighten-3 mb-4">
           <v-toolbar-title>
             <h2 class="text-h5">What's New?</h2>
           </v-toolbar-title>
         </v-toolbar>
+
+        <div class="mx-4">
+          <div class="d-flex align-end">
+            <div class="font-weight-light black--text text-h6">Preliminary Annotation Interface</div>
+            <v-spacer></v-spacer>
+            <div class="text-subtitle-2 font-weight-light font-italic">June 15, 2023</div>
+          </div>
+          <v-divider class="mb-2"></v-divider>
+          <div class="body-1">
+            <p>
+              A <strong>user interface for annotating flow photos</strong> is now available for testing. Using this interface, users perform a series of pairwise comparisons by identifying which of two photos contains more flow. Users can also classify each photo by identifying hydrologic conditions such as dry streambed, disconnected pools, and full/partial ice and snow cover. These annotations will then be used to train our deep learning model for predicting streamflow from timelapse images.
+            </p>
+            <p>
+              The annotation interface is only accessible to a select group of users for initial testing and development. To gain access, please contact us at <a href="mailto:ecosheds@usgs.gov">ecosheds@usgs.gov</a>.
+            </p>
+          </div>
+        </div>
 
         <div class="mx-4">
           <div class="d-flex align-end">
@@ -113,6 +119,22 @@
           </div>
         </div>
 
+      </v-col>
+    </v-row>
+    <v-row justify="space-around">
+      <v-col cols="12" lg="6" xl="6" class="body-1 black--text" :class="{ 'px-8': $vuetify.breakpoint.lgAndUp }">
+        <v-toolbar flat dense color="grey lighten-3 mt-8 mb-4">
+          <v-toolbar-title>
+            <h2 class="text-h5">Disclaimer</h2>
+          </v-toolbar-title>
+        </v-toolbar>
+        <Alert type="error" title="Provisional Database" class="mb-0 mx-4">
+          <div style="font-family:monospace">
+            The data you have secured from the U.S. Geological Survey (USGS) database identified as the Flow Photo Explorer (FPE) have not received USGS approval and as such are provisional and subject to revision. The data are released on the condition that neither the USGS nor the U.S. Government shall be held liable for any damages resulting from its authorized or unauthorized use.
+          </div>
+        </Alert>
+      </v-col>
+      <v-col cols="12" lg="6" xl="6" class="body-1 black--text">
         <v-toolbar flat dense color="grey lighten-3 mt-8 mb-4">
           <v-toolbar-title>
             <h2 class="text-h5">Project Status</h2>
