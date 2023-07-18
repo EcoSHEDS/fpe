@@ -12,8 +12,9 @@ class Station extends Base {
         builder.select(
           '*',
           Station.relatedQuery('annotations')
-            .sum('n')
-            .as('n_annotations')
+            .sum('n').as('n_annotations'),
+          Station.relatedQuery('annotations')
+            .sum('n_daytime').as('n_annotations_daytime')
         )
       }
     }

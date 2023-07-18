@@ -38,7 +38,7 @@
                         :items="stations"
                         :search="search"
                         :items-per-page="5"
-                        :sort-by="['n_annotations']"
+                        :sort-by="['n_annotations_daytime']"
                         :sort-desc="[true]"
                         single-select
                         dense
@@ -241,7 +241,7 @@
 
             <v-row justify="center" class="mt-4">
               <v-col cols="6">
-                <v-text-field outlined v-model="currentPair.comment" hide-details label="Any comments?"></v-text-field>
+                <v-text-field outlined v-model="currentPair.comment" hide-details label="Any comments?" ref="comment"></v-text-field>
               </v-col>
             </v-row>
 
@@ -350,8 +350,14 @@ export default {
           value: 'name'
         },
         {
-          text: '# Annotations',
+          text: '# Annotations (Total)',
           value: 'n_annotations',
+          align: 'end',
+          sortable: true
+        },
+        {
+          text: '# Annotations (Daytime)',
+          value: 'n_annotations_daytime',
           align: 'end',
           sortable: true
         }
@@ -391,6 +397,7 @@ export default {
         const stations = response.data.sort((a, b) => ascending(a.name, b.name))
         stations.forEach(d => {
           d.n_annotations = d.n_annotations || 0
+          d.n_annotations_daytime = d.n_annotations_daytime || 0
         })
         this.stations = stations
       } catch (err) {
@@ -402,6 +409,7 @@ export default {
     },
     onKeyUp (e) {
       if (!this.currentPair) return
+      if (this.$refs.comment && this.$refs.comment.isFocused) return
       if (e.code === 'KeyJ') {
         this.currentPair.rank = 'LEFT'
       } else if (e.code === 'KeyK') {
@@ -491,7 +499,15 @@ export default {
           user_id: this.user.username,
           station_id: this.station.id,
           duration_sec: durationSeconds,
-          n: this.completedPairs.length
+          n: this.completedPairs.length,
+          n_daytime: this.completedPairs
+            .filter(d => {
+              const leftHour = this.$date(d.left.image.timestamp).tz(this.station.timezone).hour()
+              const rightHour = this.$date(d.right.image.timestamp).tz(this.station.timezone).hour()
+              const daytime = leftHour >= 7 && leftHour <= 18 && rightHour >= 7 && rightHour <= 18
+              return daytime
+            })
+            .length
         }
         const response = await this.$http.restricted.post('/annotations', payload)
         const annotation = response.data
@@ -504,6 +520,7 @@ export default {
         await this.$http.restricted.put(`/annotations/${annotation.id}`, updatePayload)
 
         this.station.n_annotations += payload.n
+        this.station.n_annotations_daytime += payload.n_daytime
 
         this.reset()
         evt.$emit('notify', 'success', 'Annotations have been saved')

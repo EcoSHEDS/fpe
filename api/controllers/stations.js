@@ -157,8 +157,8 @@ const getStationValues = async (req, res, next) => {
 const getStationRandomImagePairs = async (req, res, next) => {
   const n_pairs = Math.min(req.query.n_pairs || 100, 10000)
   const result = await knex.raw(
-    'select * from f_station_random_image_pairs(?,?)',
-    [res.locals.station.id, n_pairs]
+    'select * from f_station_random_image_pairs(?,?,?,?)',
+    [res.locals.station.id, n_pairs, 7, 18]
   )
   const rows = result.rows
   return res.status(200).json(rows)
