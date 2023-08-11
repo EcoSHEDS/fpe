@@ -119,6 +119,9 @@ export default {
           const response = await this.$http.public.get('/stations')
           stations = response.data
         }
+        stations.forEach(d => {
+          d.has_obs = d.variables.length > 0 || !!d.nwis_id
+        })
         this.stations.all = stations.sort((a, b) => ascending(a.id, b.id))
         this.stations.filtered = this.stations.all
       } catch (err) {

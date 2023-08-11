@@ -348,7 +348,7 @@ export default {
   },
   computed: {
     hasData () {
-      return this.station.summary.values.count > 0 || this.station.nwis_id
+      return this.station.summary.values.count > 0 || !!this.station.nwis_id
     },
     height () {
       return this.hasData ? 150 : 40
@@ -447,7 +447,7 @@ export default {
       this.width = this.$el.offsetWidth
 
       if (this.station.summary.values.count === 0) {
-        if (this.station.nwis_id) {
+        if (!!this.station.nwis_id) {
           this.variable.options = variables.filter(d => d.id === 'FLOW_CFS')
           this.variable.selected = this.variable.options[0]
         } else {
@@ -562,7 +562,7 @@ export default {
       if (!this.variable.selected) return
       const variableId = this.variable.selected.id
       this.daily.nwis = []
-      if (this.daily.images.length > 0 && variableId === 'FLOW_CFS' && this.station.nwis_id) {
+      if (this.daily.images.length > 0 && variableId === 'FLOW_CFS' && !!this.station.nwis_id) {
         const startDate = this.daily.images[0].date
         const endDate = this.daily.images[this.daily.images.length - 1].date
         const nwisValues = await nwis.getDailyFlows(this.station.nwis_id, startDate, endDate)

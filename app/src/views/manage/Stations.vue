@@ -144,7 +144,7 @@ export default {
 
         this.stations.forEach(d => {
           d.hasImages = d.summary && d.summary.images && d.summary.images.n_images > 0
-          d.hasValues = d.summary && d.summary.values && d.summary.values.n_rows > 0
+          d.hasValues = (d.summary && d.summary.values && d.summary.values.n_rows > 0) || !!d.nwis_id
         })
       } catch (err) {
         this.error = err.toString()

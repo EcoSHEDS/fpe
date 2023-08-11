@@ -572,13 +572,13 @@ export default {
       if (!this.station) {
         return options
       } else if (!this.station.summary.values || this.station.summary.values.n_rows === 0) {
-        if (this.station.nwis_id) {
+        if (!!this.station.nwis_id) {
           options.push(variables.find(d => d.id === 'FLOW_CFS'))
         }
         return options
       } else {
         const stationVariableIds = this.station.summary.values.variables.map(d => d.variable_id)
-        if (!stationVariableIds.includes('FLOW_CFS') && this.station.nwis_id) {
+        if (!stationVariableIds.includes('FLOW_CFS') && !!this.station.nwis_id) {
           options.push(variables.find(d => d.id === 'FLOW_CFS'))
         }
         variables.forEach(v => {
@@ -625,7 +625,7 @@ export default {
     },
     autoselectVariable () {
       const values = this.variableOptions.map(d => d.id)
-      if (values.includes('FLOW_CFS') || this.station.nwis_id) {
+      if (values.includes('FLOW_CFS') || !!this.station.nwis_id) {
         this.variable.selected = this.variableOptions.find(d => d.id === 'FLOW_CFS')
       } else if (values && values.length > 0) {
         this.variable.selected = this.variableOptions.find(d => d.id === values[0])
@@ -670,7 +670,7 @@ export default {
     async fetchDailyNwis () {
       const variableId = this.variable.selected.id
       this.daily.nwis = []
-      if (this.daily.images.length > 0 && variableId === 'FLOW_CFS' && this.station.nwis_id) {
+      if (this.daily.images.length > 0 && variableId === 'FLOW_CFS' && !!this.station.nwis_id) {
         const startDate = this.daily.images[0].date
         const endDate = this.daily.images[this.daily.images.length - 1].date
         const nwisValues = await nwis.getDailyFlows(this.station.nwis_id, startDate, endDate)

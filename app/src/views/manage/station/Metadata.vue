@@ -93,7 +93,7 @@
                 </td>
                 <td class="font-weight-bold">
                   <a
-                    v-if="station.nwis_id"
+                    v-if="!!station.nwis_id"
                     :href="`https://waterdata.usgs.gov/nwis/inventory/?site_no=${station.nwis_id}&agency_cd=USGS`"
                     target="_blank"
                   >

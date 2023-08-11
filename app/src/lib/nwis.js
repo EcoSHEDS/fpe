@@ -30,7 +30,6 @@ async function getFlows (service, stationId, startDate, endDate) {
     url += '&statCd=00003'
   }
   const json = await http.get(url).then(d => d.data)
-  console.log(json)
 
   if (json.value.timeSeries.length === 0) return []
 

@@ -39,7 +39,7 @@
       <div class="text-subtitle-2 text--secondary">
         {{ station.affiliation_name | truncate(70) }}
       </div>
-      <div v-if="station.nwis_id" class="text-subtitle-2 text--secondary">
+      <div v-if="!!station.nwis_id" class="text-subtitle-2 text--secondary">
         NWIS ID:
         <a
           :href="`https://waterdata.usgs.gov/nwis/inventory/?site_no=${station.nwis_id}&agency_cd=USGS`"

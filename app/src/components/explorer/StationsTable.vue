@@ -44,7 +44,7 @@
             <div class="d-flex justify-center">
               <v-switch
                 v-model="filters.hasImages"
-                label="With Photos"
+                label="Has Photos"
                 hide-details
                 @change="filter"
               ></v-switch>
@@ -54,7 +54,7 @@
             <div class="d-flex justify-center">
               <v-switch
                 v-model="filters.hasValues"
-                label="With Obs. Data"
+                label="Has Obs. Data"
                 hide-details
                 @change="filter"
               ></v-switch>
@@ -106,8 +106,8 @@
       </span>
     </template>
     <!-- eslint-disable-next-line vue/valid-v-slot -->
-    <template v-slot:item.variables="{ item }">
-      <v-simple-checkbox :value="item.variables.length > 0" disabled></v-simple-checkbox>
+    <template v-slot:item.has_obs="{ item }">
+      <v-simple-checkbox :value="item.has_obs" disabled></v-simple-checkbox>
     </template>
     <!-- eslint-disable-next-line vue/valid-v-slot -->
     <template v-slot:item.private="{ item }">
@@ -167,7 +167,7 @@ export default {
         },
         {
           text: 'Has Obs. Data',
-          value: 'variables',
+          value: 'has_obs',
           align: 'center',
           sortable: true,
           width: 140
@@ -202,7 +202,7 @@ export default {
         .filter(d => (!this.filters.affiliation || d.affiliation_code === this.filters.affiliation))
         .filter(d => (!this.filters.search || d.name.toLowerCase().includes(this.filters.search.toLowerCase())))
         .filter(d => (!this.filters.hasImages || (d.images.count > 0)))
-        .filter(d => (!this.filters.hasValues || (d.variables.length > 0)))
+        .filter(d => (!this.filters.hasValues || (d.has_obs)))
         .filter(d => (!this.filters.userOnly || (this.user && d.user_id === this.user.username)))
       this.$emit('filter', filtered)
     },
