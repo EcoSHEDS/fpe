@@ -95,11 +95,15 @@ const deleteStation = async (req, res, next) => {
 }
 
 const deleteStationFiles = async ({ datasets, imagesets }) => {
-  for (let i = 0; i < datasets.length; i++) {
-    await deleteDatasetFiles(datasets[i])
+  if (datasets) {
+    for (let i = 0; i < datasets.length; i++) {
+      await deleteDatasetFiles(datasets[i])
+    }
   }
-  for (let i = 0; i < imagesets.length; i++) {
-    await deleteImagesetFiles(imagesets[i])
+  if (imagesets) {
+    for (let i = 0; i < imagesets.length; i++) {
+      await deleteImagesetFiles(imagesets[i])
+    }
   }
 }
 
