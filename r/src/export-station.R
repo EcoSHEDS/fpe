@@ -1,9 +1,10 @@
-# export data and images for a given station
+# export flow-images.csv and annotations.csv for a given station
 # usage: Rscript export-station.R <id> <output dir>
 
 Sys.setenv(TZ = "GMT")
 
 library(tidyverse)
+library(jsonlite)
 library(lubridate)
 library(logger)
 
@@ -14,6 +15,7 @@ output_dir <- path.expand(args[2])
 log_info("station_id: {station_id}")
 log_info("output_dir: {output_dir}")
 
+dir.create(output_dir, showWarnings = FALSE)
 stopifnot(dir.exists(output_dir))
 
 config <- config::get()
@@ -80,6 +82,12 @@ log_info("fetching: station")
 station <- fetch_station(con, station_id)
 stopifnot(nrow(station) == 1)
 
+log_info("saving: {file.path(output_dir, 'station.json')}")
+station %>%
+  select(-waterbody_type, -status, -metadata) %>%
+  as.list() %>%
+  write_json(file.path(output_dir, "station.json"), auto_unbox = TRUE)
+
 log_info("fetching: images")
 images <- fetch_station_images(con, station_id)
 
@@ -92,25 +100,25 @@ if (!is.na(station$nwis_id)) {
   values <- fetch_station_values(con, station_id)
 }
 
-station_dir <- file.path(output_dir, station$name)
-if (!dir.exists(station_dir)) {
-  log_info("creating: {station_dir}")
-  dir.create(station_dir, showWarnings = FALSE, recursive = TRUE)
-}
+# station_dir <- file.path(output_dir, station$name)
+# if (!dir.exists(station_dir)) {
+#   log_info("creating: {station_dir}")
+#   dir.create(station_dir, showWarnings = FALSE, recursive = TRUE)
+# }
 
-if (nrow(values) > 0) {
-  log_info("saving: {file.path(station_dir, 'values.csv')} (n={scales::comma(nrow(values))})")
-  write_csv(values, file.path(station_dir, "values.csv"), na = "")
-} else {
-  log_warn("no values")
-}
+# if (nrow(values) > 0) {
+#   log_info("saving: {file.path(station_dir, 'values.csv')} (n={scales::comma(nrow(values))})")
+#   write_csv(values, file.path(station_dir, "values.csv"), na = "")
+# } else {
+#   log_warn("no values")
+# }
 
-if (nrow(images) > 0) {
-  log_info("saving: {file.path(station_dir, 'images.csv')} (n={scales::comma(nrow(images))})")
-  write_csv(images, file.path(station_dir, "images.csv"), na = "")
-} else {
-  log_warn("no images")
-}
+# if (nrow(images) > 0) {
+#   log_info("saving: {file.path(station_dir, 'images.csv')} (n={scales::comma(nrow(images))})")
+#   write_csv(images, file.path(station_dir, "images.csv"), na = "")
+# } else {
+#   log_warn("no images")
+# }
 
 
 # flow images -------------------------------------------------------------
@@ -125,6 +133,7 @@ log_info("estimating flow for each image")
 
 images_flow <- images %>%
   mutate(
+    filename = map_chr(url, ~ httr::parse_url(.)$path),
     flow_cfs = interp_flow_values(timestamp)
   ) %>%
   arrange(timestamp) %>%
@@ -138,12 +147,95 @@ p <- flow_values %>%
     aes(y = flow_cfs),
     size = 0.25, color = "deepskyblue"
   )
-log_info("saving: {file.path(station_dir, 'flow-images.png')}")
-ggsave(file.path(station_dir, "flow-images.png"), p, width = 8, height = 4)
+log_info("saving: {file.path(output_dir, 'flow-images.png')}")
+ggsave(file.path(output_dir, "flow-images.png"), p, width = 8, height = 4)
 
-
-log_info("saving: {file.path(station_dir, 'flow-images.csv')}")
+log_info("saving: {file.path(output_dir, 'flow-images.csv')}")
 images_flow %>%
-  write_csv(file.path(station_dir, "flow-images.csv"), na = "")
+  write_csv(file.path(output_dir, "flow-images.csv"), na = "")
 
-file.copy(file.path(station_dir, "flow-images.csv"), file.path(output_dir, paste0(station$name, ".csv")), overwrite = TRUE)
+log_info("saving: {file.path(output_dir, 'flow-images-train.csv')}")
+images_flow_train <- images_flow %>%
+  mutate(
+    timestamp = with_tz(timestamp, tzone = station$timezone[[1]])
+  ) %>%
+  filter(
+    hour(timestamp) %in% 7:18,
+    month(timestamp) %in% 4:11
+  )
+images_flow_train %>%
+  write_csv(file.path(output_dir, "flow-images-train.csv"), na = "")
+
+
+# annotations -------------------------------------------------------------
+
+log_info("fetching: annotations from db")
+annotations_db <- tbl(con, "annotations") %>%
+  filter(
+    station_id == local(station_id)
+  ) %>%
+  left_join(
+    select(tbl(con, "stations"), station_id = id, station_name = name),
+    by = "station_id"
+  ) %>%
+  select(annotation_id = id, user_id, station_id, station_name, duration_sec, n, url) %>%
+  collect()
+
+log_info("fetching: annotations from s3")
+annotations_raw <- annotations_db %>%
+  rowwise() %>%
+  mutate(
+    data = list({
+      url %>%
+        read_json(simplifyVector = TRUE, flatten = TRUE) %>%
+        as_tibble() %>%
+        mutate(pair_id = row_number())
+    })
+  )
+
+annotations <- annotations_raw %>%
+  mutate(
+    data = list({
+      data %>%
+        mutate(
+          left.attributes = map_chr(left.attributes, \(x) str_c(x, collapse = ",")),
+          right.attributes = map_chr(right.attributes, \(x) str_c(x, collapse = ","))
+        ) %>%
+        left_join(
+          images_flow %>%
+            select(left.imageId = image_id, left.flow_cfs = flow_cfs, left.url = url, left.filename = filename),
+          by = "left.imageId"
+        ) %>%
+        left_join(
+          images_flow %>%
+            select(right.imageId = image_id, right.flow_cfs = flow_cfs, right.url = url, right.filename = filename),
+          by = "right.imageId"
+        ) %>%
+        mutate(
+          delta_flow_cfs = abs(left.flow_cfs - right.flow_cfs),
+          avg_flow_cfs = (left.flow_cfs + right.flow_cfs) / 2,
+          rel_delta_flow_cfs = delta_flow_cfs / avg_flow_cfs,
+          true_rank = case_when(
+            left.flow_cfs < right.flow_cfs ~ "RIGHT",
+            left.flow_cfs > right.flow_cfs ~ "LEFT",
+            left.flow_cfs == right.flow_cfs ~ "SAME",
+            TRUE ~ NA_character_
+          )
+        )
+    })
+  ) %>%
+  unnest(data)
+
+log_info("saving: {file.path(output_dir, 'annotations.csv')}")
+annotations %>%
+  write_csv(file.path(output_dir, "annotations.csv"), na = "")
+
+annotations_train <- annotations %>%
+  filter(
+    left.imageId %in% images_flow_train$image_id,
+    right.imageId %in% images_flow_train$image_id
+  )
+
+log_info("saving: {file.path(output_dir, 'annotations-train.csv')}")
+annotations_train %>%
+  write_csv(file.path(output_dir, "annotations-train.csv"), na = "")
