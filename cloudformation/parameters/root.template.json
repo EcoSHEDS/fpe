@@ -12,6 +12,10 @@
     "ParameterValue": ""
   },
   {
+    "ParameterKey": "modelBucketName",
+    "ParameterValue": ""
+  },
+  {
     "ParameterKey": "permissionsBoundaryName",
     "ParameterValue": "NONE"
   },

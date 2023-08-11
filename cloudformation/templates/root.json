@@ -16,6 +16,10 @@
       "Description": "Storage bucket name",
       "Type": "String"
     },
+    "modelBucketName": {
+      "Description": "Model bucket name",
+      "Type": "String"
+    },
     "permissionsBoundaryName": {
       "Description": "Permissions boundary",
       "Type": "String",
@@ -47,6 +51,18 @@
     }
   },
   "Resources": {
+    "SagemakerStack": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": "./sagemaker.json",
+        "Parameters": {
+          "appName": { "Ref": "appName" },
+          "env": { "Ref": "env" },
+          "permissionsBoundaryName": { "Ref": "permissionsBoundaryName" },
+          "modelBucketName": { "Ref": "modelBucketName" }
+        }
+      }
+    },
     "NotifyStack": {
       "Type": "AWS::CloudFormation::Stack",
       "Properties": {

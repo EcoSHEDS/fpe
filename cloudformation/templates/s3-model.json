@@ -1,0 +1,28 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "S3 bucket for model datasets and artifacts",
+  "Parameters": {
+    "bucketName": {
+      "Description": "Bucket name",
+      "Type": "String"
+    }
+  },
+  "Resources": {
+    "ModelBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName": {
+          "Ref": "bucketName"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "modelBucketName": {
+      "Description": "Deployment bucket name for storing model datasets and artifacts",
+      "Value": {
+        "Ref": "ModelBucket"
+      }
+    }
+  }
+}

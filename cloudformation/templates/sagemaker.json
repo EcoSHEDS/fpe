@@ -1,0 +1,136 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Sagemaker resources",
+  "Parameters": {
+    "appName": {
+      "Description": "Application name",
+      "Type": "String"
+    },
+    "env": {
+      "Description": "Environment",
+      "Type": "String"
+    },
+    "permissionsBoundaryName": {
+      "Description": "Permissions boundary",
+      "Type": "String",
+      "Default": "NONE"
+    },
+    "modelBucketName": {
+      "Description": "Name of model bucket",
+      "Type": "String"
+    }
+  },
+  "Conditions": {
+    "PermissionsBoundaryExists": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "permissionsBoundaryName"
+            },
+            "NONE"
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "SagemakerExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": {
+          "Fn::Join": [
+            "-",
+            [
+              {
+                "Ref": "appName"
+              },
+              {
+                "Ref": "env"
+              },
+              "sagemaker-execution-role"
+            ]
+          ]
+        },
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "sagemaker.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": [
+                  "arn:aws:iam::694155575325:role/adfs-developers"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+        ],
+        "Policies": [
+          {
+            "PolicyName": {
+              "Fn::Sub": "${appName}-${env}-s3-model"
+            },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject",
+                    "s3:PutObject",
+                    "s3:DeleteObject",
+                    "s3:ListBucket"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:aws:s3:::${modelBucketName}"
+                    },
+                    {
+                      "Fn::Sub": "arn:aws:s3:::${modelBucketName}/*"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "PermissionsBoundary": {
+          "Fn::If": [
+            "PermissionsBoundaryExists",
+            {
+              "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:policy/${permissionsBoundaryName}"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "ExecutionRoleArn": {
+      "Description": "Execution role for sagemaker",
+      "Value": {
+        "Ref": "SagemakerExecutionRole"
+      }
+    }
+  }
+}

@@ -14,6 +14,9 @@ source .env.prod.local.sh
 # create website bucket (must be done in separate stack for chs CI/CD)
 ./create-s3.sh website ${WEBSITE_BUCKET}
 
+# create deployment bucket (must be done in separate stack so nested stacks can be packaged)
+./create-s3.sh models ${MODELS_BUCKET}
+
 # create database (kept separate to avoid accidental deletion)
 ./create-db.sh parameters/db.${ENV}.local.json
 
