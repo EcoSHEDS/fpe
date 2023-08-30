@@ -92,7 +92,7 @@ log_info("fetching: images")
 images <- fetch_station_images(con, station_id)
 
 log_info("fetching: values")
-if (!is.na(station$nwis_id)) {
+if (!is.na(na_if(station$nwis_id, ""))) {
   start_timestamp <- min(images$timestamp)
   end_timestamp <- max(images$timestamp)
   values <- fetch_station_values_from_nwis(station, start_timestamp, end_timestamp)
@@ -123,33 +123,42 @@ if (!is.na(station$nwis_id)) {
 
 # flow images -------------------------------------------------------------
 
-flow_values <- values %>%
-  filter(variable_id == "FLOW_CFS") %>%
-  filter(!is.na(value))
+if (nrow(values) > 0) {
+  flow_values <- values %>%
+    filter(variable_id == "FLOW_CFS") %>%
+    filter(!is.na(value))
 
-interp_flow_values <- approxfun(flow_values$timestamp, y = flow_values$value)
+  interp_flow_values <- approxfun(flow_values$timestamp, y = flow_values$value)
 
-log_info("estimating flow for each image")
+  log_info("estimating flow for each image")
 
-images_flow <- images %>%
-  mutate(
-    filename = map_chr(url, ~ httr::parse_url(.)$path),
-    flow_cfs = interp_flow_values(timestamp)
-  ) %>%
-  arrange(timestamp) %>%
-  filter(!is.na(flow_cfs))
+  images_flow <- images %>%
+    mutate(
+      filename = map_chr(url, ~ httr::parse_url(.)$path),
+      flow_cfs = interp_flow_values(timestamp)
+    ) %>%
+    arrange(timestamp) %>%
+    filter(!is.na(flow_cfs))
 
-p <- flow_values %>%
-  ggplot(aes(timestamp, value)) +
-  geom_line() +
-  geom_point(
-    data = images_flow,
-    aes(y = flow_cfs),
-    size = 0.25, color = "deepskyblue"
-  )
-log_info("saving: {file.path(output_dir, 'flow-images.png')}")
-ggsave(file.path(output_dir, "flow-images.png"), p, width = 8, height = 4)
+  p <- flow_values %>%
+    ggplot(aes(timestamp, value)) +
+    geom_line() +
+    geom_point(
+      data = images_flow,
+      aes(y = flow_cfs),
+      size = 0.25, color = "deepskyblue"
+    )
+  log_info("saving: {file.path(output_dir, 'flow-images.png')}")
+  ggsave(file.path(output_dir, "flow-images.png"), p, width = 8, height = 4)
+} else {
+  images_flow <- images %>%
+    mutate(
+      filename = map_chr(url, ~ httr::parse_url(.)$path),
+      flow_cfs = NA_real_
+    ) %>%
+    arrange(timestamp)
 
+}
 log_info("saving: {file.path(output_dir, 'flow-images.csv')}")
 images_flow %>%
   write_csv(file.path(output_dir, "flow-images.csv"), na = "")
@@ -225,6 +234,11 @@ annotations <- annotations_raw %>%
     })
   ) %>%
   unnest(data)
+
+stopifnot(
+  all(!is.na(annotations$left.url)),
+  all(!is.na(annotations$right.url))
+)
 
 log_info("saving: {file.path(output_dir, 'annotations.csv')}")
 annotations %>%
