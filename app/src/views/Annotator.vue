@@ -341,6 +341,7 @@ export default {
       currentIndex: null,
       startedAt: new Date(),
       pairs: [],
+      pairsStationId: null,
       submitEarly: false,
       headers: [
         {
@@ -441,6 +442,7 @@ export default {
             comment: null
           }
         })
+        this.pairsStationId = this.station.id
         if (this.pairs.length > 0) {
           this.currentIndex = 0
         }
@@ -468,6 +470,7 @@ export default {
     },
     reset () {
       this.pairs = []
+      this.pairsStationId = null
       this.error.start = null
       this.error.station = null
       this.error.annotation = null
@@ -497,7 +500,7 @@ export default {
         const durationSeconds = (finishedAt.valueOf() - this.startedAt.valueOf()) / 1000
         const payload = {
           user_id: this.user.username,
-          station_id: this.station.id,
+          station_id: this.pairsStationId,
           duration_sec: durationSeconds,
           n: this.completedPairs.length,
           n_daytime: this.completedPairs
