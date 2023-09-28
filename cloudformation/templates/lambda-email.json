@@ -1,0 +1,218 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Lambda function for FPE email",
+  "Parameters": {
+    "appName": {
+      "Description": "Application name",
+      "Type": "String"
+    },
+    "env": {
+      "Description": "Environment",
+      "Type": "String"
+    },
+    "permissionsBoundaryName": {
+      "Description": "Permissions boundary",
+      "Type": "String",
+      "Default": "NONE"
+    },
+    "vpcId": {
+      "Description": "VPC ID",
+      "Type": "String"
+    },
+    "subnetIds": {
+      "Description": "Subnet IDs (private)",
+      "Type": "CommaDelimitedList"
+    },
+    "modelBucketName": {
+      "Description": "Name of model bucket",
+      "Type": "String"
+    },
+    "emailPassword": {
+      "Description": "Email Password",
+      "Type": "String"
+    }
+  },
+  "Conditions": {
+    "PermissionsBoundaryExists": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            { "Ref": "permissionsBoundaryName" },
+            "NONE"
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "SecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Allow lambda access to vpc",
+        "VpcId": {
+          "Ref": "vpcId"
+        }
+      }
+    },
+    "LambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "DependsOn": "LambdaExecutionRole",
+      "Properties": {
+        "FunctionName": {
+          "Fn::Join": [
+            "-",
+            [
+              { "Ref": "appName" },
+              { "Ref": "env" },
+              "lambda-email"
+            ]
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "project",
+            "Value": { "Ref": "appName" }
+          },
+          {
+            "Key": "env",
+            "Value": { "Ref": "env" }
+          }
+        ],
+        "Handler": "lambda.handler",
+        "Environment": {
+          "Variables": {
+            "ENV": { "Ref": "env" },
+            "REGION": { "Ref": "AWS::Region" },
+            "FPE_EMAIL_PASSWORD": { "Ref": "emailPassword" },
+            "FPE_S3_BUCKET": { "Ref": "modelBucketName" }
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "LambdaExecutionRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "python3.9",
+        "Timeout": "900",
+        "Code": "../../lambda/email/",
+        "VpcConfig": {
+          "SecurityGroupIds": [
+            { "Ref": "SecurityGroup" }
+          ],
+          "SubnetIds": { "Ref": "subnetIds" }
+        }
+      }
+    },
+    "LambdaExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": {
+          "Fn::Join": [
+            "-",
+            [
+              { "Ref": "appName" },
+              { "Ref": "env" },
+              "lambda-email-role"
+            ]
+          ]
+        },
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+        ],
+        "PermissionsBoundary": {
+          "Fn::If": [
+            "PermissionsBoundaryExists",
+            {
+              "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:policy/${permissionsBoundaryName}"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        }
+      }
+    },
+    "LambdaExecutionPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "DependsOn": "LambdaExecutionRole",
+      "Properties": {
+        "PolicyName": {
+          "Fn::Join": [
+            "-",
+            [
+              { "Ref": "appName" },
+              { "Ref": "env" },
+              "lambda-email-policy"
+            ]
+          ]
+        },
+        "Roles": [
+          { "Ref": "LambdaExecutionRole" }
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Resource": {
+                "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${LambdaFunction}:log-stream:*"
+              }
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject",
+                "s3:ListBucket"
+              ],
+              "Resource": [
+                { "Fn::Sub": "arn:aws:s3:::${modelBucketName}" },
+                { "Fn::Sub": "arn:aws:s3:::${modelBucketName}/*" }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "LambdaName": {
+      "Description": "Name of lambda function",
+      "Value": {
+        "Ref": "LambdaFunction"
+      }
+    },
+    "LambdaArn": {
+      "Description": "Arn of lambda function",
+      "Value": {
+        "Fn::GetAtt": [
+          "LambdaFunction",
+          "Arn"
+        ]
+      }
+    }
+  }
+}

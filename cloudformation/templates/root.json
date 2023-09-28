@@ -48,6 +48,10 @@
     "userPoolId": {
       "Description": "User pool ID",
       "Type": "String"
+    },
+    "emailPassword": {
+      "Description": "Email Password",
+      "Type": "String"
     }
   },
   "Resources": {
@@ -167,6 +171,36 @@
           "userPoolId": { "Ref": "userPoolId" }
         }
       }
+    },
+    "LambdaModelsStack": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": "./lambda-models.local.json",
+        "Parameters": {
+          "appName": { "Ref": "appName" },
+          "env": { "Ref": "env" },
+          "permissionsBoundaryName": { "Ref": "permissionsBoundaryName" },
+          "vpcId": { "Ref": "vpcId" },
+          "subnetIds": { "Ref": "privateSubnetIds" },
+          "storageBucketName": { "Ref": "storageBucketName" },
+          "modelBucketName": { "Ref": "modelBucketName" }
+        }
+      }
+    },
+    "LambdaEmailStack": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": "./lambda-email.local.json",
+        "Parameters": {
+          "appName": { "Ref": "appName" },
+          "env": { "Ref": "env" },
+          "permissionsBoundaryName": { "Ref": "permissionsBoundaryName" },
+          "vpcId": { "Ref": "vpcId" },
+          "subnetIds": { "Ref": "privateSubnetIds" },
+          "modelBucketName": { "Ref": "modelBucketName" },
+          "emailPassword": { "Ref": "emailPassword" }
+        }
+      }
     }
   },
   "Outputs": {
@@ -185,6 +219,10 @@
     "StorageBucket": {
       "Description": "Storage bucket name",
       "Value": { "Ref": "storageBucketName" }
+    },
+    "ModelBucket": {
+      "Description": "Model bucket name",
+      "Value": { "Ref": "modelBucketName" }
     }
   }
 }

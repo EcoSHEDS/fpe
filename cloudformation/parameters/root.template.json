@@ -38,5 +38,9 @@
   {
     "ParameterKey": "userPoolId",
     "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "emailPassword",
+    "ParameterValue": ""
   }
 ]
