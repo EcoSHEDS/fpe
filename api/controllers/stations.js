@@ -6,19 +6,21 @@ const { deleteDatasetFiles } = require('./datasets')
 const { deleteImagesetFiles } = require('./imagesets')
 const { Station } = require('../db/models')
 
-const stationsQuery = Station.query()
-  .select('stations.*', 'user.affiliation_code', 'user.affiliation_name', 'i.images', 'v.variables')
-  .leftJoinRelated('user')
-  .leftJoin(
-    knex.raw('stations_summary_images as i'),
-    'stations.id',
-    'i.station_id'
-  )
-  .leftJoin(
-    knex.raw('stations_summary_variables as v'),
-    'stations.id',
-    'v.station_id'
-  )
+const stationsQuery = function () {
+  return Station.query()
+    .select('stations.*', 'user.affiliation_code', 'user.affiliation_name', 'i.images', 'v.variables')
+    .leftJoinRelated('user')
+    .leftJoin(
+      knex.raw('stations_summary_images as i'),
+      'stations.id',
+      'i.station_id'
+    )
+    .leftJoin(
+      knex.raw('stations_summary_variables as v'),
+      'stations.id',
+      'v.station_id'
+    )
+}
 
 const attachStation = async (req, res, next) => {
   const row = await Station.query()
@@ -32,15 +34,16 @@ const attachStation = async (req, res, next) => {
 }
 
 const getPublicStations = async (req, res, next) => {
-  const rows = await stationsQuery
+  const rows = await stationsQuery()
     .where(req.query)
     .andWhere('private', false)
   return res.status(200).json(rows)
 }
 
 const getAllStations = async (req, res, next) => {
-  const rows = await stationsQuery
+  const rows = await stationsQuery()
     .where(req.query)
+    .debug(true)
   return res.status(200).json(rows)
 }
 
