@@ -60,7 +60,7 @@ const router = new VueRouter({
 let loaded = false
 router.beforeEach(async (to, from, next) => {
   if (!loaded) {
-    getUser(true)
+    await getUser(true)
     loaded = true
   }
   if (to.matched.some(record => record.meta.requiresAuth)) {

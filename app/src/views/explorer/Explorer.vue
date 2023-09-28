@@ -120,7 +120,7 @@ export default {
           stations = response.data
         }
         stations.forEach(d => {
-          d.has_obs = d.variables.length > 0 || !!d.nwis_id
+          d.has_obs = (d.variables && d.variables.length > 0) || !!d.nwis_id
         })
         this.stations.all = stations.sort((a, b) => ascending(a.id, b.id))
         this.stations.filtered = this.stations.all

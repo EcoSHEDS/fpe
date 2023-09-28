@@ -88,20 +88,20 @@
     </template>
     <!-- eslint-disable-next-line vue/valid-v-slot -->
     <template v-slot:item.images.count="{ item }">
-      <span v-if="item.images.count > 0">
+      <span v-if="item.images && item.images.count > 0">
         {{ item.images.count.toLocaleString() }}
       </span>
       <span v-else>0</span>
     </template>
     <!-- eslint-disable-next-line vue/valid-v-slot -->
     <template v-slot:item.images.start_date="{ item }">
-      <span v-if="item.images.count > 0">
+      <span v-if="item.images && item.images.count > 0">
         {{ item.images.start_date | timestampFormat('ll') }}
       </span>
     </template>
     <!-- eslint-disable-next-line vue/valid-v-slot -->
     <template v-slot:item.images.end_date="{ item }">
-      <span v-if="item.images.count > 0">
+      <span v-if="item.images && item.images.count > 0">
         {{ item.images.end_date | timestampFormat('ll') }}
       </span>
     </template>
@@ -187,7 +187,7 @@ export default {
     }
   },
   mounted () {
-    if (this.user && this.user.isAdmin) {
+    if (this.user) {
       this.headers.push({
         text: 'Private',
         value: 'private',
@@ -201,7 +201,7 @@ export default {
       const filtered = this.stations
         .filter(d => (!this.filters.affiliation || d.affiliation_code === this.filters.affiliation))
         .filter(d => (!this.filters.search || d.name.toLowerCase().includes(this.filters.search.toLowerCase())))
-        .filter(d => (!this.filters.hasImages || (d.images.count > 0)))
+        .filter(d => (!this.filters.hasImages || (d.images && d.images.count > 0)))
         .filter(d => (!this.filters.hasValues || (d.has_obs)))
         .filter(d => (!this.filters.userOnly || (this.user && d.user_id === this.user.username)))
       this.$emit('filter', filtered)
