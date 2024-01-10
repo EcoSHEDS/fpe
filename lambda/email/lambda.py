@@ -54,7 +54,7 @@ def handler(event, context):
                     body = part.get_payload(decode=True)
                     camera_ssn = body.strip().decode()
                     print(f"camera ssn: {camera_ssn}")
-                elif part.get_content_type() == "image/jpeg":
+                elif part.get_content_type() in ["image/jpeg", "application/octet-stream"]:
                     image_filename = part.get_filename()
                     print(f"filename: {image_filename}")
                     image_data = part.get_payload(decode=True)
