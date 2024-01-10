@@ -1,5 +1,6 @@
-# export flow-images.csv and annotations.csv for a given station
-# usage: Rscript export-station.R <id> <output dir>
+# export station/data files
+# usage: Rscript src/export-station.R <id> <site dir>
+# example: Rscript src/export-station.R 17 D:/fpe/sites/WHATELY
 
 Sys.setenv(TZ = "GMT")
 
@@ -11,11 +12,12 @@ library(logger)
 args <- commandArgs(trailingOnly = TRUE)
 station_id <- parse_number(args[1])
 output_dir <- path.expand(args[2])
+output_dir <- file.path(output_dir, "data")
 
 log_info("station_id: {station_id}")
 log_info("output_dir: {output_dir}")
 
-dir.create(output_dir, showWarnings = FALSE)
+dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
 stopifnot(dir.exists(output_dir))
 
 config <- config::get()
@@ -137,19 +139,18 @@ if (nrow(values) > 0) {
       filename = map_chr(url, ~ httr::parse_url(.)$path),
       flow_cfs = interp_flow_values(timestamp)
     ) %>%
-    arrange(timestamp) %>%
-    filter(!is.na(flow_cfs))
+    arrange(timestamp)
 
   p <- flow_values %>%
     ggplot(aes(timestamp, value)) +
     geom_line() +
     geom_point(
       data = images_flow,
-      aes(y = flow_cfs),
+      aes(y = coalesce(flow_cfs, 0)),
       size = 0.25, color = "deepskyblue"
     )
-  log_info("saving: {file.path(output_dir, 'flow-images.png')}")
-  ggsave(file.path(output_dir, "flow-images.png"), p, width = 8, height = 4)
+  log_info("saving: {file.path(output_dir, 'images.png')}")
+  ggsave(file.path(output_dir, "images.png"), p, width = 8, height = 4)
 } else {
   images_flow <- images %>%
     mutate(
@@ -157,24 +158,10 @@ if (nrow(values) > 0) {
       flow_cfs = NA_real_
     ) %>%
     arrange(timestamp)
-
 }
-log_info("saving: {file.path(output_dir, 'flow-images.csv')}")
+log_info("saving: {file.path(output_dir, 'images.csv')}")
 images_flow %>%
-  write_csv(file.path(output_dir, "flow-images.csv"), na = "")
-
-log_info("saving: {file.path(output_dir, 'flow-images-train.csv')}")
-images_flow_train <- images_flow %>%
-  mutate(
-    timestamp = with_tz(timestamp, tzone = station$timezone[[1]])
-  ) %>%
-  filter(
-    hour(timestamp) %in% 7:18,
-    month(timestamp) %in% 4:11
-  )
-images_flow_train %>%
-  write_csv(file.path(output_dir, "flow-images-train.csv"), na = "")
-
+  write_csv(file.path(output_dir, "images.csv"), na = "")
 
 # annotations -------------------------------------------------------------
 
@@ -192,6 +179,7 @@ annotations_db <- tbl(con, "annotations") %>%
 
 log_info("fetching: annotations from s3")
 annotations_raw <- annotations_db %>%
+  filter(!is.na(url)) %>%
   rowwise() %>%
   mutate(
     data = list({
@@ -212,12 +200,24 @@ annotations <- annotations_raw %>%
         ) %>%
         left_join(
           images_flow %>%
-            select(left.imageId = image_id, left.flow_cfs = flow_cfs, left.url = url, left.filename = filename),
+            select(
+              left.imageId = image_id,
+              left.timestamp = timestamp,
+              left.flow_cfs = flow_cfs,
+              left.url = url,
+              left.filename = filename
+            ),
           by = "left.imageId"
         ) %>%
         left_join(
           images_flow %>%
-            select(right.imageId = image_id, right.flow_cfs = flow_cfs, right.url = url, right.filename = filename),
+            select(
+              right.imageId = image_id,
+              right.timestamp = timestamp,
+              right.flow_cfs = flow_cfs,
+              right.url = url,
+              right.filename = filename
+            ),
           by = "right.imageId"
         ) %>%
         mutate(
@@ -243,13 +243,3 @@ stopifnot(
 log_info("saving: {file.path(output_dir, 'annotations.csv')}")
 annotations %>%
   write_csv(file.path(output_dir, "annotations.csv"), na = "")
-
-annotations_train <- annotations %>%
-  filter(
-    left.imageId %in% images_flow_train$image_id,
-    right.imageId %in% images_flow_train$image_id
-  )
-
-log_info("saving: {file.path(output_dir, 'annotations-train.csv')}")
-annotations_train %>%
-  write_csv(file.path(output_dir, "annotations-train.csv"), na = "")
