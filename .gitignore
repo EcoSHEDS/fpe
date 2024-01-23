@@ -11,3 +11,4 @@ node_modules/
 .Rhistory
 .Rproj.user
 r/config.yml
+r/export/daily
