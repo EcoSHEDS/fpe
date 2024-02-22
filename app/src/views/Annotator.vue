@@ -316,7 +316,7 @@
 </template>
 
 <script>
-import { ascending } from 'd3'
+import { ascending } from 'd3-array'
 import { mapGetters } from 'vuex'
 import evt from '@/events'
 export default {

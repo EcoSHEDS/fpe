@@ -2,19 +2,17 @@
   <v-container>
     <v-row justify="space-around">
       <v-col cols="12">
-        <v-card elevation="4">
-
+        <v-card elevation="4" class="pb-4">
           <v-toolbar flat dense color="grey lighten-3">
             <v-toolbar-title class="text-h5">
-              Photo Explorer | <span class="text-subtitle-1">Stations Map</span>
+              Photo Explorer
             </v-toolbar-title>
           </v-toolbar>
 
-          <v-card-text class="body-1 black--text">
+          <v-card-text class="body-1 black--text pb-0">
             <v-row align="stretch">
-              <!-- MAP -->
-              <v-col cols="12" lg="6">
-                <v-sheet elevation="2" style="height:450px;">
+              <v-col cols="12" lg="4">
+                <v-sheet elevation="2" style="height:400px">
                   <StationsMap
                     :loading="loading"
                     :stations="stations.filtered"
@@ -24,34 +22,7 @@
                 </v-sheet>
               </v-col>
 
-              <!-- STATION INFO -->
-              <v-col cols="12" lg="6">
-                <v-sheet elevation="2" rounded class="pa-2">
-                  <div v-if="loading" class="text-center grey lighten-2 py-8">
-                    <div class="text-h5 mb-8">Loading stations...</div>
-                    <v-progress-circular
-                      color="grey"
-                      indeterminate
-                      size="32"
-                      width="4"
-                    ></v-progress-circular>
-                  </div>
-                  <Alert v-else-if="error" type="error" class="mb-0" title="Failed to Get Stations">{{ error }}</Alert>
-                  <StationDetail
-                    v-else-if="stations.selected"
-                    :station-id="stations.selected.id"
-                    @close="select"
-                  ></StationDetail>
-                  <Alert v-else type="info" class="mb-0">
-                    <div class="body-1">Select a station on the map or from the table below</div>
-                  </Alert>
-                </v-sheet>
-              </v-col>
-            </v-row>
-
-            <!-- STATIONS TABLE -->
-            <v-row v-if="!error">
-              <v-col cols="12">
+              <v-col cols="12" lg="8">
                 <v-sheet elevation="2" rounded>
                   <StationsTable
                     :loading="loading"
@@ -64,6 +35,8 @@
                 </v-sheet>
               </v-col>
             </v-row>
+
+            <router-view></router-view>
           </v-card-text>
         </v-card>
       </v-col>
@@ -72,19 +45,17 @@
 </template>
 
 <script>
-import { ascending } from 'd3'
+import { ascending } from 'd3-array'
 import { mapGetters } from 'vuex'
 
 import StationsMap from '@/components/explorer/StationsMap'
 import StationsTable from '@/components/explorer/StationsTable'
-import StationDetail from '@/components/explorer/StationDetail'
 
 export default {
-  name: 'explorer',
+  name: 'ExplorerHome',
   components: {
     StationsMap,
-    StationsTable,
-    StationDetail
+    StationsTable
   },
   data: () => ({
     loading: true,
@@ -98,8 +69,16 @@ export default {
   computed: {
     ...mapGetters(['user'])
   },
-  mounted () {
-    this.fetch()
+  async mounted () {
+    await this.fetch()
+    if (this.$route.params.id) {
+      this.stations.selected = this.stations.all.find(d => d.id === +this.$route.params.id)
+    }
+  },
+  watch: {
+    '$route.params.id' () {
+      this.stations.selected = this.stations.all.find(d => d.id === +this.$route.params.id)
+    }
   },
   methods: {
     async fetch () {
@@ -121,6 +100,7 @@ export default {
         }
         stations.forEach(d => {
           d.has_obs = (d.variables && d.variables.length > 0) || !!d.nwis_id
+          d.has_model = (d.models && d.models.length > 0)
         })
         this.stations.all = stations.sort((a, b) => ascending(a.id, b.id))
         this.stations.filtered = this.stations.all
@@ -134,13 +114,16 @@ export default {
     select (station) {
       if (station && this.stations.selected !== station) {
         this.stations.selected = station
+        this.$router.push({ name: 'explorerStation', params: { id: station.id } })
       } else {
         this.stations.selected = null
+        if (this.$route.name === 'explorerStation') {
+          this.$router.push({ name: 'explorerHome' })
+        }
       }
     },
     filter (filtered) {
       this.stations.filtered = filtered
-
       if (!this.stations.filtered.includes(this.stations.selected)) {
         this.select()
       }

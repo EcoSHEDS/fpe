@@ -50,7 +50,7 @@
             </v-list-item-content>
           </v-list-item>
 
-          <v-list-item :to="{ name: 'explorer' }" class="pr-8">
+          <v-list-item :to="{ name: 'explorerHome' }" class="pr-8">
             <v-list-item-icon>
               <v-icon>mdi-image-multiple-outline</v-icon>
             </v-list-item-icon>
@@ -156,7 +156,7 @@
       <v-btn text :to="{ name: 'user-guide' }" class="mx-2">
         <v-icon small left>mdi-book</v-icon> User Guide
       </v-btn>
-      <v-btn text :to="{ name: 'explorer' }" class="mx-2">
+      <v-btn text :to="{ name: 'explorerHome' }" class="mx-2">
         <v-icon small left>mdi-image-multiple-outline</v-icon> Photo Explorer
       </v-btn>
 

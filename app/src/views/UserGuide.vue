@@ -567,7 +567,7 @@
 
                   <v-img src="img/user-guide/upload/photo-pii-off.jpg" alt="Screenshot of photo with PII flag ignored" class="my-4 mx-auto" max-width="800"></v-img>
 
-                  <p><strong>Congratulations!</strong> The upload process is complete and you can now view the photos on the <router-link :to="{ name: 'explorer' }">Photo Explorer</router-link> (unless the station is private).</p>
+                  <p><strong>Congratulations!</strong> The upload process is complete and you can now view the photos on the <router-link :to="{ name: 'explorerHome' }">Photo Explorer</router-link> (unless the station is private).</p>
                 </v-card-text>
               </v-card>
             </v-tab-item>

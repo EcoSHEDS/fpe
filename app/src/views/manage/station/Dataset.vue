@@ -226,7 +226,7 @@
                   class="px-0 mb-4"
                 >
                   <div class="text-subtitle-1 black--text">{{ series.variable.description }}</div>
-                  <SeriesChart :series="series"></SeriesChart>
+                  <!-- <SeriesChart :series="series"></SeriesChart> -->
                 </div>
               </div>
             </v-col>
@@ -256,14 +256,14 @@ import RefresherMixin from '@/mixins/refresher'
 
 import ConfirmDialog from '@/components/ConfirmDialog'
 import StatusChip from '@/components/StatusChip'
-import SeriesChart from '@/components/charts/SeriesChart'
+// import SeriesChart from '@/components/charts/SeriesChart'
 
 export default {
   name: 'ManageDataset',
   mixins: [RefresherMixin],
   components: {
     ConfirmDialog,
-    SeriesChart,
+    // SeriesChart,
     StatusChip
   },
   data () {

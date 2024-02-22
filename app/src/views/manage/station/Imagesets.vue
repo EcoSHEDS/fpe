@@ -137,22 +137,18 @@
               </div>
               <v-divider></v-divider>
             </template>
-            <!-- eslint-disable-next-line vue/valid-v-slot -->
             <template v-slot:item.created_at="{ item }">
               {{ item.created_at | timestampFormat('lll') }}
             </template>
-            <!-- eslint-disable-next-line vue/valid-v-slot -->
             <template v-slot:item.period="{ item }">
               <span v-if="item.status === 'DONE' && item.start_timestamp">
                 {{ item.start_timestamp | timestampFormat('ll') }} &#8211;
                 {{ item.end_timestamp | timestampFormat('ll') }}
               </span>
             </template>
-            <!-- eslint-disable-next-line vue/valid-v-slot -->
             <template v-slot:item.n_images="{ item }">
               {{ item.n_images !== null ? (+item.n_images).toLocaleString() : '' }}
             </template>
-            <!-- eslint-disable-next-line vue/valid-v-slot -->
             <template v-slot:item.status="{ item }">
               <StatusChip :status="item.status"></StatusChip>
             </template>

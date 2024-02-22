@@ -1,5 +1,4 @@
 const Base = require('./Base')
-const Annotation = require('./Annotation')
 
 class Station extends Base {
   static get tableName () {
@@ -21,14 +20,10 @@ class Station extends Base {
   }
 
   static get relationMappings () {
-    const Annotation = require('./Annotation')
-    const Dataset = require('./Dataset')
-    const Imageset = require('./Imageset')
-    const User = require('./User')
     return {
       user: {
         relation: Base.BelongsToOneRelation,
-        modelClass: User,
+        modelClass: require('./User'),
         join: {
           from: 'stations.user_id',
           to: 'users.id'
@@ -36,7 +31,7 @@ class Station extends Base {
       },
       annotations: {
         relation: Base.HasManyRelation,
-        modelClass: Annotation,
+        modelClass: require('./Annotation'),
         join: {
           from: 'stations.id',
           to: 'annotations.station_id'
@@ -44,7 +39,7 @@ class Station extends Base {
       },
       datasets: {
         relation: Base.HasManyRelation,
-        modelClass: Dataset,
+        modelClass: require('./Dataset'),
         join: {
           from: 'stations.id',
           to: 'datasets.station_id'
@@ -52,10 +47,18 @@ class Station extends Base {
       },
       imagesets: {
         relation: Base.HasManyRelation,
-        modelClass: Imageset,
+        modelClass: require('./Imageset'),
         join: {
           from: 'stations.id',
           to: 'imagesets.station_id'
+        }
+      },
+      models: {
+        relation: Base.HasManyRelation,
+        modelClass: require('./Model'),
+        join: {
+          from: 'stations.id',
+          to: 'models.station_id'
         }
       }
     }

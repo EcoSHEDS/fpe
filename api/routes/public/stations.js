@@ -10,7 +10,8 @@ const {
   getStationDaily,
   getStationDailyImages,
   getStationDailyValues,
-  getStationRandomImagePairs
+  getStationRandomImagePairs,
+  getStationModels
 } = require('../../controllers/stations')
 const {
   attachDataset,
@@ -94,5 +95,9 @@ router.route('/:stationId/imagesets/:imagesetId/images')
 router.route('/:stationId/imagesets/:imagesetId/list')
   .all(asyncHandler(attachStation), asyncHandler(attachPublicImageset))
   .get(asyncHandler(listImagesetFiles))
+
+router.route('/:stationId/models')
+  .all(asyncHandler(attachStation))
+  .get(asyncHandler(getStationModels))
 
 module.exports = router

@@ -32,7 +32,7 @@
     "dbInstanceClass": {
       "Description": "Database instance class",
       "Type": "String",
-      "Default": "db.t2.micro"
+      "Default": "db.t3.micro"
     },
     "publiclyAccessible": {
       "Description": "Enable public access",
@@ -124,7 +124,7 @@
           "Ref": "DBSubnetGroup"
         },
         "Engine": "postgres",
-        "EngineVersion": 12.7,
+        "EngineVersion": 15.5,
         "MasterUsername": {
           "Fn::Join": [
             "",

@@ -16,6 +16,7 @@ module.exports = {
     'vue/multi-word-component-names': 'off',
     'vue/script-setup-uses-vars': 'off',
     'vue/no-v-text-v-html-on-component': 'off',
-    'no-extra-boolean-cast': 'off'
+    'no-extra-boolean-cast': 'off',
+    'vue/valid-v-slot': 'off'
   }
 }

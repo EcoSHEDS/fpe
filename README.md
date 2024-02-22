@@ -43,10 +43,16 @@ knex migrate:make name_in_snake_case
 Database seeds (`db/seeds/development`) populate the database with initial data (currently only used for development).
 
 ```sh
-export NODE_ENV=development # set NODE_ENV prior to running migrations (important!)
-knex seed:make name_in_snake_case
-knex seed:run # run all
-knex seed:run --sepecific my_seed.js # only one file
+# set NODE_ENV prior to running migrations (important!)
+export NODE_ENV=development
+knex seed:run
+```
+
+Example datasets can be generated for existing (production) stations using the `r/scripts/export-dev-station.R` script. The output from that script can be place in the `db/seeds/development/data/users/<userId>/stations` folder to add a station and its processed datasets and imagesets to an existing user. Be sure to sync the `<station code>/storage` folder to the S3 storage bucket for development.
+
+```sh
+cd db/seeds/development/data/users/<userId>/stations/<station code>
+aws s3 sync storage s3://<bucket name>/ --exclude "*" --include "imagesets/*" --include "datasets/*"
 ```
 
 ## API
