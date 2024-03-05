@@ -73,6 +73,7 @@ export default {
         plotOptions: {
           series: {
             animation: false,
+            turboThreshold: 0,
             point: {
               events: {
                 mouseOver: (e) => {

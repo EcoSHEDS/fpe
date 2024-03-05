@@ -72,6 +72,7 @@ export default {
         plotOptions: {
           series: {
             animation: false,
+            turboThreshold: 0,
             tooltip: {
               headerFormat: '<b>{series.name}</b><br>',
               pointFormatter: function () {
