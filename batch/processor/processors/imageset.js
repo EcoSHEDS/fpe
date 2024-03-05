@@ -66,6 +66,8 @@ async function processImage (image, utcOffset, timezone, dryRun) {
   // download file
   console.log(`downloading image file (image_id=${image.id}, Key=${image.full_s3.Key})`)
   const s3ImageFile = await s3.getObject(image.full_s3).promise()
+  let sharpImage = await sharp(s3ImageFile.Body)
+  const metadata = await sharpImage.metadata()
 
   // extract exif
   console.log(`extracting exif (image_id=${image.id})`)
@@ -88,10 +90,33 @@ async function processImage (image, utcOffset, timezone, dryRun) {
     throw new Error(`Image file (${image.filename}) is missing timestamp (DateTimeOriginal or CreateDate) in EXIF data`)
   }
 
+  // check if image needs to be rotated
+  if (metadata.orientation && metadata.orientation !== 1) {
+    console.log(`rotating image (image_id=${image.id}, orientation=${metadata.orientation})`)
+    sharpImage = await sharpImage.rotate()
+    const rotatedBuffer = await sharpImage.keepExif().toBuffer()
+    const rotatedMetadata = await sharp(rotatedBuffer).metadata()
+    // update exif after rotation
+    exif.imageSize = {
+      width: rotatedMetadata.width,
+      height: rotatedMetadata.height
+    }
+    // save to s3
+    if (!dryRun) {
+      console.log(`saving rotated image (image_id=${image.id})`)
+      await s3.putObject({
+        Bucket: image.full_s3.Bucket,
+        Key: image.full_s3.Key,
+        Body: rotatedBuffer,
+        ContentType: 'image'
+      }).promise()
+    }
+  }
+
   // create thumbnail
   console.log(`generating thumbnail (image_id=${image.id}, width=${THUMB_WIDTH})`)
   const thumbKey = image.full_s3.Key.replace('images/', 'thumbs/')
-  const thumbBuffer = await sharp(s3ImageFile.Body).resize(THUMB_WIDTH).toBuffer()
+  const thumbBuffer = await sharp(s3ImageFile.Body).rotate().resize(THUMB_WIDTH).toBuffer()
 
   if (!dryRun) {
     console.log(`saving thumbnail (image_id=${image.id})`)
@@ -207,9 +232,85 @@ async function processImageset (id, dryRun) {
   return imageset
 }
 
-module.exports = async function (id, { dryRun }) {
+async function rotateImage (image) {
+  console.log(`rotating image (image_id=${image.id})`)
+
+  // download full image file
+  console.log(`downloading image file (image_id=${image.id}, Key=${image.full_s3.Key})`)
+  let s3ImageFile = await s3.getObject(image.full_s3).promise()
+  let sharpImage = await sharp(s3ImageFile.Body)
+  let metadata = await sharpImage.metadata()
+
+  // check if image needs to be rotated
+  if (metadata.orientation && metadata.orientation !== 1) {
+    console.log(`rotating image (image_id=${image.id}, orientation=${metadata.orientation})`)
+    sharpImage = await sharpImage.rotate()
+    const rotatedBuffer = await sharpImage.keepExif().toBuffer()
+    console.log(`saving rotated image (image_id=${image.id})`)
+    await s3.putObject({
+      Bucket: image.full_s3.Bucket,
+      Key: image.full_s3.Key,
+      Body: rotatedBuffer,
+      ContentType: 'image'
+    }).promise()
+  } else {
+    console.log(`no rotation needed for image (image_id=${image.id})`)
+  }
+
+  // download thumb image file
+  console.log(`downloading thumb file (image_id=${image.id}, Key=${image.thumb_s3.Key})`)
+  s3ImageFile = await s3.getObject(image.thumb_s3).promise()
+  sharpImage = await sharp(s3ImageFile.Body)
+  metadata = await sharpImage.metadata()
+
+  // check if thumb needs to be rotated
+  if (metadata.orientation && metadata.orientation !== 1) {
+    console.log(`rotating thumb (image_id=${image.id}, orientation=${metadata.orientation})`)
+    sharpImage = await sharpImage.rotate()
+    const rotatedBuffer = await sharpImage.keepExif().toBuffer()
+    console.log(`saving rotated thumb (image_id=${image.id})`)
+    await s3.putObject({
+      Bucket: image.thumb_s3.Bucket,
+      Key: image.thumb_s3.Key,
+      Body: rotatedBuffer,
+      ContentType: 'image'
+    }).promise()
+  } else {
+    console.log(`no rotation needed for thumb (image_id=${image.id})`)
+  }
+
+  return image
+}
+
+async function rotateImageset (id) {
+  console.log(`rotating imageset (id=${id})`)
+
+  console.log(`fetching imageset record (id=${id})`)
+  const imageset = await Imageset.query()
+    .findById(id)
+  if (!imageset) throw new Error(`Imageset record (id=${id}) not found`)
+
+  const images = await imageset.$relatedQuery('images').orderBy('id')
+  if (images.length === 0) {
+    console.log(`no images to rotate (id=${id})`)
+    return imageset
+  }
+
+  console.log(`rotating images (id=${id}, n=${images.length})`)
+  for (let i = 0; i < images.length; i++) {
+    await rotateImage(images[i])
+  }
+
+  return imageset
+}
+
+module.exports = async function (id, { dryRun, rotateOnly }) {
   try {
-    await processImageset(id, dryRun)
+    if (rotateOnly) {
+      await rotateImageset(id)
+    } else {
+      await processImageset(id, dryRun)
+    }
   } catch (e) {
     console.log(`failed (id=${id}): ${e.message || e.toString()}`)
     console.error(e)
