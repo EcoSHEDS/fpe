@@ -390,6 +390,18 @@ export default {
   beforeDestroy () {
     window.removeEventListener('keyup', this.onKeyUp)
   },
+  beforeRouteLeave (to, from, next) {
+    if (this.completedPairs.length > 0) {
+      const message = 'Are you sure you want to leave? Your annotations will not be saved.'
+      if (window.confirm(message)) {
+        next()
+      } else {
+        next(false)
+      }
+    } else {
+      next()
+    }
+  },
   methods: {
     async fetchStations () {
       this.loading.stations = true
