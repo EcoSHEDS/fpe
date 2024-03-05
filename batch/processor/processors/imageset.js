@@ -242,33 +242,37 @@ async function rotateImage (image) {
   let metadata = await sharpImage.metadata()
   const orientation = metadata.orientation
 
-  console.log(`rotating image (image_id=${image.id}, orientation=${orientation})`)
-  sharpImage = await sharpImage.rotate()
-  let rotatedBuffer = await sharpImage.keepExif().toBuffer()
-  console.log(`saving rotated image (image_id=${image.id})`)
-  await s3.putObject({
-    Bucket: image.full_s3.Bucket,
-    Key: image.full_s3.Key,
-    Body: rotatedBuffer,
-    ContentType: 'image'
-  }).promise()
+  if (orientation && orientation !== 1) {
+    console.log(`rotating image (image_id=${image.id}, orientation=${orientation})`)
+    sharpImage = await sharpImage.rotate()
+    let rotatedBuffer = await sharpImage.keepExif().toBuffer()
+    console.log(`saving rotated image (image_id=${image.id})`)
+    await s3.putObject({
+      Bucket: image.full_s3.Bucket,
+      Key: image.full_s3.Key,
+      Body: rotatedBuffer,
+      ContentType: 'image'
+    }).promise()
 
-  // download thumb image file
-  console.log(`downloading thumb file (image_id=${image.id}, Key=${image.thumb_s3.Key})`)
-  s3ImageFile = await s3.getObject(image.thumb_s3).promise()
-  sharpImage = await sharp(s3ImageFile.Body).withMetadata({ orientation })
-  metadata = await sharpImage.metadata()
+    // download thumb image file
+    console.log(`downloading thumb file (image_id=${image.id}, Key=${image.thumb_s3.Key})`)
+    s3ImageFile = await s3.getObject(image.thumb_s3).promise()
+    sharpImage = await sharp(s3ImageFile.Body).withMetadata({ orientation })
+    metadata = await sharpImage.metadata()
 
-  console.log(`rotating thumb (image_id=${image.id}, orientation=${metadata.orientation})`)
-  sharpImage = await sharpImage.rotate()
-  rotatedBuffer = await sharpImage.keepExif().toBuffer()
-  console.log(`saving rotated thumb (image_id=${image.id}, key=${image.thumb_s3.Key})`)
-  await s3.putObject({
-    Bucket: image.thumb_s3.Bucket,
-    Key: image.thumb_s3.Key,
-    Body: rotatedBuffer,
-    ContentType: 'image'
-  }).promise()
+    console.log(`rotating thumb (image_id=${image.id}, orientation=${metadata.orientation})`)
+    sharpImage = await sharpImage.rotate()
+    rotatedBuffer = await sharpImage.keepExif().toBuffer()
+    console.log(`saving rotated thumb (image_id=${image.id}, key=${image.thumb_s3.Key})`)
+    await s3.putObject({
+      Bucket: image.thumb_s3.Bucket,
+      Key: image.thumb_s3.Key,
+      Body: rotatedBuffer,
+      ContentType: 'image'
+    }).promise()
+  } else {
+    console.log(`rotation not necessary (image_id=${image.id}, orientation=1)`)
+  }
 
   return image
 }
@@ -312,8 +316,10 @@ module.exports = async function (id, { dryRun, rotateOnly }) {
       })
       .findById(id)
   }
-  const message = await notifyMessage(id)
-  if (message) {
-    await notify('New Photo Upload', message)
+  if (process.env.NOTIFY_TOPIC) {
+    const message = await notifyMessage(id)
+    if (message) {
+      await notify('New Photo Upload', message)
+    }
   }
 }
