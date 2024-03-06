@@ -165,7 +165,7 @@
       </div>
     </div>
     <div v-else>
-      <v-alert text class="mb-0" type="info" color="grey darken-2">
+      <v-alert text class="mb-0" type="info" color="warning">
         No models available.
       </v-alert>
     </div>

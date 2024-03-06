@@ -33,5 +33,7 @@ Highcharts.setOptions({
     '#17becf'
   ]
 })
-
+// Highcharts.Pointer.prototype.reset = function () {
+//   return undefined
+// }
 Vue.use(HighchartsVue)

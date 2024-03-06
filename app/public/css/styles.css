@@ -15,3 +15,8 @@
 .v-stepper__header {
   box-shadow: none !important;
 }
+
+/* add background to start/end date inputs in stock chart */
+.highcharts-range-selector {
+  background-color: white !important;
+}

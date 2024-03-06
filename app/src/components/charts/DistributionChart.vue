@@ -1,23 +1,57 @@
 <template>
   <v-row class="justify-center mt-4">
-    <v-col cols="12" md="8">
+    <v-col cols="12" md="7">
       <highcharts :options="chartOptions" ref="chart"></highcharts>
     </v-col>
-    <v-col cols="12" md="4">
+    <v-col cols="12" md="5">
       <v-sheet class="text-body-2 px-4">
-        <div class="text-subtitle-1">About This Chart</div>
+        <div class="text-caption">Timeseries Mode</div>
+        <div class="d-flex align-center">
+          <b>Daily Mean</b>
+          <v-spacer></v-spacer>
+          <v-tooltip bottom max-width="400">
+            <template v-slot:activator="{ on }">
+              <v-btn
+                small
+                icon
+                v-on="on"
+                color="default"
+                class="ml-2"
+              ><v-icon small>mdi-information</v-icon></v-btn>
+            </template>
+            <div>Each point shows the <b>daily mean value</b> and rank percentile.</div>
+            <div>Photo associated with each point is the one taken closest to noon on that date.</div>
+          </v-tooltip>
+        </div>
+        <div class="text-caption mt-4">Selected Time Period</div>
+        <div class="d-flex align-center">
+          <div>
+            <b>{{ timeRange[0] | timestampFormat('lll') }} - {{ timeRange[1] | timestampFormat('lll') }}</b>
+          </div>
+          <v-spacer></v-spacer>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn
+                small
+                icon
+                v-on="on"
+                color="default"
+                class="ml-2"
+              ><v-icon small>mdi-information</v-icon></v-btn>
+            </template>
+            <span>Use the timeseries chart to change the time period</span>
+          </v-tooltip>
+        </div>
+        <div class="text-subtitle-1 mt-8">About This Chart</div>
         <v-divider class="mb-2"></v-divider>
         <p>
-          The Distribution Chart shows the cumulative distribution of daily mean values for each variable.
+          The Distribution Chart shows the cumulative distribution of each variable.
         </p>
         <p>
-          The x-axis represents the percentile rank, and the y-axis represents the daily mean value of each date.
+          The x-axis represents the percentile rank, and the y-axis represents the value of each date or photo depending on whether the Timeseries Mode is Daily or Instantaneous.
         </p>
         <p>
-          Hover over the chart to see the photo associated with each daily point, which is the photo taken closest to noon on that date.
-        </p>
-        <p>
-          Note that the <code>Show as Rank Percentile</code> option does not affect this chart since the x-axis is already in rank percentile.
+          Hover over the chart to see the photo associated with each point. If multiple variables are available, then all points corresponding to the current photo will be highlighted (one for each variable).
         </p>
       </v-sheet>
     </v-col>
@@ -28,6 +62,7 @@
 import { variables } from '@/lib/constants'
 import { format } from 'd3-format'
 import { utcFormat } from 'd3-time-format'
+
 const variableAxes = variables.map((variable, i) => {
   return {
     id: variable.id,
@@ -53,12 +88,10 @@ variableAxes.push({
 
 export default {
   name: 'DistributionChart',
-  props: ['series', 'images', 'station', 'play', 'speed'],
+  props: ['series', 'images', 'station', 'image', 'timeRange'],
   data () {
     return {
-      points: [],
-      imageIndex: 0,
-      playerTimout: null,
+      scaleValues: false,
       chartOptions: {
         animation: false,
         chart: {
@@ -73,11 +106,16 @@ export default {
           series: {
             animation: false,
             turboThreshold: 0,
+            states: {
+              inactive: {
+                opacity: 0.7
+              }
+            },
             tooltip: {
-              headerFormat: '<b>{series.name}</b><br>',
+              // headerFormat: '<b>{series.name}</b><br>',
               pointFormatter: function () {
                 const date = utcFormat('%B %d, %Y')(new Date(this.date))
-                return `Date: <b>${date}</b><br>Rank: <b>${format('.1%')(this.x)}</b><br>Value: <b>${format('.1f')(this.y)}</b>`
+                return `<br>Date: <b>${date}</b><br>Value: <b>${format('.1f')(this.y)}</b><br>Rank: <b>${format('.1%')(this.x)}</b>`
               }
             },
             point: {
@@ -88,6 +126,11 @@ export default {
               }
             }
           }
+        },
+        tooltip: {
+          // positioner: function () {
+          //   return { x: 90, y: 20 } // fixed position (top-left)
+          // }
         },
         xAxis: {
           title: {
@@ -106,21 +149,14 @@ export default {
     }
   },
   watch: {
-    play (val) {
-      if (val) {
-        this.startPlaying()
-      } else {
-        this.stopPlaying()
-      }
-    },
-    speed (val) {
-      if (this.play) {
-        this.stopPlaying()
-        this.startPlaying()
-      }
+    images () {
+      this.updateChart()
     },
     series () {
       this.updateChart()
+    },
+    image () {
+      this.highlightImage(this.image)
     }
   },
   async mounted () {
@@ -156,11 +192,11 @@ export default {
       return points
     },
     updateChart () {
-      this.points = this.generatePoints()
+      const points = this.generatePoints()
       const pointSeries = this.series.map((series, i) => {
         return {
           name: series.name,
-          data: this.points.map((d, j) => {
+          data: points.map((d, j) => {
             return {
               x: d.values[i] ? d.values[i].rank : null,
               y: d.values[i] ? d.values[i].value : null,
@@ -203,41 +239,21 @@ export default {
         series: pointSeries
       }, true, true, false)
     },
-    clearHover () {
-      this.chart.series
-        .filter(series => series.visible)
-        .forEach(series => {
-          series.points.forEach(point => {
-            point.setState()
-          })
+    highlightImage (image) {
+      this.chart.series.forEach(s => {
+        s.data.forEach(p => {
+          if (p.image && p.image === image) {
+            if (p.state !== 'hover') {
+              p.setState('hover')
+            }
+            p.graphic.toFront()
+          } else {
+            if (p.state === 'hover') {
+              p.setState('')
+            }
+          }
         })
-    },
-    hoverPoint (index) {
-      this.clearHover()
-      const x = this.chart.series[0].points[index].x
-      const points = this.chart.series
-        .filter(series => series.name !== 'Navigator 1' && series.visible)
-        .map(series => series.points.find(d => d.x === x))
-        .filter(d => d !== undefined)
-      if (points.length > 0) {
-        points.forEach(point => {
-          point.setState('hover')
-        })
-        this.chart.tooltip.refresh(points)
-      }
-    },
-    startPlaying () {
-      this.playerTimeout = setInterval(async () => {
-        const n = this.chart.series[0].points.length
-        this.imageIndex += 1
-        if (this.imageIndex >= n) {
-          this.imageIndex = 0
-        }
-        this.hoverPoint(this.imageIndex)
-      }, 1000 / this.speed)
-    },
-    stopPlaying () {
-      clearTimeout(this.playerTimeout)
+      })
     }
   }
 }

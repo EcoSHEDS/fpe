@@ -5,6 +5,8 @@
     :loading="loading"
     :value="selectedArray"
     :options="{ itemsPerPage: 5 }"
+    :sort-by="['has_model', 'images.count']"
+    :sort-desc="[true, true]"
     @click:row="select"
     single-select
     dense

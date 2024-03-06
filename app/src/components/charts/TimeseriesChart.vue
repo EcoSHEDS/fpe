@@ -1,10 +1,76 @@
 <template>
-  <highcharts constructor-type="stockChart" :options="chartOptions" ref="chart" class="mt-4"></highcharts>
+  <div>
+    <div class="d-flex px-8 py-4 align-center">
+      <div class="text-body-2">
+        <span style="vertical-align: middle;">Mode: <b>{{ mode === 'day' ? 'Daily Mean' : 'Instantaneous' }}</b></span>
+        <v-tooltip bottom max-width="400">
+          <template v-slot:activator="{ on }">
+            <v-btn
+              small
+              icon
+              v-on="on"
+              color="default"
+              class="ml-2"
+            ><v-icon small>mdi-information</v-icon></v-btn>
+          </template>
+          <div class="mb-2">When the selected time period is more than 30 days, the chart is in <b>Daily Mean</b> mode and each timeseries is aggregated to daily values. Only the photo taken closest to noon on each date will be shown.</div>
+          <div>Otherwise, the <b>Instantaneous</b> values of each variable along with all available photos will be shown.</div>
+        </v-tooltip>
+      </div>
+      <v-divider vertical class="mx-4"></v-divider>
+      <v-checkbox
+        :value="scaleValues"
+        color="default"
+        hide-details
+        class="mt-0 pt-0"
+        @change="$emit('update:scaleValues', !scaleValues)"
+      >
+        <template v-slot:label>
+          <div class="text-body-2 black--text">Show as Rank Percentile (0-100%)</div>
+        </template>
+      </v-checkbox>
+      <v-spacer></v-spacer>
+      <div class="d-flex align-center">
+        <v-menu offset-y>
+          <template v-slot:activator="{ on }">
+            <v-btn
+              small
+              depressed
+              v-on="on"
+              color="default"
+              class="ml-2"
+            >About This Chart</v-btn>
+          </template>
+          <v-card max-width="400">
+            <v-card-text class="black--text text-body-2">
+              <!-- <div class="text-subtitle-1">About This Chart</div>
+              <v-divider class="mb-2"></v-divider> -->
+              <p>
+                The Timeseries Chart shows when photos were taken along with the daily or instantanous values of any observed or modeled variables.
+              </p>
+              <p>
+                <b>Hover</b> over the chart to see the photo and values at each date and time.
+              </p>
+              <p>
+                Use the <b>time period selector</b> near the bottom of the chart, the zoom present buttons (1m, 3m, etc), or the date inputs to zoom in on a specific period. When the selected period is less than 30 days, the chart will show instantaneous values of each variable. Otherwise, it will show daily mean values along with the photos taken closest to noon on each date.
+              </p>
+              <p class="mb-0">
+                Use the legend to <b>show/hide</b> individual variables.
+              </p>
+            </v-card-text>
+          </v-card>
+        </v-menu>
+      </div>
+    </div>
+    <v-divider></v-divider>
+    <highcharts constructor-type="stockChart" :options="chartOptions" ref="chart"></highcharts>
+  </div>
 </template>
 
 <script>
 import { variables } from '@/lib/constants'
 import { format } from 'd3-format'
+
 const variableAxes = variables.map((variable, i) => {
   return {
     id: variable.id,
@@ -40,32 +106,12 @@ variableAxes.push({
   }
 })
 
-// const variableAxes = ['FLOW_CFS', 'SCORE', 'STAGE_FT'].map((variableId, i) => {
-//   return {
-//     id: variableId,
-//     title: {
-//       text: variableId
-//     },
-//     opposite: i > 0,
-//     top: '25%',
-//     height: '75%',
-//     showLastLabel: true,
-//     labels: {
-//       distance: 0,
-//       y: 4
-//     },
-//     offset: i === 0 ? 0 : undefined
-//   }
-// })
-
 export default {
   name: 'TimeseriesChart',
-  props: ['series', 'images', 'station', 'play', 'speed', 'scaleValues'],
+  props: ['series', 'images', 'station', 'image', 'scaleValues'],
   data () {
     return {
-      imageIndex: 0,
       mode: 'day', // 'day' or 'raw'
-      playerTimout: null,
       chartOptions: {
         animation: false,
         chart: {
@@ -91,24 +137,56 @@ export default {
             point: {
               events: {
                 mouseOver: (e) => {
-                  this.clearHover()
-                  // console.log('mouseOver', e.target.index)
-                  this.imageIndex = e.target.index
-                  this.hoverDate(e.target.x)
+                  const image = e.target.image
+                  if (image) {
+                    this.$emit('hover', image)
+                  }
                 }
               }
             }
           }
+        },
+        rangeSelector: {
+          buttons: [
+            {
+              type: 'month',
+              count: 1,
+              text: '1m',
+              title: 'View 1 month'
+            }, {
+              type: 'month',
+              count: 3,
+              text: '3m',
+              title: 'View 3 months'
+            }, {
+              type: 'month',
+              count: 6,
+              text: '6m',
+              title: 'View 6 months'
+            }, {
+              type: 'year',
+              count: 1,
+              text: '1y',
+              title: 'View 1 year'
+            }, {
+              type: 'all',
+              text: 'All',
+              title: 'View all'
+            }
+          ]
+        },
+        scrollbar: {
+          liveRedraw: false
         },
         legend: {
           enabled: true
         },
         tooltip: {
           animation: false,
-          split: false,
-          shared: true,
-          xDateFormat: '%b %e, %Y',
-          hideDelay: 999999999
+          // split: false,
+          // shared: true,
+          xDateFormat: '%b %e, %Y'
+          // hideDelay: 999999999
         },
         navigator: {
           enabled: true,
@@ -117,79 +195,40 @@ export default {
             marker: {
               enabled: true
             }
+          },
+          xAxis: {
+            ordinal: false
           }
         },
         xAxis: {
+          ordinal: false,
           events: {
-            // afterSetExtremes: this.afterSetExtremes
+            afterSetExtremes: this.afterSetExtremes
           }
         }
       }
     }
   },
   watch: {
-    play (val) {
-      if (val) {
-        this.startPlaying()
-      } else {
-        this.stopPlaying()
-      }
-    },
-    speed (val) {
-      if (this.play) {
-        this.stopPlaying()
-        this.startPlaying()
-      }
-    },
     series () {
       this.updateChart()
     },
     scaleValues () {
       this.updateChart()
+    },
+    image () {
+      this.highlightImage(this.image)
     }
   },
   async mounted () {
     this.chart = this.$refs.chart.chart
+    window.chart = this.chart
     await this.updateChart()
   },
   methods: {
-    async afterSetExtremes () {
-      // console.log('afterSetExtremes()')
-
-      const extremes = this.chart.xAxis[0].getExtremes()
-      const start = this.$date(extremes.min)
-      const end = this.$date(extremes.max)
-      const durationDays = end.diff(start, 'days')
-      // console.log(`extremes: ${start} to ${end} (${durationDays} days)`)
-
-      // await this.render()
-      // let mode = 'daily'
-      if (durationDays > 90) {
-        if (this.mode === 'day') return
-
-        // switch back to daily
-        this.mode = 'day'
-        for (const series of this.chart.series) {
-          series.setData(series.options.daily, false, false)
-        }
-        return this.chart.redraw()
-      }
-
-      this.chart.showLoading('Loading data...')
-      this.mode = 'raw'
-      for (const series of this.chart.series) {
-        if (series.name === 'Photo') {
-          const images = await this.fetchRawImages(this.station.id, start, end)
-          const seriesValues = images.map(d => ({ x: d.timestamp.valueOf(), y: 0, image: d }))
-          series.setData(seriesValues, false, false)
-        } else if (series.options.source === 'FPE') {
-          const values = await this.fetchRawData(this.station.id, series.options.variableId, start, end)
-          const seriesValues = values.map(d => ([d.timestampUtc.valueOf(), d.value]))
-          series.setData(seriesValues, false, false)
-        }
-      }
-      this.chart.render(false)
-      this.chart.hideLoading()
+    async afterSetExtremes (event) {
+      this.clearHighlight()
+      this.$emit('zoom', [new Date(event.min), new Date(event.max)])
     },
     async fetchRawImages (stationId, start, end) {
       const url = `/stations/${stationId}/images`
@@ -301,16 +340,13 @@ export default {
             hover: {
               radiusPlus: 5,
               opacity: 1
-            },
-            select: {
-              opacity: 1
             }
           }
         },
         color: 'goldenrod',
         tooltip: {
           pointFormatter: function () {
-            const timestamp = $date(this.image.timestamp).tz(timezone).format('LT z')
+            const timestamp = $date(this.image.timestamp).tz(timezone).format('LLL z')
             return `<span style="color:${this.color}">\u25CF</span> ${this.series.name.toUpperCase()}: <b>${timestamp}</b><br/>`
           },
           xDateFormat: '%b %e, %Y'
@@ -319,7 +355,12 @@ export default {
 
       const variableSeries = this.series.map((series, i) => {
         const dailyValues = series.data.map(d => {
-          return [d.dateUtc.valueOf(), this.scaleValues ? d.rank : d.value]
+          const image = this.images.find(image => image.date === d.date)?.image
+          return {
+            x: (new Date(d.date)).valueOf(),
+            y: this.scaleValues ? d.rank : d.value,
+            image
+          }
         })
         const s = {
           name: series.name,
@@ -333,7 +374,18 @@ export default {
             enabled: true
           },
           marker: {
-            symbol: 'circle'
+            enabled: true,
+            symbol: 'circle',
+            radius: 1,
+            states: {
+              normal: {
+                opacity: 1
+              },
+              hover: {
+                radiusPlus: 6,
+                opacity: 1
+              }
+            }
           },
           tooltip: {},
           states: {
@@ -372,75 +424,32 @@ export default {
         yAxis: yAxes,
         series: newSeries
       }, true, true, false)
-      // if (variableSeries.length === 0) {
-      //   this.chart.showNoData('No observed data or model results available')
-      // } else {
-      //   this.chart.hideNoData()
-      // }
-      this.hoverPoint(0)
     },
-    clearHover () {
-      this.chart.series
-        .filter(series => series.visible)
-        .forEach(series => {
-          series.points.forEach(point => {
-            point.setState()
-          })
-        })
-    },
-    hoverPoint (index) {
-      this.clearHover()
-      const x = this.chart.series[0].points[index].x
-      // console.log('hoverPoint', index, x, (new Date(x)).toISOString())
-      const points = this.chart.series
-        .filter(series => series.name !== 'Navigator 1' && series.visible)
-        .map(series => series.points.find(d => d.x === x))
-        .filter(d => d !== undefined)
-      if (points.length > 0) {
-        points.forEach(point => {
-          point.setState('hover')
-        })
-        this.chart.tooltip.refresh(points)
-        const date = (new Date(points[0].x)).toISOString().slice(0, 10)
-        this.hoverDate(date)
-      }
-    },
-    startPlaying () {
-      this.playerTimeout = setInterval(async () => {
-        const n = this.chart.series[0].points.length
-        this.imageIndex += 1
-        if (this.imageIndex >= n) {
-          this.imageIndex = 0
-        }
-        this.hoverPoint(this.imageIndex)
-      }, 1000 / this.speed)
-    },
-    stopPlaying () {
-      clearTimeout(this.playerTimeout)
-    },
-    hoverDate (millis) {
-      let image
-      if (this.mode === 'day') {
-        const date = (new Date(millis)).toISOString().slice(0, 10)
-        const item = this.images.find(d => d.date === date)
-        if (!item || !item.image) return
-        image = item.image
-        if (image) {
-          image.values = this.series.map(series => {
-            return {
-              variableId: series.variableId,
-              value: series.data.find(d => d.date === date)
+    highlightImage (image) {
+      this.chart.series.forEach(s => {
+        s.data.forEach(p => {
+          if (p.image && p.image === image) {
+            if (p.state !== 'hover') {
+              p.setState('hover')
             }
-          })
-        }
-      } else {
-        const item = this.chart.series[0].options.data.find(d => d.x >= millis)
-        if (item) {
-          image = item.image
-        }
-      }
-
-      this.$emit('hover', image)
+            p.graphic.toFront()
+          } else {
+            if (p.state === 'hover') {
+              p.setState('')
+            }
+          }
+        })
+      })
+    },
+    clearHighlight () {
+      this.chart.series.forEach(s => {
+        if (s.name === 'Navigator 1') return
+        s.data.forEach(p => {
+          if (p.state === 'hover') {
+            p.setState('')
+          }
+        })
+      })
     }
   }
 }

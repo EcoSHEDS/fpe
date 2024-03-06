@@ -14,40 +14,66 @@
         <canvas ref="image" class="elevation-4"></canvas>
       </div>
 
-      <v-container style="max-width: 550px;">
-        <v-row>
-          <v-col cols="3">
-            <v-btn
-              block
-              rounded
-              color="primary"
-              @click="player.playing = !player.playing"
-              v-if="!player.playing"
-            >
-              <v-icon small>mdi-play</v-icon> Play
-            </v-btn>
-            <v-btn
-              block
-              rounded
-              color="primary"
-              @click="player.playing = !player.playing"
-              v-else
-            >
-              <v-icon small>mdi-stop</v-icon> Stop
-            </v-btn>
-          </v-col>
-          <v-col cols="9">
-            <v-slider
-              v-model="player.speed"
-              label="Speed"
-              min="1"
-              max="100"
-              step="1"
-              hide-details
-            ></v-slider>
-          </v-col>
-        </v-row>
-      </v-container>
+      <div style="max-width: 600px;" class="d-flex mx-auto my-4">
+        <v-btn
+          rounded
+          outlined
+          color="primary"
+          @click="prevImage"
+          :disabled="player.playing"
+          class="mx-1"
+          title="Previous Image"
+        >
+          <v-icon>mdi-menu-left</v-icon> Prev
+        </v-btn>
+        <v-btn
+          rounded
+          outlined
+          color="primary"
+          @click="nextImage"
+          :disabled="player.playing"
+          class="mx-1"
+          title="Next Image"
+        >
+          <v-icon>mdi-menu-right</v-icon> Next
+        </v-btn>
+        <v-divider vertical class="mx-4"></v-divider>
+        <v-btn
+          v-if="!player.playing"
+          rounded
+          outlined
+          color="primary"
+          @click="startPlaying"
+          title="Start Playing"
+        >
+          <v-icon small>mdi-play</v-icon> Play
+        </v-btn>
+        <v-btn
+          v-else
+          rounded
+          color="error"
+          @click="stopPlaying"
+          title="Stop Playing"
+        >
+          <v-icon small>mdi-stop</v-icon> Stop
+        </v-btn>
+        <v-slider
+          v-model="player.speed"
+          color="black"
+          label="Speed"
+          min="1"
+          max="100"
+          step="1"
+          hide-details
+          class="ml-4"
+          title="Animation Speed"
+        ></v-slider>
+      </div>
+
+      <!-- <div v-if="image">
+        <pre>{{ timeRange }}</pre>
+        <pre>{{ imagesInTimeRange.length }}</pre>
+      </div> -->
 
       <div class="mt-4" style="padding-left:1px">
         <v-tabs v-model="tab" background-color="grey lighten-4">
@@ -57,15 +83,6 @@
           <!-- <v-tab>Models</v-tab> -->
           <v-spacer></v-spacer>
 
-          <v-divider vertical class="mx-4"></v-divider>
-          <div style="margin-top:-6px;">
-            <v-switch
-              v-model="scaleValues"
-              label="Show as Rank Percentile (0-100%)"
-              :disabled="tab === 1"
-            >
-            </v-switch>
-          </div>
           <v-divider vertical class="mx-4"></v-divider>
           <div style="width:300px;margin-top:8px;" class="pr-4">
             <v-select
@@ -98,36 +115,39 @@
               :station="station"
               :images="images"
               :series="selectedSeries"
-              :play="player.playing"
-              :speed="player.speed"
               :scale-values="scaleValues"
-              @hover="onHover"
-              ref="chart">
+              :image="image"
+              @hover="addImageToQueue"
+              @zoom="setTimeRange"
+              @update:scaleValues="scaleValues = $event"
+              ref="chart"
+            >
             </TimeseriesChart>
           </v-tab-item>
           <v-tab-item>
             <DistributionChart
               v-if="ready"
               :station="station"
-              :images="images"
+              :images="imagesInTimeRange"
               :series="selectedSeries"
-              :play="player.playing"
-              :speed="player.speed"
-              @hover="onHover"
-              ref="chart">
+              :image="image"
+              :time-range="timeRange"
+              @hover="addImageToQueue"
+            >
             </DistributionChart>
           </v-tab-item>
           <v-tab-item>
             <ScatterplotChart
               v-if="ready"
               :station="station"
-              :images="images"
+              :images="imagesInTimeRange"
               :series="selectedSeries"
-              :play="player.playing"
-              :speed="player.speed"
               :scale-values="scaleValues"
-              @hover="onHover"
-              ref="chart">
+              :image="image"
+              :time-range="timeRange"
+              @hover="addImageToQueue"
+              @update:scaleValues="scaleValues = $event"
+            >
             </ScatterplotChart>
           </v-tab-item>
           <!-- <v-tab-item>
@@ -155,6 +175,7 @@
 <script>
 import { rank, rollup, mean, max } from 'd3-array'
 import { csv } from 'd3-fetch'
+// import evt from '@/events'
 import nwis from '@/lib/nwis'
 import TimeseriesChart from '@/components/charts/TimeseriesChart'
 import DistributionChart from '@/components/charts/DistributionChart'
@@ -177,31 +198,41 @@ export default {
       tab: 0,
       scaleValues: false,
 
+      image: null,
       images: [],
       series: [],
       selectedSeries: [],
       models: [],
+      timeRange: null,
 
       queue: [],
       drawing: false,
-      imageShown: null,
       imageError: false,
 
-      maxHeight: 500,
+      maxHeight: 400,
       imageAspectRatio: null,
 
       player: {
+        timeout: null,
         playing: false,
         speed: 50
       }
     }
   },
   computed: {
+    imagesInTimeRange () {
+      if (!this.timeRange) return this.images
+      return this.images.filter(d => d.dateUtc >= this.timeRange[0] && d.dateUtc <= this.timeRange[1])
+    }
   },
   async mounted () {
     await this.init()
   },
-  watch: {},
+  watch: {
+    'player.speed' (val) {
+      this.changeSpeed()
+    }
+  },
   methods: {
     async init () {
       this.loading = true
@@ -229,13 +260,22 @@ export default {
         }
 
         if (this.station.nwis_id) {
-          const values = await this.fetchDailyNwisValues(this.station.nwis_id, startDate, endDate)
-          if (values.length > 0) {
+          const flowValues = await this.fetchDailyNwisValues(this.station.nwis_id, startDate, endDate, 'FLOW_CFS')
+          if (flowValues.length > 0) {
             series.push({
               variableId: 'FLOW_CFS',
               name: 'OBS. FLOW_CFS [NWIS]',
               source: 'NWIS',
-              data: values
+              data: flowValues
+            })
+          }
+          const stageValues = await this.fetchDailyNwisValues(this.station.nwis_id, startDate, endDate, 'STAGE_FT')
+          if (stageValues.length > 0) {
+            series.push({
+              variableId: 'STAGE_FT',
+              name: 'OBS. STAGE_FT [NWIS]',
+              source: 'NWIS',
+              data: stageValues
             })
           }
         }
@@ -266,6 +306,7 @@ export default {
         this.selectedSeries = this.series.slice()
         this.models = Object.freeze(models)
         this.ready = true
+        this.nextImage()
       } catch (error) {
         this.error = error
       } finally {
@@ -277,7 +318,7 @@ export default {
       const images = response.data
       images.forEach(d => {
         d.dateUtc = this.$date.utc(d.date)
-        d.dateLocal = this.$date.tz(d.date, this.station.utczone)
+        d.dateLocal = this.$date.tz(d.date, this.station.timezone)
       })
       return images
     },
@@ -286,16 +327,16 @@ export default {
       const values = response.data
       values.forEach(d => {
         d.dateUtc = this.$date.utc(d.date)
-        d.dateLocal = this.$date.tz(d.date, this.station.utczone)
+        d.dateLocal = this.$date.tz(d.date, this.station.timezone)
         d.value = d.mean
       })
       return values
     },
-    async fetchDailyNwisValues (nwisId, startDate, endDate) {
-      const values = await nwis.getDailyFlows(nwisId, startDate, endDate)
+    async fetchDailyNwisValues (nwisId, startDate, endDate, variable) {
+      const values = await nwis.getDailyValues(nwisId, startDate, endDate, variable)
       values.forEach(d => {
         d.dateUtc = this.$date.utc(d.date)
-        d.dateLocal = this.$date.tz(d.date, this.station.utczone)
+        d.dateLocal = this.$date.tz(d.date, this.station.timezone)
         d.value = d.mean
       })
       return values
@@ -317,6 +358,7 @@ export default {
         return {
           date,
           dateUtc: this.$date.utc(date),
+          dateLocal: this.$date.tz(date, this.station.timezone),
           value
         }
       })
@@ -329,14 +371,8 @@ export default {
       }
       return models
     },
-    onHover (image) {
+    addImageToQueue (image) {
       if (!image) return
-      const nextInQueue = this.queue.length > 0 ? this.queue[this.queue.length - 1] : null
-
-      // image is already at end of queue
-      if (nextInQueue && nextInQueue.id === image.id) return
-      // image is already being shown
-      if (this.imageShown && this.imageShown.id === image.id) return
 
       this.queue.push(image)
 
@@ -344,30 +380,42 @@ export default {
         this.drawImageFromQueue()
       }
     },
-    getNextImage () {
+    popImageQueue () {
       if (this.queue.length > 4) {
         this.queue.splice(0, this.queue.length - 5)
       }
       return this.queue.shift()
     },
-    drawImageFromQueue () {
-      if (!this.$refs.image) return
+    async drawImageFromQueue (tries = 0) {
+      if (!this.$refs.image) {
+        if (tries >= 10) {
+          this.drawing = false
+          return
+        }
+        return await new Promise(resolve => {
+          setTimeout(() => {
+            this.drawImageFromQueue(tries + 1)
+            resolve()
+          }, 100)
+        })
+      }
+
       const canvas = this.$refs.image
       const ctx = canvas.getContext('2d')
 
-      const image = this.getNextImage()
+      const image = this.popImageQueue()
 
       this.imageError = false
       this.drawing = true
       if (!image) {
         ctx.clearRect(0, 0, canvas.width, canvas.height)
-        this.imageShown = null
+        this.image = null
         this.drawing = false
         if (this.queue.length > 0) {
           this.drawImageFromQueue()
         }
       } else {
-        this.imageShown = image
+        this.image = image
         const imageElement = new Image()
         imageElement.crossOrigin = 'anonymous'
         imageElement.onload = () => {
@@ -394,6 +442,59 @@ export default {
         }
         imageElement.src = image.thumb_url
       }
+    },
+    nextImage () {
+      if (this.imagesInTimeRange.length === 0) return
+
+      // start with first image
+      if (!this.image) {
+        this.addImageToQueue(this.imagesInTimeRange[0].image)
+      } else {
+        // find index of current image
+        const index = this.imagesInTimeRange.findIndex(d => d.image === this.image)
+        if (index < this.imagesInTimeRange.length - 1) {
+          // next image
+          this.addImageToQueue(this.imagesInTimeRange[index + 1].image)
+        } else {
+          // current image is last, jump first image
+          this.addImageToQueue(this.imagesInTimeRange[0].image)
+        }
+      }
+    },
+    prevImage () {
+      if (this.imagesInTimeRange.length === 0) return
+
+      // start with last image
+      if (!this.image) {
+        this.addImageToQueue(this.imagesInTimeRange[this.imagesInTimeRange.length - 1].image)
+      } else {
+        // find index of current image
+        const index = this.imagesInTimeRange.findIndex(d => d.image === this.image)
+        if (index === 0) {
+          // current image is last, jump to last image
+          this.addImageToQueue(this.imagesInTimeRange[this.imagesInTimeRange.length - 1].image)
+        } else {
+          // previous image
+          this.addImageToQueue(this.imagesInTimeRange[index - 1].image)
+        }
+      }
+    },
+    changeSpeed () {
+      if (this.player.playing) {
+        this.stopPlaying()
+        this.startPlaying()
+      }
+    },
+    startPlaying () {
+      this.player.playing = true
+      this.player.timeout = setInterval(this.nextImage, 5000 / this.player.speed)
+    },
+    stopPlaying () {
+      clearTimeout(this.player.timeout)
+      this.player.playing = false
+    },
+    setTimeRange (range) {
+      this.timeRange = range
     }
     // chartCanvas () {
     //   const svgString = this.$refs.chart.chart.container.innerHTML

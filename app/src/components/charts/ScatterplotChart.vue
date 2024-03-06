@@ -12,9 +12,10 @@
             :items="series"
             item-text="name"
             dense
+            outlined
             hide-details
             return-object
-            class="mb-8"
+            class="my-4"
           ></v-select>
           <v-select
             v-model="ySeries"
@@ -22,11 +23,22 @@
             :items="series"
             item-text="name"
             dense
+            outlined
             hide-details
             return-object
             class="my-4"
           ></v-select>
-          <div class="text-subtitle-1 mt-8">About This Chart</div>
+
+          <v-checkbox
+            :value="scaleValues"
+            color="default"
+            label="Show as Rank Percentile (0-100%)"
+            hide-details
+            @change="$emit('update:scaleValues', !scaleValues)"
+          >
+          </v-checkbox>
+
+          <div class="text-subtitle-1 mt-4">About This Chart</div>
           <v-divider class="mb-2"></v-divider>
           <p>
             The Scatter Chart shows the relationship between the daily mean values of two variables.
@@ -52,14 +64,15 @@ import { utcFormat } from 'd3-time-format'
 
 export default {
   name: 'ScatterChart',
-  props: ['series', 'images', 'station', 'play', 'speed', 'scaleValues'],
+  props: ['series', 'images', 'station', 'image', 'scaleValues', 'timeRange'],
   data () {
     return {
       points: [],
       imageIndex: 0,
-      playerTimout: null,
+
       xSeries: null,
       ySeries: null,
+
       chartOptions: {
         animation: false,
         chart: {
@@ -77,8 +90,7 @@ export default {
             point: {
               events: {
                 mouseOver: (e) => {
-                  this.clearHover()
-                  this.hoverImage(e.target.image)
+                  this.$emit('hover', e.target.image)
                 }
               }
             }
@@ -91,20 +103,10 @@ export default {
     }
   },
   watch: {
-    play (val) {
-      if (val) {
-        this.startPlaying()
-      } else {
-        this.stopPlaying()
-      }
-    },
-    speed (val) {
-      if (this.play) {
-        this.stopPlaying()
-        this.startPlaying()
-      }
-    },
     scaleValues (val) {
+      this.updateChart()
+    },
+    images (val) {
       this.updateChart()
     },
     series (val) {
@@ -115,6 +117,9 @@ export default {
     },
     ySeries (val) {
       this.updateChart()
+    },
+    image () {
+      this.highlightImage(this.image)
     }
   },
   async mounted () {
@@ -206,7 +211,7 @@ export default {
           min: 0,
           max: 1,
           type: 'linear',
-          gridlineWidth: 1,
+          gridLineWidth: 1,
           labels: {
             formatter: function () {
               return format('.0%')(this.value)
@@ -225,7 +230,7 @@ export default {
           min: 0,
           max: 1,
           type: 'linear',
-          gridlineWidth: 1,
+          gridLineWidth: 1,
           labels: {
             formatter: function () {
               return format('.0%')(this.value)
@@ -243,7 +248,7 @@ export default {
             text: this.xSeries.name
           },
           type: this.xSeries.variableId === 'FLOW_CFS' ? 'logarithmic' : 'linear',
-          gridlineWidth: 1,
+          gridLineWidth: 1,
           labels: {
             formatter: function () {
               return format('.1f')(this.value)
@@ -260,7 +265,7 @@ export default {
             text: this.ySeries.name
           },
           type: this.ySeries.variableId === 'FLOW_CFS' ? 'logarithmic' : 'linear',
-          gridlineWidth: 1,
+          gridLineWidth: 1,
           labels: {
             formatter: function () {
               return format('.1f')(this.value)
@@ -288,46 +293,21 @@ export default {
         series: pointSeries
       }, true, true)
     },
-    clearHover () {
-      this.chart.series
-        .filter(series => series.visible)
-        .forEach(series => {
-          series.points.forEach(point => {
-            point.setState()
-          })
+    highlightImage (image) {
+      this.chart.series.forEach(s => {
+        s.data.forEach(p => {
+          if (p.image && p.image === image) {
+            if (p.state !== 'hover') {
+              p.setState('hover')
+            }
+            p.graphic.toFront()
+          } else {
+            if (p.state === 'hover') {
+              p.setState('')
+            }
+          }
         })
-    },
-    hoverPoint (index) {
-      this.clearHover()
-      const x = this.chart.series[0].points[index].x
-      const points = this.chart.series
-        .filter(series => series.name !== 'Navigator 1' && series.visible)
-        .map(series => series.points.find(d => d.x === x))
-        .filter(d => d !== undefined)
-      if (points.length > 0) {
-        points.forEach(point => {
-          point.setState('hover')
-        })
-        this.chart.tooltip.refresh(points)
-        // const date = (new Date(points[0].x)).toISOString().slice(0, 10)
-        // this.hoverImage(date)
-      }
-    },
-    startPlaying () {
-      this.playerTimeout = setInterval(async () => {
-        const n = this.chart.series[0].points.length
-        this.imageIndex += 1
-        if (this.imageIndex >= n) {
-          this.imageIndex = 0
-        }
-        this.hoverPoint(this.imageIndex)
-      }, 1000 / this.speed)
-    },
-    stopPlaying () {
-      clearTimeout(this.playerTimeout)
-    },
-    hoverImage (image) {
-      this.$emit('hover', image)
+      })
     }
   }
 }
