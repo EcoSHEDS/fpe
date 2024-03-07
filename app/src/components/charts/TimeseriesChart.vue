@@ -2,7 +2,7 @@
   <div>
     <div class="d-flex px-8 py-4 align-center">
       <div class="text-body-2">
-        <span style="vertical-align: middle;">Mode: <b>{{ mode === 'day' ? 'Daily Mean' : 'Instantaneous' }}</b></span>
+        <span style="vertical-align: middle;">Mode: <b>{{ mode === 'DAY' ? 'Daily Mean' : 'Instantaneous' }}</b></span>
         <v-tooltip bottom max-width="400">
           <template v-slot:activator="{ on }">
             <v-btn
@@ -70,6 +70,21 @@
 <script>
 import { variables } from '@/lib/constants'
 import { format } from 'd3-format'
+// import Highcharts from 'highcharts'
+// const COLORS = Highcharts.getOptions().colors
+
+const COLORS = [
+  '#1f77b4',
+  '#ff7f0e',
+  '#2ca02c',
+  '#d62728',
+  '#9467bd',
+  '#8c564b',
+  '#e377c2',
+  '#7f7f7f',
+  '#bcbd22',
+  '#17becf'
+]
 
 const variableAxes = variables.map((variable, i) => {
   return {
@@ -84,7 +99,6 @@ const variableAxes = variables.map((variable, i) => {
     endOnTick: true,
     type: variable?.axis?.type || 'linear',
     labels: {
-      distance: 0,
       y: 4
     }
   }
@@ -101,20 +115,18 @@ variableAxes.push({
   endOnTick: true,
   type: 'linear',
   labels: {
-    distance: 0,
     y: 4
   }
 })
 
 export default {
   name: 'TimeseriesChart',
-  props: ['series', 'images', 'station', 'image', 'scaleValues'],
+  props: ['loading', 'series', 'images', 'station', 'image', 'scaleValues', 'mode', 'instantaneous'],
   data () {
     return {
-      mode: 'day', // 'day' or 'raw'
       chartOptions: {
-        animation: false,
         chart: {
+          animation: false,
           zoomType: 'x'
         },
         time: {
@@ -136,12 +148,12 @@ export default {
             turboThreshold: 0,
             point: {
               events: {
-                mouseOver: (e) => {
-                  const image = e.target.image
-                  if (image) {
-                    this.$emit('hover', image)
-                  }
-                }
+                // mouseOver: (e) => {
+                //   const image = e.target.image
+                //   if (image) {
+                //     this.$emit('hover', image)
+                //   }
+                // }
               }
             }
           }
@@ -190,6 +202,7 @@ export default {
         },
         navigator: {
           enabled: true,
+          adaptToUpdatedData: false,
           series: {
             type: 'line',
             marker: {
@@ -198,6 +211,12 @@ export default {
           },
           xAxis: {
             ordinal: false
+          },
+          yAxis: {
+            min: -2,
+            max: 1,
+            startOnTick: true,
+            endOnTick: true
           }
         },
         xAxis: {
@@ -218,6 +237,17 @@ export default {
     },
     image () {
       this.highlightImage(this.image)
+    },
+    instantaneous () {
+      this.render()
+    },
+    loading () {
+      if (!this.chart) return
+      if (this.loading) {
+        this.chart.showLoading()
+      } else {
+        this.chart.hideLoading()
+      }
     }
   },
   async mounted () {
@@ -227,41 +257,63 @@ export default {
   },
   methods: {
     async afterSetExtremes (event) {
+      // console.log('afterSetExtremes', event)
       this.clearHighlight()
       this.$emit('zoom', [new Date(event.min), new Date(event.max)])
     },
-    async fetchRawImages (stationId, start, end) {
-      const url = `/stations/${stationId}/images`
-      const response = await this.$http.public.get(url, {
-        params: {
-          start: this.$date(start).toISOString(),
-          end: this.$date(end).toISOString()
-        }
-      })
-      const images = response.data
-      images.forEach(d => {
-        d.timestampRaw = d.timestamp
-        d.timestamp = this.$date(d.timestamp).tz(this.station.timezone)
-        d.timestampUtc = this.$date(d.timestampRaw).add(d.timestamp.utcOffset() / 60, 'hour').toDate()
-      })
-      return images.filter(d => d.timestamp.isBetween(start, end, null, '[]'))
+    render () {
+      if (this.mode === 'INST') {
+        this.renderInstantaneous()
+      } else {
+        this.renderDaily()
+      }
     },
-    async fetchRawData (stationId, variableId, start, end) {
-      const url = `/stations/${stationId}/values`
-      const response = await this.$http.public.get(url, {
-        params: {
-          variable: variableId,
-          start: this.$date(start).subtract(1, 'day').toISOString(),
-          end: this.$date(end).add(1, 'day').toISOString()
+    renderInstantaneous () {
+      // console.log('renderInstantaneous')
+
+      this.chart.series.forEach(s => {
+        if (s.name === 'Navigator 1') return
+
+        if (s.name === 'Photo') {
+          const images = this.instantaneous.images.map(d => {
+            return { x: (new Date(d.timestamp)).valueOf(), y: 0, image: d }
+          })
+          s.setData(images, false, false, false, false)
+        } else {
+          // console.log(s)
+          const instantaneousSeries = this.instantaneous.series.find(ss => ss.name === s.name)
+          if (instantaneousSeries) {
+            if (s.options.marker.enabled) {
+              // update marker with image values
+              const imageValues = this.instantaneous.images.map(d => {
+                const value = d.values.find(v => v.name === s.name)
+                return {
+                  x: (new Date(d.timestamp)).valueOf(),
+                  y: value !== undefined ? (this.scaleValues ? value.rank : value.value) : null,
+                  image: d
+                }
+              })
+              s.setData(imageValues, false, false, false, false)
+            } else {
+              // update line with series values
+              const seriesValues = instantaneousSeries.data.map(d => {
+                return {
+                  x: (new Date(d.timestamp)).valueOf(),
+                  y: this.scaleValues ? d.rank : d.value
+                }
+              })
+              s.setData(seriesValues, false, false, false, false)
+            }
+          }
         }
       })
-      const values = response.data
-      values.forEach((d, i) => {
-        d.timestampRaw = d.timestamp
-        d.timestamp = this.$date(d.timestamp).tz(this.station.timezone)
-        d.timestampUtc = this.$date(d.timestampRaw).add(d.timestamp.utcOffset() / 60, 'hour')
+      this.chart.render(true, false, false)
+    },
+    renderDaily () {
+      this.chart.series.forEach(s => {
+        s.setData(s.options.daily, false, false, false, false)
       })
-      return values
+      this.chart.render(true, false, false)
     },
     updateChart () {
       const seriesVariableIds = this.series.map(d => d.variableId)
@@ -283,7 +335,7 @@ export default {
               return (this.value * 100).toFixed(0) + '%'
             },
             y: 5,
-            x: 0
+            x: 40
           },
           opposite: false,
           startOnTick: true,
@@ -295,6 +347,7 @@ export default {
         dataAxes = variableAxes.filter(d => seriesVariableIds.includes(d.id))
         dataAxes.forEach((axis, i) => {
           axis.opposite = i > 0
+          axis.labels.x = i > 0 ? 10 : 40
           axis.gridLineWidth = i > 0 ? 0 : 1
         })
       }
@@ -303,7 +356,11 @@ export default {
           id: 'images',
           title: {
             text: 'Photos',
-            x: -10
+            align: 'middle',
+            rotation: 0,
+            textAlign: 'right',
+            y: 4,
+            x: -5
           },
           labels: {
             enabled: false
@@ -315,10 +372,11 @@ export default {
         ...dataAxes
       ]
       const dailyImages = this.images.map(d => {
-        return { x: (new Date(d.date)).valueOf(), y: 0, image: d.image }
+        return { x: (new Date(d.date)).valueOf(), y: 0, image: d }
       })
       const $date = this.$date
       const timezone = this.station.timezone
+      const that = this
       const imagesSeries = {
         name: 'Photo',
         data: dailyImages,
@@ -347,6 +405,7 @@ export default {
         tooltip: {
           pointFormatter: function () {
             const timestamp = $date(this.image.timestamp).tz(timezone).format('LLL z')
+            that.$emit('hover', this.image)
             return `<span style="color:${this.color}">\u25CF</span> ${this.series.name.toUpperCase()}: <b>${timestamp}</b><br/>`
           },
           xDateFormat: '%b %e, %Y'
@@ -354,25 +413,57 @@ export default {
       }
 
       const variableSeries = this.series.map((series, i) => {
-        const dailyValues = series.data.map(d => {
-          const image = this.images.find(image => image.date === d.date)?.image
+        const seriesValues = series.data.map(d => {
           return {
             x: (new Date(d.date)).valueOf(),
-            y: this.scaleValues ? d.rank : d.value,
-            image
+            y: this.scaleValues ? d.rank : d.value
           }
         })
-        const s = {
+        const lineSeries = {
           name: series.name,
           source: series.source,
           variableId: series.variableId,
-          data: dailyValues,
-          daily: dailyValues,
+          data: seriesValues,
+          daily: seriesValues,
           yAxis: this.scaleValues ? 'values' : series.variableId,
           gapSize: 2,
           legend: {
             enabled: true
           },
+          color: COLORS[i],
+          marker: {
+            enabled: false
+          },
+          enableMouseTracking: false,
+          states: {
+            hover: {
+              halo: {
+                size: 0
+              }
+            },
+            inactive: {
+              opacity: 1
+            }
+          }
+        }
+        const imageValues = this.images.map(d => {
+          const value = d.values.find(v => v.name === series.name)
+          return {
+            x: (new Date(d.date)).valueOf(),
+            y: value !== undefined ? (this.scaleValues ? value.rank : value.value) : null,
+            image: d
+          }
+        })
+        const markerSeries = {
+          name: series.name,
+          linkedTo: ':previous',
+          source: series.source,
+          variableId: series.variableId,
+          data: imageValues,
+          daily: imageValues,
+          yAxis: this.scaleValues ? 'values' : series.variableId,
+          color: COLORS[i],
+          lineWidth: 0,
           marker: {
             enabled: true,
             symbol: 'circle',
@@ -390,24 +481,23 @@ export default {
           tooltip: {},
           states: {
             hover: {
-              lineWidthPlus: 0,
-              halo: {
-                size: 0
-              }
+              lineWidthPlus: 0
             }
           }
         }
+
         if (this.scaleValues) {
-          s.tooltip.pointFormatter = function () {
+          markerSeries.tooltip.pointFormatter = function () {
             return `<span style="color:${this.color}">\u25CF</span> ${this.series.name.toUpperCase()}: <b>${format('.1%')(this.y)}</b><br/>`
           }
         } else {
-          s.tooltip.pointFormatter = function () {
+          markerSeries.tooltip.pointFormatter = function () {
             return `<span style="color:${this.color}">\u25CF</span> ${this.series.name.toUpperCase()}: <b>${format('.1f')(this.y)}</b><br/>`
           }
         }
-        return s
-      })
+        return [lineSeries, markerSeries]
+      }).flat()
+
       const newSeries = [imagesSeries, ...variableSeries]
 
       // first clear out chart to reset series and yAxes
@@ -416,23 +506,26 @@ export default {
         yAxis: [],
         series: []
       }, true, true, false)
-      this.chart.colorCounter = 0
       this.chart.update({
-        // time: {
-        //   timezone: this.station.timezone
-        // },
         yAxis: yAxes,
         series: newSeries
       }, true, true, false)
+      this.render()
     },
     highlightImage (image) {
+      // console.log(image)
       this.chart.series.forEach(s => {
-        s.data.forEach(p => {
-          if (p.image && p.image === image) {
+        if (!s.options.marker.enabled) return
+        // console.log(s.name, s)
+        s.points.forEach(p => {
+          // console.log(p.image)
+          if (p.image && p.image.id === image.id) {
             if (p.state !== 'hover') {
               p.setState('hover')
             }
-            p.graphic.toFront()
+            if (p.graphic) {
+              p.graphic.toFront()
+            }
           } else {
             if (p.state === 'hover') {
               p.setState('')

@@ -137,7 +137,7 @@ export default {
         const yValue = this.ySeries.data.find(d => d.date === date)
         return {
           date: image.date,
-          image: image.image,
+          image,
           xValue,
           yValue
         }

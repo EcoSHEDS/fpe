@@ -112,11 +112,14 @@
           <v-tab-item>
             <TimeseriesChart
               v-if="ready"
+              :loading="loadingData"
               :station="station"
               :images="images"
               :series="selectedSeries"
               :scale-values="scaleValues"
               :image="image"
+              :mode="mode"
+              :instantaneous="instantaneous"
               @hover="addImageToQueue"
               @zoom="setTimeRange"
               @update:scaleValues="scaleValues = $event"
@@ -132,6 +135,7 @@
               :series="selectedSeries"
               :image="image"
               :time-range="timeRange"
+              :mode="mode"
               @hover="addImageToQueue"
             >
             </DistributionChart>
@@ -175,12 +179,14 @@
 <script>
 import { rank, rollup, mean, max } from 'd3-array'
 import { csv } from 'd3-fetch'
-// import evt from '@/events'
+import { scaleUtc } from 'd3-scale'
 import nwis from '@/lib/nwis'
 import TimeseriesChart from '@/components/charts/TimeseriesChart'
 import DistributionChart from '@/components/charts/DistributionChart'
 import ScatterplotChart from '@/components/charts/ScatterplotChart'
 // import { Canvg } from 'canvg'
+
+const MODE_DAY_MINIMUM = 30 // minimum number of days for mode='DAY'
 
 export default {
   name: 'StationPhotos',
@@ -193,9 +199,11 @@ export default {
   data () {
     return {
       loading: true,
+      loadingData: false,
       error: null,
       ready: false,
       tab: 0,
+
       scaleValues: false,
 
       image: null,
@@ -203,7 +211,10 @@ export default {
       series: [],
       selectedSeries: [],
       models: [],
+      instantaneous: null,
       timeRange: null,
+      timeRangeDuration: null,
+      mode: 'DAY',
 
       queue: [],
       drawing: false,
@@ -222,6 +233,9 @@ export default {
   computed: {
     imagesInTimeRange () {
       if (!this.timeRange) return this.images
+      if (this.mode === 'INST' && this.instantaneous) {
+        return this.instantaneous.images.filter(d => d.timestamp >= this.timeRange[0] && d.timestamp <= this.timeRange[1])
+      }
       return this.images.filter(d => d.dateUtc >= this.timeRange[0] && d.dateUtc <= this.timeRange[1])
     }
   },
@@ -239,6 +253,7 @@ export default {
       this.error = null
       try {
         const images = await this.fetchDailyImages()
+        // console.log(images[0])
 
         const startDate = images[0].date
         const endDate = images[images.length - 1].date
@@ -246,58 +261,20 @@ export default {
         const variableIds = this.station.summary.values.variables
           .map(d => d.variable_id)
 
-        const series = []
-        for (const variableId of variableIds) {
-          const values = await this.fetchDailyValues(variableId, startDate, endDate)
-          if (values.length > 0) {
-            series.push({
-              variableId,
-              name: `OBS. ${variableId} [FPE]`,
-              source: 'FPE',
-              data: values
-            })
-          }
-        }
-
-        if (this.station.nwis_id) {
-          const flowValues = await this.fetchDailyNwisValues(this.station.nwis_id, startDate, endDate, 'FLOW_CFS')
-          if (flowValues.length > 0) {
-            series.push({
-              variableId: 'FLOW_CFS',
-              name: 'OBS. FLOW_CFS [NWIS]',
-              source: 'NWIS',
-              data: flowValues
-            })
-          }
-          const stageValues = await this.fetchDailyNwisValues(this.station.nwis_id, startDate, endDate, 'STAGE_FT')
-          if (stageValues.length > 0) {
-            series.push({
-              variableId: 'STAGE_FT',
-              name: 'OBS. STAGE_FT [NWIS]',
-              source: 'NWIS',
-              data: stageValues
-            })
-          }
-        }
-
         const models = await this.fetchModels()
-        if (models.length > 0) {
-          models.forEach(model => {
-            series.push({
-              variableId: 'SCORE',
-              name: `MODEL SCORE [${model.code}]`,
-              source: 'MODEL',
-              data: model.values.filter(d => d.date >= startDate && d.date <= endDate)
-            })
-          })
-        }
+        const series = await this.fetchDailySeries(variableIds, startDate, endDate, models)
 
-        series.forEach(s => {
-          const values = s.data.map(d => d.value)
-          const ranks = rank(values)
-          const maxRank = max(ranks)
-          s.data.forEach((d, i) => {
-            d.rank = ranks[i] / maxRank
+        images.forEach(d => {
+          d.values = []
+          series.forEach(s => {
+            const datum = s.data.find(v => v.date === d.date)
+            d.values.push({
+              variableId: s.variableId,
+              name: s.name,
+              source: s.source,
+              value: datum?.value,
+              rank: datum?.rank
+            })
           })
         })
 
@@ -313,14 +290,188 @@ export default {
         this.loading = false
       }
     },
+    async fetchInstantaneous () {
+      // console.log('fetchInstantaneous', this.timeRange)
+      if (!this.timeRange) return
+
+      this.loadingData = true
+
+      const startDate = this.$date(this.timeRange[0]).subtract(1, 'day')
+      const endDate = this.$date(this.timeRange[1]).add(1, 'day')
+
+      const images = await this.fetchInstantaneousImages(startDate, endDate)
+      const series = await this.fetchInstantaneousSeriesData(this.series, this.models, startDate, endDate)
+
+      images.forEach(d => {
+        d.values = []
+      })
+      series.forEach(s => {
+        const values = s.data.filter(d => d.value !== null)
+        const valueScale = scaleUtc(values.map(d => d.timestamp), values.map(d => d.value))
+        const rankScale = scaleUtc(values.map(d => d.timestamp), values.map(d => d.rank))
+        images.forEach(d => {
+          const nextIndex = values.findIndex(v => v.timestamp >= d.timestamp)
+          // only add if image timestamp within 60 minutes from prev or next value
+          if (nextIndex > 0 &&
+              ((values[nextIndex].timestamp - d.timestamp) < 60 * 60 * 1000) &&
+              ((d.timestamp - values[nextIndex - 1].timestamp) < 60 * 60 * 1000)) {
+            d.values.push({
+              variableId: s.variableId,
+              name: s.name,
+              source: s.source,
+              value: valueScale(d.timestamp),
+              rank: rankScale(d.timestamp)
+            })
+          }
+        })
+      })
+
+      this.loadingData = false
+
+      return {
+        images,
+        series
+      }
+    },
+    async fetchInstantaneousImages (startDate, endDate) {
+      const response = await this.$http.public.get(`/stations/${this.station.id}/images?start=${startDate.toISOString().substring(0, 10)}&end=${endDate.toISOString().substring(0, 10)}`)
+      const images = response.data
+      images.forEach(d => {
+        d.timestamp = new Date(d.timestamp)
+      })
+      return images
+    },
+    async fetchInstantaneousSeriesData (series, models, startDate, endDate) {
+      const instSeries = []
+      for (const s of series) {
+        if (s.source === 'FPE') {
+          const values = await this.fetchInstantaneousValues(s.variableId, startDate, endDate)
+          if (values.length > 0) {
+            instSeries.push({
+              variableId: s.variableId,
+              name: `OBS. ${s.variableId} [FPE]`,
+              source: 'FPE',
+              data: values
+            })
+          }
+        } else if (s.source === 'NWIS') {
+          const values = await this.fetchInstantaneousNwisValues(this.station.nwis_id, startDate, endDate, s.variableId)
+          if (values.length > 0) {
+            instSeries.push({
+              variableId: s.variableId,
+              name: `OBS. ${s.variableId} [NWIS]`,
+              source: 'NWIS',
+              data: values
+            })
+          }
+        }
+      }
+      for (const model of models) {
+        const values = model.values.filter(d => d.timestamp >= startDate && d.timestamp <= endDate)
+        instSeries.push({
+          variableId: 'SCORE',
+          name: `MODEL SCORE [${model.code}]`,
+          source: 'MODEL',
+          data: values
+        })
+      }
+
+      instSeries.forEach(s => {
+        const values = s.data.map(d => d.value)
+        const ranks = rank(values)
+        const maxRank = max(ranks)
+        s.data.forEach((d, i) => {
+          d.rank = ranks[i] / maxRank
+        })
+      })
+
+      return instSeries
+    },
+    async fetchInstantaneousValues (variableId, startDate, endDate) {
+      const response = await this.$http.public.get(`/stations/${this.station.id}/values?variableId=${variableId}&start=${startDate.toISOString().substring(0, 10)}&end=${endDate.toISOString().substring(0, 10)}`)
+      const values = response.data
+      // values.forEach(d => {
+      //   d.dateUtc = this.$date.utc(d.date)
+      //   d.dateLocal = this.$date.tz(d.date, this.station.timezone)
+      //   d.value = d.mean
+      // })
+      return values
+    },
+    async fetchInstantaneousNwisValues (nwisId, startDate, endDate, variable) {
+      const values = await nwis.getInstantaneousValues(nwisId, startDate.toISOString().substring(0, 10), endDate.toISOString().substring(0, 10), variable)
+      // values.forEach(d => {
+      //   d.dateUtc = this.$date.utc(d.date)
+      //   d.dateLocal = this.$date.tz(d.date, this.station.timezone)
+      //   d.value = d.mean
+      // })
+      return values
+    },
+    async fetchDailySeries (variableIds, startDate, endDate, models) {
+      const series = []
+      for (const variableId of variableIds) {
+        const values = await this.fetchDailyValues(variableId, startDate, endDate)
+        if (values.length > 0) {
+          series.push({
+            variableId,
+            name: `OBS. ${variableId} [FPE]`,
+            source: 'FPE',
+            data: values
+          })
+        }
+      }
+
+      if (this.station.nwis_id) {
+        const flowValues = await this.fetchDailyNwisValues(this.station.nwis_id, startDate, endDate, 'FLOW_CFS')
+        if (flowValues.length > 0) {
+          series.push({
+            variableId: 'FLOW_CFS',
+            name: 'OBS. FLOW_CFS [NWIS]',
+            source: 'NWIS',
+            data: flowValues
+          })
+        }
+        const stageValues = await this.fetchDailyNwisValues(this.station.nwis_id, startDate, endDate, 'STAGE_FT')
+        if (stageValues.length > 0) {
+          series.push({
+            variableId: 'STAGE_FT',
+            name: 'OBS. STAGE_FT [NWIS]',
+            source: 'NWIS',
+            data: stageValues
+          })
+        }
+      }
+
+      if (models.length > 0) {
+        models.forEach(model => {
+          series.push({
+            variableId: 'SCORE',
+            name: `MODEL SCORE [${model.code}]`,
+            source: 'MODEL',
+            data: model.dailyValues.filter(d => d.date >= startDate && d.date <= endDate)
+          })
+        })
+      }
+
+      series.forEach(s => {
+        const values = s.data.map(d => d.value)
+        const ranks = rank(values)
+        const maxRank = max(ranks)
+        s.data.forEach((d, i) => {
+          d.rank = ranks[i] / maxRank
+        })
+      })
+
+      return series
+    },
     async fetchDailyImages () {
       const response = await this.$http.public.get(`/stations/${this.station.id}/daily/images`)
       const images = response.data
-      images.forEach(d => {
-        d.dateUtc = this.$date.utc(d.date)
-        d.dateLocal = this.$date.tz(d.date, this.station.timezone)
-      })
-      return images
+      return images.map(d => ({
+        ...d.image,
+        date: d.date,
+        dateUtc: this.$date.utc(d.date),
+        dateLocal: this.$date.tz(d.date, this.station.timezone)
+      }))
     },
     async fetchDailyValues (variableId, startDate, endDate) {
       const response = await this.$http.public.get(`/stations/${this.station.id}/daily/values?variableId=${variableId}&start=${startDate}&end=${endDate}`)
@@ -341,33 +492,33 @@ export default {
       })
       return values
     },
-    async fetchDailyModelPredictions (model) {
+    async fetchModelPredictions (model) {
       if (!model || !model.predictions_url) return []
       const values = await csv(model.predictions_url, d => {
         return {
           date: d.timestamp.substring(0, 10),
           // dateUtc: this.$date.utc(d.timestamp.substring(0, 10)),
           timestamp: new Date(d.timestamp),
-          score: +d.score
+          value: +d.score
         }
       })
-      const dailyRollup = rollup(values, v => {
-        return mean(v, d => d.score)
-      }, d => d.date)
-      const dailyValues = Array.from(dailyRollup, ([date, value]) => {
-        return {
-          date,
-          dateUtc: this.$date.utc(date),
-          dateLocal: this.$date.tz(date, this.station.timezone),
-          value
-        }
-      })
-      return dailyValues
+      return values
     },
     async fetchModels () {
       const models = this.station.models
       for (const model of models) {
-        model.values = await this.fetchDailyModelPredictions(model)
+        model.values = await this.fetchModelPredictions(model)
+        const dailyRollup = rollup(model.values, v => {
+          return mean(v, d => d.value)
+        }, d => d.date)
+        model.dailyValues = Array.from(dailyRollup, ([date, value]) => {
+          return {
+            date,
+            dateUtc: this.$date.utc(date),
+            dateLocal: this.$date.tz(date, this.station.timezone),
+            value
+          }
+        })
       }
       return models
     },
@@ -448,16 +599,16 @@ export default {
 
       // start with first image
       if (!this.image) {
-        this.addImageToQueue(this.imagesInTimeRange[0].image)
+        this.addImageToQueue(this.imagesInTimeRange[0])
       } else {
         // find index of current image
-        const index = this.imagesInTimeRange.findIndex(d => d.image === this.image)
+        const index = this.imagesInTimeRange.findIndex(d => d === this.image)
         if (index < this.imagesInTimeRange.length - 1) {
           // next image
-          this.addImageToQueue(this.imagesInTimeRange[index + 1].image)
+          this.addImageToQueue(this.imagesInTimeRange[index + 1])
         } else {
           // current image is last, jump first image
-          this.addImageToQueue(this.imagesInTimeRange[0].image)
+          this.addImageToQueue(this.imagesInTimeRange[0])
         }
       }
     },
@@ -466,16 +617,16 @@ export default {
 
       // start with last image
       if (!this.image) {
-        this.addImageToQueue(this.imagesInTimeRange[this.imagesInTimeRange.length - 1].image)
+        this.addImageToQueue(this.imagesInTimeRange[this.imagesInTimeRange.length - 1])
       } else {
         // find index of current image
-        const index = this.imagesInTimeRange.findIndex(d => d.image === this.image)
+        const index = this.imagesInTimeRange.findIndex(d => d === this.image)
         if (index === 0) {
           // current image is last, jump to last image
-          this.addImageToQueue(this.imagesInTimeRange[this.imagesInTimeRange.length - 1].image)
+          this.addImageToQueue(this.imagesInTimeRange[this.imagesInTimeRange.length - 1])
         } else {
           // previous image
-          this.addImageToQueue(this.imagesInTimeRange[index - 1].image)
+          this.addImageToQueue(this.imagesInTimeRange[index - 1])
         }
       }
     },
@@ -493,8 +644,23 @@ export default {
       clearTimeout(this.player.timeout)
       this.player.playing = false
     },
-    setTimeRange (range) {
+    async setTimeRange (range) {
+      // console.log('setTimeRange', range)
       this.timeRange = range
+      if (!this.timeRange) {
+        this.timeRangeDuration = null
+        this.mode = 'DAY'
+        this.instantaneous = null
+      } else {
+        this.timeRangeDuration = (this.timeRange[1] - this.timeRange[0]) / (1000 * 60 * 60 * 24)
+        if (this.timeRangeDuration && this.timeRangeDuration > MODE_DAY_MINIMUM) {
+          this.mode = 'DAY'
+          this.instantaneous = null
+        } else {
+          this.mode = 'INST'
+          this.instantaneous = await this.fetchInstantaneous()
+        }
+      }
     }
     // chartCanvas () {
     //   const svgString = this.$refs.chart.chart.container.innerHTML

@@ -48,11 +48,11 @@ async function getInstantaneousValues (stationId, startDate, endDate, variable =
   const values = await getData('iv', stationId, startDate, endDate, variable)
 
   return values.map(d => ({
-    timestamp: d.dateTime,
+    timestamp: new Date(d.dateTime),
     value: Number(d.value),
     provisional: d.qualifiers.includes('P')
     // qualifiers: d.qualifiers
-  })).filter(d => d.value >= 0)
+  }))
 }
 
 async function getDailyValues (stationId, startDate, endDate, variable = 'FLOW_CFS') {

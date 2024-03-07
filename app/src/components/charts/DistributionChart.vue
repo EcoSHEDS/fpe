@@ -7,7 +7,7 @@
       <v-sheet class="text-body-2 px-4">
         <div class="text-caption">Timeseries Mode</div>
         <div class="d-flex align-center">
-          <b>Daily Mean</b>
+          <b>{{ mode === 'DAY' ? 'Daily Mean' : 'Instantaneous' }}</b>
           <v-spacer></v-spacer>
           <v-tooltip bottom max-width="400">
             <template v-slot:activator="{ on }">
@@ -19,14 +19,14 @@
                 class="ml-2"
               ><v-icon small>mdi-information</v-icon></v-btn>
             </template>
-            <div>Each point shows the <b>daily mean value</b> and rank percentile.</div>
-            <div>Photo associated with each point is the one taken closest to noon on that date.</div>
+            <div class="mb-2">When the selected time period is more than 30 days, the chart is in <b>Daily Mean</b> mode and each timeseries is aggregated to daily values. Only the photo taken closest to noon on each date will be shown.</div>
+            <div>Otherwise, the <b>Instantaneous</b> values of each variable along with all available photos will be shown.</div>
           </v-tooltip>
         </div>
         <div class="text-caption mt-4">Selected Time Period</div>
         <div class="d-flex align-center">
           <div>
-            <b>{{ timeRange[0] | timestampFormat('lll') }} - {{ timeRange[1] | timestampFormat('lll') }}</b>
+            <b>{{ timeRange[0] | timestampFormat('ll') }} - {{ timeRange[1] | timestampFormat('ll') }}</b>
           </div>
           <v-spacer></v-spacer>
           <v-tooltip bottom>
@@ -61,7 +61,7 @@
 <script>
 import { variables } from '@/lib/constants'
 import { format } from 'd3-format'
-import { utcFormat } from 'd3-time-format'
+import { timeFormat } from 'd3-time-format'
 
 const variableAxes = variables.map((variable, i) => {
   return {
@@ -88,8 +88,9 @@ variableAxes.push({
 
 export default {
   name: 'DistributionChart',
-  props: ['series', 'images', 'station', 'image', 'timeRange'],
+  props: ['series', 'images', 'station', 'image', 'timeRange', 'mode'],
   data () {
+    // const $date = this.$date
     return {
       scaleValues: false,
       chartOptions: {
@@ -112,10 +113,14 @@ export default {
               }
             },
             tooltip: {
-              // headerFormat: '<b>{series.name}</b><br>',
               pointFormatter: function () {
-                const date = utcFormat('%B %d, %Y')(new Date(this.date))
-                return `<br>Date: <b>${date}</b><br>Value: <b>${format('.1f')(this.y)}</b><br>Rank: <b>${format('.1%')(this.x)}</b>`
+                if (this.mode === 'DAY') {
+                  const date = timeFormat('%B %d, %Y')(new Date(this.image.date))
+                  return `<br>Date: <b>${date}</b><br>Value: <b>${format('.1f')(this.y)}</b><br>Rank: <b>${format('.1%')(this.x)}</b>`
+                } else {
+                  const timestamp = timeFormat('%B %d, %Y %H:%M:%S %Z')(this.image.timestamp)
+                  return `<br>Timestamp: <b>${timestamp}</b><br>Value: <b>${format('.1f')(this.y)}</b><br>Rank: <b>${format('.1%')(this.x)}</b>`
+                }
               }
             },
             point: {
@@ -164,47 +169,49 @@ export default {
     await this.updateChart()
   },
   methods: {
-    generatePoints () {
-      if (!this.images) {
-        return []
-      }
+    // generatePoints () {
+    //   if (!this.images) {
+    //     return []
+    //   }
 
-      const points = this.images.map(image => {
-        const date = image.date
-        const values = this.series.map((series, i) => {
-          const value = series.data.find(d => d.date === date)
-          return {
-            seriesIndex: i,
-            variableId: series.variableId,
-            name: series.name,
-            date,
-            value: value ? value.value : null,
-            rank: value ? value.rank : null
-          }
-        })
-        return {
-          date: image.date,
-          image: image.image,
-          values
-        }
-      })
+    //   const points = this.images.map(image => {
+    //     const date = image.date
+    //     const values = this.series.map((series, i) => {
+    //       const value = series.data.find(d => d.date === date)
+    //       return {
+    //         seriesIndex: i,
+    //         variableId: series.variableId,
+    //         name: series.name,
+    //         date,
+    //         mode: this.mode,
+    //         value: value ? value.value : null,
+    //         rank: value ? value.rank : null
+    //       }
+    //     })
+    //     return {
+    //       date: image.date,
+    //       image,
+    //       values
+    //     }
+    //   })
 
-      return points
-    },
+    //   return points
+    // },
     updateChart () {
-      const points = this.generatePoints()
+      // const points = this.generatePoints()
       const pointSeries = this.series.map((series, i) => {
+        const values = this.images.map(d => {
+          const value = d.values.find(v => v.name === series.name)
+          return {
+            x: value ? value.rank : null,
+            y: value ? value.value : null,
+            image: d,
+            mode: this.mode
+          }
+        }).filter(d => d.x !== null && d.y !== null)
         return {
           name: series.name,
-          data: points.map((d, j) => {
-            return {
-              x: d.values[i] ? d.values[i].rank : null,
-              y: d.values[i] ? d.values[i].value : null,
-              date: d.date,
-              image: d.image,
-              index: i
-            }
-          }).filter(d => d.x !== null && d.y !== null),
+          data: values,
           marker: {
             symbol: 'circle',
             radius: 3,
@@ -242,11 +249,13 @@ export default {
     highlightImage (image) {
       this.chart.series.forEach(s => {
         s.data.forEach(p => {
-          if (p.image && p.image === image) {
+          if (p.image && p.image.id === image?.id) {
             if (p.state !== 'hover') {
               p.setState('hover')
             }
-            p.graphic.toFront()
+            if (p.graphic) {
+              p.graphic.toFront()
+            }
           } else {
             if (p.state === 'hover') {
               p.setState('')
