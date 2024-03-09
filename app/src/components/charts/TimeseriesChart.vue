@@ -39,7 +39,7 @@
               v-on="on"
               color="default"
               class="ml-2"
-            >About This Chart</v-btn>
+            >About This Chart <v-icon right small>mdi-menu-down</v-icon></v-btn>
           </template>
           <v-card max-width="400">
             <v-card-text class="black--text text-body-2">
@@ -242,10 +242,13 @@ export default {
       this.render()
     },
     loading () {
+      // console.log('watch:loading')
       if (!this.chart) return
       if (this.loading) {
+        // console.log('watch:loading show')
         this.chart.showLoading()
       } else {
+        // console.log('watch:loading hide')
         this.chart.hideLoading()
       }
     }
@@ -258,18 +261,22 @@ export default {
   methods: {
     async afterSetExtremes (event) {
       // console.log('afterSetExtremes', event)
-      this.clearHighlight()
-      this.$emit('zoom', [new Date(event.min), new Date(event.max)])
+      // this.clearHighlight()
+      if (event.min && event.max) {
+        this.$emit('zoom', [new Date(event.min), new Date(event.max)])
+      }
     },
     render () {
+      // console.log('render: start')
       if (this.mode === 'INST') {
         this.renderInstantaneous()
       } else {
         this.renderDaily()
       }
+      // console.log('render: done')
     },
     renderInstantaneous () {
-      // console.log('renderInstantaneous')
+      // console.log('renderInstantaneous: start')
 
       this.chart.series.forEach(s => {
         if (s.name === 'Navigator 1') return
@@ -278,12 +285,13 @@ export default {
           const images = this.instantaneous.images.map(d => {
             return { x: (new Date(d.timestamp)).valueOf(), y: 0, image: d }
           })
-          s.setData(images, false, false, false, false)
+          s.setData(images)
         } else {
-          // console.log(s)
+          // console.log(s.name, s)
           const instantaneousSeries = this.instantaneous.series.find(ss => ss.name === s.name)
           if (instantaneousSeries) {
             if (s.options.marker.enabled) {
+              // console.log('marker.enabled')
               // update marker with image values
               const imageValues = this.instantaneous.images.map(d => {
                 const value = d.values.find(v => v.name === s.name)
@@ -292,30 +300,33 @@ export default {
                   y: value !== undefined ? (this.scaleValues ? value.rank : value.value) : null,
                   image: d
                 }
-              })
-              s.setData(imageValues, false, false, false, false)
+              }).filter(d => d.y !== null && d.y !== undefined)
+              s.setData(imageValues)
             } else {
+              // console.log('!marker.enabled')
               // update line with series values
               const seriesValues = instantaneousSeries.data.map(d => {
                 return {
                   x: (new Date(d.timestamp)).valueOf(),
                   y: this.scaleValues ? d.rank : d.value
                 }
-              })
-              s.setData(seriesValues, false, false, false, false)
+              }).filter(d => d.y !== null && d.y !== undefined)
+              s.setData(seriesValues)
             }
           }
         }
       })
       this.chart.render(true, false, false)
+      // console.log('renderInstantaneous: done')
     },
     renderDaily () {
       this.chart.series.forEach(s => {
-        s.setData(s.options.daily, false, false, false, false)
+        s.setData(s.options.daily)
       })
       this.chart.render(true, false, false)
     },
     updateChart () {
+      // console.log('updateChart: start')
       const seriesVariableIds = this.series.map(d => d.variableId)
       let dataAxes = []
       if (this.scaleValues) {
@@ -482,6 +493,9 @@ export default {
           states: {
             hover: {
               lineWidthPlus: 0
+            },
+            inactive: {
+              opacity: 1
             }
           }
         }
@@ -511,30 +525,54 @@ export default {
         series: newSeries
       }, true, true, false)
       this.render()
+
+      if (variableSeries.length === 0) {
+        this.chart.showNoData()
+      } else {
+        this.chart.hideNoData()
+      }
+
+      // console.log('updateChart: done')
     },
     highlightImage (image) {
       // console.log(image)
-      this.chart.series.forEach(s => {
-        if (!s.options.marker.enabled) return
-        // console.log(s.name, s)
-        s.points.forEach(p => {
-          // console.log(p.image)
-          if (p.image && p.image.id === image.id) {
-            if (p.state !== 'hover') {
-              p.setState('hover')
-            }
-            if (p.graphic) {
-              p.graphic.toFront()
-            }
-          } else {
-            if (p.state === 'hover') {
+      // console.log('highlightImage: start')
+      if (this.chart.hoverPoints !== undefined && this.chart.hoverPoints !== null) {
+        // user is mousing over chart
+        this.chart.series.forEach(s => {
+          if (!s.options.marker.enabled) return
+          s.points.forEach(p => {
+            if (!this.chart.hoverPoints.includes(p) && p.state === 'hover') {
               p.setState('')
             }
-          }
+          })
         })
-      })
+      } else {
+        // highlight is triggered by parent (next/prev, play)
+        this.chart.series.forEach(s => {
+          if (!s.options.marker.enabled) return
+          // console.log(s.name)
+          s.points.forEach(p => {
+            // console.log(p.image)
+            if (p.image && p.image.id === image.id) {
+              if (p.state !== 'hover') {
+                p.setState('hover')
+              }
+              if (s.name !== 'Photo' && s.name !== 'Navigator 1' && p.graphic) {
+                p.graphic.toFront()
+              }
+            } else {
+              if (p.state === 'hover') {
+                p.setState('')
+              }
+            }
+          })
+        })
+      }
+      // console.log('highlightImage: done')
     },
     clearHighlight () {
+      // console.log('clearHighlight: start')
       this.chart.series.forEach(s => {
         if (s.name === 'Navigator 1') return
         s.data.forEach(p => {
@@ -543,6 +581,7 @@ export default {
           }
         })
       })
+      // console.log('clearHighlight: done')
     }
   }
 }

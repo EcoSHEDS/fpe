@@ -6,46 +6,74 @@
       </v-col>
       <v-col cols="12" md="6">
         <v-sheet class="text-body-2 px-4">
-          <v-select
-            v-model="xSeries"
-            label="X Variable"
-            :items="series"
-            item-text="name"
-            dense
-            outlined
-            hide-details
-            return-object
-            class="my-4"
-          ></v-select>
-          <v-select
-            v-model="ySeries"
-            label="Y Variable"
-            :items="series"
-            item-text="name"
-            dense
-            outlined
-            hide-details
-            return-object
-            class="my-4"
-          ></v-select>
+          <div v-if="series.length === 0">
+            <Alert type="warning" title="No Data Available">
+              This station does not have any observed data or model predictions.
+            </Alert>
+          </div>
+          <div v-else-if="series.length <= 1">
+            <Alert type="warning" title="Insufficient Data">
+              This station only has one variable available. Two are needed to create a scatter plot.
+            </Alert>
+          </div>
+          <div v-else>
+            <v-select
+              v-model="xSeries"
+              label="X Variable"
+              :items="series"
+              item-text="name"
+              dense
+              outlined
+              hide-details
+              return-object
+              class="my-4"
+            ></v-select>
+            <v-select
+              v-model="ySeries"
+              label="Y Variable"
+              :items="series"
+              item-text="name"
+              dense
+              outlined
+              hide-details
+              return-object
+              class="my-4"
+            ></v-select>
 
-          <v-checkbox
-            :value="scaleValues"
-            color="default"
-            label="Show as Rank Percentile (0-100%)"
-            hide-details
-            @change="$emit('update:scaleValues', !scaleValues)"
-          >
-          </v-checkbox>
+            <v-checkbox
+              :value="scaleValues"
+              color="default"
+              label="Show as Rank Percentile (0-100%)"
+              hide-details
+              @change="$emit('update:scaleValues', !scaleValues)"
+            >
+            </v-checkbox>
+          </div>
 
-          <div class="text-subtitle-1 mt-4">About This Chart</div>
-          <v-divider class="mb-2"></v-divider>
-          <p>
-            The Scatter Chart shows the relationship between the daily mean values of two variables.
-          </p>
-          <p>
-            Hover over the chart to see the photo associated with each daily point, which is the photo taken closest to noon on that date.
-          </p>
+          <div class="my-4" ref="tooltip"></div>
+
+          <div class="mt-4">
+            <v-menu offset-y>
+              <template v-slot:activator="{ on }">
+                <v-btn
+                  small
+                  depressed
+                  v-on="on"
+                  color="default"
+                >About This Chart <v-icon right small>mdi-menu-down</v-icon></v-btn>
+              </template>
+              <v-card max-width="400">
+                <v-card-text class="black--text text-body-2">
+                  <p>
+                    The Scatter Chart shows the relationship between the daily mean values of two variables.
+                  </p>
+                  <p class="mb-0">
+                    Hover over the chart to see the photo associated with each daily point, which is the photo taken closest to noon on that date.
+                  </p>
+                </v-card-text>
+              </v-card>
+            </v-menu>
+          </div>
         </v-sheet>
       </v-col>
     </v-row>
@@ -58,13 +86,12 @@
 </template>
 
 <script>
-// import { variables } from '@/lib/constants'
 import { format } from 'd3-format'
-import { utcFormat } from 'd3-time-format'
+import dayjs from 'dayjs'
 
 export default {
   name: 'ScatterChart',
-  props: ['series', 'images', 'station', 'image', 'scaleValues', 'timeRange'],
+  props: ['series', 'images', 'station', 'image', 'mode', 'scaleValues', 'timeRange'],
   data () {
     return {
       points: [],
@@ -98,6 +125,18 @@ export default {
         },
         legend: {
           enabled: false
+        },
+        tooltip: {
+          outside: true,
+          useHTML: true,
+          headerFormat: '',
+          shape: 'rect',
+          positioner: function () {
+            return {
+              x: this.chart.container.getBoundingClientRect().width,
+              y: 10
+            }
+          }
         }
       }
     }
@@ -131,13 +170,11 @@ export default {
       if (!this.images) {
         return []
       }
-      const points = this.images.map(image => {
-        const date = image.date
-        const xValue = this.xSeries.data.find(d => d.date === date)
-        const yValue = this.ySeries.data.find(d => d.date === date)
+      const points = this.images.map(d => {
+        const xValue = d.values.find(v => v.name === this.xSeries.name)
+        const yValue = d.values.find(v => v.name === this.ySeries.name)
         return {
-          date: image.date,
-          image,
+          image: d,
           xValue,
           yValue
         }
@@ -171,33 +208,81 @@ export default {
       }
 
       this.points = this.generatePoints()
-      const that = this
+      const timezone = this.station.timezone
       const pointSeries = {
-        name: `${this.series[0].name} vs ${this.series[1].name}`,
+        name: `${this.xSeries.name} vs ${this.ySeries.name}`,
         data: this.points.map((d, j) => {
           return {
             x: d.xValue ? d.xValue[this.scaleValues ? 'rank' : 'value'] : null,
             y: d.yValue ? d.yValue[this.scaleValues ? 'rank' : 'value'] : null,
-            image: d.image,
-            date: d.date
+            mode: this.mode,
+            xValue: d.xValue,
+            yValue: d.yValue,
+            image: d.image
           }
-        }).filter(d => d.x !== null && d.y !== null),
+        }).filter(d => d.x !== null && d.y !== null && d.x !== undefined && d.y !== undefined),
         marker: {
           symbol: 'circle',
           radius: 3,
-          // lineColor: 'goldenrod',
           lineWidth: 1,
           states: {
             hover: {
+              animation: false,
               radiusPlus: 5
+            },
+            normal: {
+              animation: false
             }
           }
         },
+        states: {
+          inactive: {
+            opacity: 1
+          }
+        },
         tooltip: {
-          headerFormat: '',
           pointFormatter: function () {
-            const formatter = that.scaleValues ? format('.1%') : format('.1f')
-            return `${utcFormat('%b %d, %Y')(new Date(this.date))}<br>${that.xSeries.name}: <b>${formatter(this.x)}</b><br>${that.ySeries.name}: <b>${formatter(this.y)}</b>`
+            const header = this.mode === 'DAY'
+              ? dayjs(this.image.timestamp).tz(timezone).format('ll')
+              : dayjs(this.image.timestamp).tz(timezone).format('lll')
+            const modeLabel = this.mode === 'DAY' ? 'Daily Mean' : 'Instantaneous'
+
+            const valueFormat = (x) => {
+              return (x === null || x === undefined) ? 'N/A' : format('.1f')(x)
+            }
+            const rankFormat = (x) => {
+              return (x === null || x === undefined) ? 'N/A' : format('.1%')(x)
+            }
+
+            return `
+              <b>${header}</b>
+              <br>
+              <table style="border-spacing: 10px 5px; margin-left: -10px; margin-right: -10px">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th colspan="2" class="text-center">${modeLabel}</th>
+                  </tr>
+                  <tr>
+                    <th style="text-align:left">Variable</th>
+                    <th class="text-right">Value</th>
+                    <th class="text-right">Rank</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>${this.xValue.name}</td>
+                    <td class="text-right">${valueFormat(this.xValue.value)}</td>
+                    <td class="text-right">${rankFormat(this.xValue.rank)}</td>
+                  </tr>
+                  <tr>
+                    <td>${this.yValue.name}</td>
+                    <td class="text-right">${valueFormat(this.yValue.value)}</td>
+                    <td class="text-right">${rankFormat(this.yValue.rank)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            `
           }
         }
       }
@@ -290,7 +375,10 @@ export default {
         // },
         xAxis,
         yAxis,
-        series: pointSeries
+        series: pointSeries,
+        tooltip: {
+          container: this.$refs.tooltip
+        }
       }, true, true)
     },
     highlightImage (image) {

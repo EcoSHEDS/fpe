@@ -1,5 +1,5 @@
 <template>
-  <div class="pt-4">
+  <div class="pt-4" style="min-height: 400px">
     <v-overlay v-if="loading" absolute class="rounded">
       <v-progress-circular indeterminate size="64"></v-progress-circular>
     </v-overlay>
@@ -109,7 +109,7 @@
         </v-tabs>
 
         <v-tabs-items v-model="tab">
-          <v-tab-item>
+          <v-tab-item :transition="false">
             <TimeseriesChart
               v-if="ready"
               :loading="loadingData"
@@ -127,7 +127,7 @@
             >
             </TimeseriesChart>
           </v-tab-item>
-          <v-tab-item>
+          <v-tab-item :transition="false">
             <DistributionChart
               v-if="ready"
               :station="station"
@@ -140,7 +140,7 @@
             >
             </DistributionChart>
           </v-tab-item>
-          <v-tab-item>
+          <v-tab-item :transition="false">
             <ScatterplotChart
               v-if="ready"
               :station="station"
@@ -149,13 +149,12 @@
               :scale-values="scaleValues"
               :image="image"
               :time-range="timeRange"
+              :mode="mode"
               @hover="addImageToQueue"
               @update:scaleValues="scaleValues = $event"
             >
             </ScatterplotChart>
           </v-tab-item>
-          <!-- <v-tab-item>
-          </v-tab-item> -->
         </v-tabs-items>
 
         <v-divider class="mt-2"></v-divider>
@@ -326,6 +325,8 @@ export default {
         })
       })
 
+      // console.log('fetchInstantaneous: done')
+
       this.loadingData = false
 
       return {
@@ -388,7 +389,7 @@ export default {
       return instSeries
     },
     async fetchInstantaneousValues (variableId, startDate, endDate) {
-      const response = await this.$http.public.get(`/stations/${this.station.id}/values?variableId=${variableId}&start=${startDate.toISOString().substring(0, 10)}&end=${endDate.toISOString().substring(0, 10)}`)
+      const response = await this.$http.public.get(`/stations/${this.station.id}/values?variable=${variableId}&start=${startDate.toISOString().substring(0, 10)}&end=${endDate.toISOString().substring(0, 10)}`)
       const values = response.data
       // values.forEach(d => {
       //   d.dateUtc = this.$date.utc(d.date)
@@ -602,7 +603,7 @@ export default {
         this.addImageToQueue(this.imagesInTimeRange[0])
       } else {
         // find index of current image
-        const index = this.imagesInTimeRange.findIndex(d => d === this.image)
+        const index = this.imagesInTimeRange.findIndex(d => d.id === this.image.id)
         if (index < this.imagesInTimeRange.length - 1) {
           // next image
           this.addImageToQueue(this.imagesInTimeRange[index + 1])
@@ -620,7 +621,7 @@ export default {
         this.addImageToQueue(this.imagesInTimeRange[this.imagesInTimeRange.length - 1])
       } else {
         // find index of current image
-        const index = this.imagesInTimeRange.findIndex(d => d === this.image)
+        const index = this.imagesInTimeRange.findIndex(d => d.id === this.image.id)
         if (index === 0) {
           // current image is last, jump to last image
           this.addImageToQueue(this.imagesInTimeRange[this.imagesInTimeRange.length - 1])

@@ -42,17 +42,32 @@
             <span>Use the timeseries chart to change the time period</span>
           </v-tooltip>
         </div>
-        <div class="text-subtitle-1 mt-8">About This Chart</div>
-        <v-divider class="mb-2"></v-divider>
-        <p>
-          The Distribution Chart shows the cumulative distribution of each variable.
-        </p>
-        <p>
-          The x-axis represents the percentile rank, and the y-axis represents the value of each date or photo depending on whether the Timeseries Mode is Daily or Instantaneous.
-        </p>
-        <p>
-          Hover over the chart to see the photo associated with each point. If multiple variables are available, then all points corresponding to the current photo will be highlighted (one for each variable).
-        </p>
+
+        <div class="mt-4">
+          <v-menu offset-y>
+            <template v-slot:activator="{ on }">
+              <v-btn
+                small
+                depressed
+                v-on="on"
+                color="default"
+              >About This Chart <v-icon right small>mdi-menu-down</v-icon></v-btn>
+            </template>
+            <v-card max-width="400">
+              <v-card-text class="black--text text-body-2">
+                <p>
+                  The Distribution Chart shows the cumulative distribution of each variable.
+                </p>
+                <p>
+                  The x-axis represents the percentile rank, and the y-axis represents the value of each date or photo depending on whether the Timeseries Mode is Daily or Instantaneous.
+                </p>
+                <p class="mb-0">
+                  Hover over the chart to see the photo associated with each point. If multiple variables are available, then all points corresponding to the current photo will be highlighted (one for each variable).
+                </p>
+              </v-card-text>
+            </v-card>
+          </v-menu>
+        </div>
       </v-sheet>
     </v-col>
   </v-row>
@@ -61,7 +76,7 @@
 <script>
 import { variables } from '@/lib/constants'
 import { format } from 'd3-format'
-import { timeFormat } from 'd3-time-format'
+import dayjs from 'dayjs'
 
 const variableAxes = variables.map((variable, i) => {
   return {
@@ -107,25 +122,11 @@ export default {
           series: {
             animation: false,
             turboThreshold: 0,
-            states: {
-              inactive: {
-                opacity: 0.7
-              }
-            },
-            tooltip: {
-              pointFormatter: function () {
-                if (this.mode === 'DAY') {
-                  const date = timeFormat('%B %d, %Y')(new Date(this.image.date))
-                  return `<br>Date: <b>${date}</b><br>Value: <b>${format('.1f')(this.y)}</b><br>Rank: <b>${format('.1%')(this.x)}</b>`
-                } else {
-                  const timestamp = timeFormat('%B %d, %Y %H:%M:%S %Z')(this.image.timestamp)
-                  return `<br>Timestamp: <b>${timestamp}</b><br>Value: <b>${format('.1f')(this.y)}</b><br>Rank: <b>${format('.1%')(this.x)}</b>`
-                }
-              }
-            },
             point: {
               events: {
                 mouseOver: (e) => {
+                  // console.log('mouseOver', e.target.image.id)
+                  this.highlightImage(e.target.image)
                   this.$emit('hover', e.target.image)
                 }
               }
@@ -133,9 +134,16 @@ export default {
           }
         },
         tooltip: {
-          // positioner: function () {
-          //   return { x: 90, y: 20 } // fixed position (top-left)
-          // }
+          outside: true,
+          useHTML: true,
+          headerFormat: '',
+          shape: 'rect',
+          positioner: function () {
+            return {
+              x: this.chart.container.getBoundingClientRect().width,
+              y: 10
+            }
+          }
         },
         xAxis: {
           title: {
@@ -169,36 +177,10 @@ export default {
     await this.updateChart()
   },
   methods: {
-    // generatePoints () {
-    //   if (!this.images) {
-    //     return []
-    //   }
-
-    //   const points = this.images.map(image => {
-    //     const date = image.date
-    //     const values = this.series.map((series, i) => {
-    //       const value = series.data.find(d => d.date === date)
-    //       return {
-    //         seriesIndex: i,
-    //         variableId: series.variableId,
-    //         name: series.name,
-    //         date,
-    //         mode: this.mode,
-    //         value: value ? value.value : null,
-    //         rank: value ? value.rank : null
-    //       }
-    //     })
-    //     return {
-    //       date: image.date,
-    //       image,
-    //       values
-    //     }
-    //   })
-
-    //   return points
-    // },
     updateChart () {
-      // const points = this.generatePoints()
+      const chart = this.chart
+      const mode = this.mode
+      const station = this.station
       const pointSeries = this.series.map((series, i) => {
         const values = this.images.map(d => {
           const value = d.values.find(v => v.name === series.name)
@@ -218,11 +200,72 @@ export default {
             lineWidth: 1,
             states: {
               hover: {
+                animation: false,
                 radiusPlus: 5
+              },
+              normal: {
+                animation: false
               }
             }
           },
-          yAxis: series.variableId
+          states: {
+            inactive: {
+              opacity: 1
+            }
+          },
+          yAxis: series.variableId,
+          tooltip: {
+            pointFormatter: function () {
+              const header = this.mode === 'DAY'
+                ? dayjs(this.image.timestamp).tz(station.timezone).format('ll')
+                : dayjs(this.image.timestamp).tz(station.timezone).format('lll')
+
+              const modeLabel = mode === 'DAY' ? 'Daily Mean' : 'Instantaneous'
+
+              const valueFormatter = format('.1f')
+              const rankFormatter = format('.1%')
+
+              const valueRows = this.image.values.map(d => {
+                const valueLabel = d.value === null || d.value === undefined ? 'N/A' : valueFormatter(d.value)
+                const rankLabel = d.rank === null || d.rank === undefined ? 'N/A' : rankFormatter(d.rank)
+
+                const series = chart.series.find(s => s.name === d.name)
+                if (!series.visible) return ''
+
+                return `
+                  <tr>
+                    <td><span style="color:${series.color}">●</span></td>
+                    <td>${d.name}</td>
+                    <td class="text-right">${valueLabel}</td>
+                    <td class="text-right">${rankLabel}</td>
+                  </tr>
+                `
+              }).join('')
+
+              return `
+                <b>${header}</b>
+                <br>
+                <table style="border-spacing: 10px 5px; margin-left: -10px; margin-right: -10px">
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th></th>
+                      <th colspan="2" class="text-center">${modeLabel}</th>
+                    </tr>
+                    <tr>
+                      <th></th>
+                      <th style="text-align:left">Variable</th>
+                      <th class="text-right">Value</th>
+                      <th class="text-right">Rank</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${valueRows}
+                  </tbody>
+                </table>
+              `
+            }
+          }
         }
       })
 
@@ -247,22 +290,46 @@ export default {
       }, true, true, false)
     },
     highlightImage (image) {
-      this.chart.series.forEach(s => {
-        s.data.forEach(p => {
-          if (p.image && p.image.id === image?.id) {
-            if (p.state !== 'hover') {
-              p.setState('hover')
-            }
-            if (p.graphic) {
+      // console.log('highlightImage', image)
+      if (this.chart.hoverPoints !== undefined && this.chart.hoverPoints !== null) {
+        // console.log('mousing', this.chart.hoverPoints)
+        // user is mousing over chart
+        this.chart.series.forEach(s => {
+          s.points.forEach(p => {
+            if (this.chart.hoverPoints.includes(p) && p.graphic) {
+              // bring hovered point to front
               p.graphic.toFront()
-            }
-          } else {
-            if (p.state === 'hover') {
+            } else if (p.image.id === image.id) {
+              // hover paired point (same image)
+              p.setState('hover')
+              if (p.graphic) {
+                p.graphic.toFront()
+              }
+            } else if (p.state === 'hover') {
+              // unhighlight point
               p.setState('')
             }
-          }
+          })
         })
-      })
+      } else {
+        // highlight is triggered by parent (next/prev, play)
+        this.chart.series.forEach(s => {
+          s.points.forEach(p => {
+            if (p.image.id === image.id) {
+              if (p.state !== 'hover') {
+                p.setState('hover')
+              }
+              if (p.graphic) {
+                p.graphic.toFront()
+              }
+            } else {
+              if (p.state === 'hover') {
+                p.setState('')
+              }
+            }
+          })
+        })
+      }
     }
   }
 }

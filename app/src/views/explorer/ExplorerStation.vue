@@ -29,13 +29,13 @@
         </v-toolbar>
 
         <v-row no-gutters>
-          <v-col cols="4">
+          <v-col cols="3">
             <StationInfo
               :station="station"
             ></StationInfo>
           </v-col>
           <v-divider vertical></v-divider>
-          <v-col cols="8">
+          <v-col cols="9">
             <StationPhotos
               :station="station"
             ></StationPhotos>

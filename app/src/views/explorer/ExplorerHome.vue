@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container fluid>
     <v-row justify="space-around">
       <v-col cols="12">
         <v-card elevation="4" class="pb-4">
