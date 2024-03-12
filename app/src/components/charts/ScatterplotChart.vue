@@ -6,6 +6,41 @@
       </v-col>
       <v-col cols="12" md="6">
         <v-sheet class="text-body-2 px-4">
+          <div class="text-caption mt-4">Timeseries Mode</div>
+          <div class="d-flex align-center">
+            <b>{{ mode === 'DAY' ? 'Daily Mean' : 'Sub-Daily' }}</b>
+            <v-tooltip bottom max-width="400">
+              <template v-slot:activator="{ on }">
+                <v-btn
+                  small
+                  icon
+                  v-on="on"
+                  color="default"
+                  class="ml-2"
+                ><v-icon small>mdi-information</v-icon></v-btn>
+              </template>
+              <div class="mb-2">When the selected time period is more than 30 days, the chart is in <b>Daily Mean</b> mode and each timeseries is aggregated to daily values. Only the photo taken closest to noon on each date will be shown.</div>
+              <div>Otherwise, the <b>Sub-Daily</b> values of each variable along with all available photos will be shown.</div>
+            </v-tooltip>
+          </div>
+          <div class="text-caption mt-4">Selected Time Period</div>
+          <div class="d-flex align-center">
+            <div>
+              <b>{{ timeRange[0] | timestampFormat('ll') }} - {{ timeRange[1] | timestampFormat('ll') }}</b>
+            </div>
+            <v-tooltip bottom>
+              <template v-slot:activator="{ on }">
+                <v-btn
+                  small
+                  icon
+                  v-on="on"
+                  color="default"
+                  class="ml-2"
+                ><v-icon small>mdi-information</v-icon></v-btn>
+              </template>
+              <span>Use the timeseries chart to change the time period</span>
+            </v-tooltip>
+          </div>
           <div v-if="series.length === 0">
             <Alert type="warning" title="No Data Available">
               This station does not have any observed data or model predictions.
@@ -49,8 +84,6 @@
             >
             </v-checkbox>
           </div>
-
-          <div class="my-4" ref="tooltip"></div>
 
           <div class="mt-4">
             <v-menu offset-y>
@@ -245,7 +278,7 @@ export default {
             const header = this.mode === 'DAY'
               ? dayjs(this.image.timestamp).tz(timezone).format('ll')
               : dayjs(this.image.timestamp).tz(timezone).format('lll')
-            const modeLabel = this.mode === 'DAY' ? 'Daily Mean' : 'Instantaneous'
+            const modeLabel = this.mode === 'DAY' ? 'Daily Mean' : 'Sub-daily'
 
             const valueFormat = (x) => {
               return (x === null || x === undefined) ? 'N/A' : format('.1f')(x)

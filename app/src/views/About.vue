@@ -64,7 +64,7 @@
 
             <div class="text-h6">Contact Us</div>
             <p>
-              Please send any questions or comments about this project to the ecoSHEDS team at <a href="mailto:ecosheds@usgs.gov">ecosheds@usgs.gov</a>.
+              Please send any questions or comments about this project to the EcoSHEDS team at <a href="mailto:ecosheds@usgs.gov">ecosheds@usgs.gov</a>.
             </p>
           </v-card-text>
         </v-card>

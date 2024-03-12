@@ -7,8 +7,7 @@
       <v-sheet class="text-body-2 px-4">
         <div class="text-caption">Timeseries Mode</div>
         <div class="d-flex align-center">
-          <b>{{ mode === 'DAY' ? 'Daily Mean' : 'Instantaneous' }}</b>
-          <v-spacer></v-spacer>
+          <b>{{ mode === 'DAY' ? 'Daily Mean' : 'Sub-Daily' }}</b>
           <v-tooltip bottom max-width="400">
             <template v-slot:activator="{ on }">
               <v-btn
@@ -20,7 +19,7 @@
               ><v-icon small>mdi-information</v-icon></v-btn>
             </template>
             <div class="mb-2">When the selected time period is more than 30 days, the chart is in <b>Daily Mean</b> mode and each timeseries is aggregated to daily values. Only the photo taken closest to noon on each date will be shown.</div>
-            <div>Otherwise, the <b>Instantaneous</b> values of each variable along with all available photos will be shown.</div>
+            <div>Otherwise, the <b>Sub-Daily</b> values of each variable along with all available photos will be shown.</div>
           </v-tooltip>
         </div>
         <div class="text-caption mt-4">Selected Time Period</div>
@@ -28,7 +27,6 @@
           <div>
             <b>{{ timeRange[0] | timestampFormat('ll') }} - {{ timeRange[1] | timestampFormat('ll') }}</b>
           </div>
-          <v-spacer></v-spacer>
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
               <v-btn
@@ -59,7 +57,7 @@
                   The Distribution Chart shows the cumulative distribution of each variable.
                 </p>
                 <p>
-                  The x-axis represents the percentile rank, and the y-axis represents the value of each date or photo depending on whether the Timeseries Mode is Daily or Instantaneous.
+                  The x-axis represents the percentile rank, and the y-axis represents the value of each date or photo depending on whether the Timeseries Mode is Daily or Sub-Daily.
                 </p>
                 <p class="mb-0">
                   Hover over the chart to see the photo associated with each point. If multiple variables are available, then all points corresponding to the current photo will be highlighted (one for each variable).
@@ -220,7 +218,7 @@ export default {
                 ? dayjs(this.image.timestamp).tz(station.timezone).format('ll')
                 : dayjs(this.image.timestamp).tz(station.timezone).format('lll')
 
-              const modeLabel = mode === 'DAY' ? 'Daily Mean' : 'Instantaneous'
+              const modeLabel = mode === 'DAY' ? 'Daily Mean' : 'Sub-Daily'
 
               const valueFormatter = format('.1f')
               const rankFormatter = format('.1%')

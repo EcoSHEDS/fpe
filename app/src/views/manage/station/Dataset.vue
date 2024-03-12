@@ -220,13 +220,16 @@
                 <div class="font-weight-bold body-1 mt-4">{{ dataset.error_message || 'Unknown Error' }}</div>
               </v-alert>
               <div v-else-if="dataset.status === 'DONE'">
+                <Alert v-if="dataset.series.length === 0" type="error" title="No Timeseries in Dataset File">
+                  This file was successfully processed, but does not appear to have any timeseries data. Please check the file and re-upload if necessary.
+                </Alert>
                 <div
+                  v-else
                   v-for="series in dataset.series"
                   :key="series.id"
                   class="px-0 mb-4"
                 >
-                  <div class="text-subtitle-1 black--text">{{ series.variable.description }}</div>
-                  <!-- <SeriesChart :series="series"></SeriesChart> -->
+                  <DatasetTimeseriesChart :series="series" :timezone="station.timezone"></DatasetTimeseriesChart>
                 </div>
               </div>
             </v-col>
@@ -256,14 +259,14 @@ import RefresherMixin from '@/mixins/refresher'
 
 import ConfirmDialog from '@/components/ConfirmDialog'
 import StatusChip from '@/components/StatusChip'
-// import SeriesChart from '@/components/charts/SeriesChart'
+import DatasetTimeseriesChart from '@/components/charts/DatasetTimeseriesChart'
 
 export default {
   name: 'ManageDataset',
   mixins: [RefresherMixin],
   components: {
     ConfirmDialog,
-    // SeriesChart,
+    DatasetTimeseriesChart,
     StatusChip
   },
   data () {

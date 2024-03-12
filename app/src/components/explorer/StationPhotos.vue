@@ -110,7 +110,7 @@
 
         <v-tabs-items v-model="tab">
           <v-tab-item :transition="false">
-            <TimeseriesChart
+            <PhotoTimeseriesChart
               v-if="ready"
               :loading="loadingData"
               :station="station"
@@ -125,7 +125,7 @@
               @update:scaleValues="scaleValues = $event"
               ref="chart"
             >
-            </TimeseriesChart>
+            </PhotoTimeseriesChart>
           </v-tab-item>
           <v-tab-item :transition="false">
             <DistributionChart
@@ -180,7 +180,7 @@ import { rank, rollup, mean, max } from 'd3-array'
 import { csv } from 'd3-fetch'
 import { scaleUtc } from 'd3-scale'
 import nwis from '@/lib/nwis'
-import TimeseriesChart from '@/components/charts/TimeseriesChart'
+import PhotoTimeseriesChart from '@/components/charts/PhotoTimeseriesChart'
 import DistributionChart from '@/components/charts/DistributionChart'
 import ScatterplotChart from '@/components/charts/ScatterplotChart'
 // import { Canvg } from 'canvg'
@@ -191,7 +191,7 @@ export default {
   name: 'StationPhotos',
   props: ['station'],
   components: {
-    TimeseriesChart,
+    PhotoTimeseriesChart,
     DistributionChart,
     ScatterplotChart
   },
