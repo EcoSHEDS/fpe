@@ -3,6 +3,7 @@ const User = require('../../models/User')
 
 exports.seed = async (knex) => {
   User.knex(knex)
+  await knex.raw('set timezone to "UTC"')
   await knex('stations').del()
   await knex('users').del()
 
