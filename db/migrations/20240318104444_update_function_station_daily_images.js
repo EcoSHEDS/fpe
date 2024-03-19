@@ -7,7 +7,7 @@ exports.up = async function (knex) {
     create or replace function f_station_daily_images(_station_id INT)
     returns table (
         date DATE,
-        n_images INT,
+        n_images BIGINT,
         image JSON
     )
     as $$
