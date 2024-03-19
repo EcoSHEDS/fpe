@@ -2,16 +2,9 @@ const AWS = require('aws-sdk')
 const ExifParser = require('exif-parser')
 const sharp = require('sharp')
 const Joi = require('joi')
-const dayjs = require('dayjs')
-const timezone = require('dayjs/plugin/timezone')
-const utc = require('dayjs/plugin/utc')
-const localizedFormat = require('dayjs/plugin/localizedFormat')
-const { notify, batch } = require('../aws')
 
-dayjs.extend(timezone)
-dayjs.extend(utc)
-dayjs.extend(localizedFormat)
-dayjs.tz.setDefault('UTC')
+const { DateTime } = require('../lib/time')
+const { notify, batch } = require('../aws')
 
 const { Imageset } = require('../models')
 
@@ -30,7 +23,7 @@ async function notifyMessage (id) {
   return `New photoset has been uploaded to FPE
 
 Imageset ID: ${imageset.id}
-Uploaded at: ${dayjs(imageset.created_at).tz('US/Eastern').format('lll')} (US/Eastern)
+Uploaded at: ${DateTime.fromISO(imageset.created_at).tz('US/Eastern').toFormat('DD ttt')}
 Status: ${imageset.status}
 
 User ID: ${imageset.station.user.id}
@@ -39,7 +32,7 @@ Station: ${imageset.station.name}
 Station URL: https://www.usgs.gov/apps/ecosheds/fpe/#/explorer/${imageset.station.id}/
 
 # Images: ${imageset.n_images}
-Period: ${dayjs(imageset.start_timestamp).tz(imageset.station.timezone).format('ll')} to ${dayjs(imageset.end_timestamp).tz(imageset.station.timezone).format('ll')}
+Period: ${DateTime.fromISO(imageset.start_timestamp).setZone(imageset.station.timezone).toFormat('DD')} to ${DateTime.fromISO(imageset.end_timestamp).setZone(imageset.station.timezone).toFormat('DD')}
 `
 }
 
@@ -131,11 +124,10 @@ async function processImage (image, utcOffset, timezone, dryRun) {
   // update record
   console.log(`updating image record (image_id=${image.id})`)
   const exifDatetime = exif.tags.DateTimeOriginal || exif.tags.CreateDate
-  const rawDate = new Date(exifDatetime * 1000)
-  const timestamp = dayjs(rawDate).subtract(utcOffset, 'hour')
+  const timestamp = DateTime.fromJSDate(new Date(exifDatetime * 1000)).setZone(`UTC${utcOffset}`, { keepLocalTime: true })
   const payload = {
     ...exif.imageSize,
-    timestamp: timestamp.toISOString(),
+    timestamp: timestamp.toISO(),
     thumb_s3: {
       Bucket: image.full_s3.Bucket,
       Key: thumbKey
