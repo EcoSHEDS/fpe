@@ -57,6 +57,12 @@
           </tbody>
         </v-simple-table>
       </v-sheet>
+      <v-divider class="mb-4"></v-divider>
+      <div v-if="series.length === 0">
+        <Alert type="warning" title="No Data Available">
+          This station does not have any observed data or model predictions.
+        </Alert>
+      </div>
 
       <div class="mt-4 d-flex">
         <v-menu offset-y>

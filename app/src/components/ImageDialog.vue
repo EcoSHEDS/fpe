@@ -44,7 +44,7 @@
                   Timestamp
                 </td>
                 <td class="font-weight-bold">
-                  {{ image.timestamp | timestampLocalFormat(station.timezone, 'lll z') }}
+                  {{ image.timestamp | formatTimestamp(station.timezone, 'DD ttt') }}
                 </td>
               </tr>
             </tbody>

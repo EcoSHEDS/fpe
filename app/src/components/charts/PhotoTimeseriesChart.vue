@@ -245,6 +245,11 @@ export default {
       } else {
         // console.log('watch:loading hide')
         this.chart.hideLoading()
+        if (this.series.length === 0) {
+          setTimeout(() => {
+            this.chart.showNoData()
+          }, 500)
+        }
       }
     }
   },
@@ -520,6 +525,7 @@ export default {
       }, true, true, false)
       this.render()
 
+      console.log('n', variableSeries.length)
       if (variableSeries.length === 0) {
         this.chart.showNoData()
       } else {

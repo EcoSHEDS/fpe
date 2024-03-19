@@ -57,7 +57,7 @@
               </tr>
             </tbody>
           </v-simple-table>
-          <v-divider class="mb-2"></v-divider>
+          <v-divider class="mb-4"></v-divider>
           <div v-if="series.length === 0">
             <Alert type="warning" title="No Data Available">
               This station does not have any observed data or model predictions.

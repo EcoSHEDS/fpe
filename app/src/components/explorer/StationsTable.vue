@@ -87,6 +87,9 @@
         Click on a row to select a station.
       </div>
     </template>
+    <template v-slot:item.affiliation_code="{ item }">
+      {{ item.affiliation_code | truncate(10) }}
+    </template>
     <template v-slot:item.name="{ item }">
       {{ item.name | truncate(40) }}
     </template>
@@ -156,7 +159,7 @@ export default {
         {
           text: '# Photos',
           value: 'images.count',
-          align: 'center',
+          align: 'right',
           width: 120
         },
         {

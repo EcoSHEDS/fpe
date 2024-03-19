@@ -65,7 +65,7 @@
                       <li><strong>File must contain continuous data at hourly (or greater) frequency</strong>. Please do not upload daily data.</li>
                       <li><strong>File must be in comma-separated values (CSV) format</strong> with the first non-commented row (see next point) containing the column names.</li>
                       <li><strong>First one or more rows may contain comments</strong>. Comment rows must start with a '#' symbol to distinguish them from the first row of column names.</li>
-                      <li><strong>Dates and times may be one single column or two separate columns</strong>. If dates and times are in separate columns, the values will be merged together separated by a space to create a complete timestamp.</li>
+                      <li><strong>Dates and times must be in ISO format (e.g., <code>YYYY-mm-dd HH:MM</code>)</strong>, but can be in one single column or two separate columns. If dates and times are in separate columns, the values will be merged together separated by a space to create a complete timestamp.</li>
                       <li><strong>A optional column of flags may be included</strong> for each variable (flow or stage). If no flags are included, we assume all data have undergone QAQC review. Only include flags indicating erroneous or abnormal data. Any rows having a flag of any kind will be ignored. Conversely, rows without any flags are assumed to contain reasonably accurate data.</li>
                       <li><strong>File may contain additional columns, which will be ignored.</strong></li>
                     </ul>
@@ -186,6 +186,9 @@
 
                       <ul class="mt-2 body-2">
                         <li>
+                          <strong>Dates and times must be in ISO format (e.g., <code>YYYY-mm-dd HH:MM</code>)</strong>.
+                        </li>
+                        <li>
                           <strong>Dates and times may be one single column or two separate columns</strong>. If dates and times are in separate columns, the values will be merged together separated by a space to create a complete timestamp.
                         </li>
                         <li>
@@ -297,7 +300,7 @@
                               <td class="font-weight-bold">
                                 {{ parseTimestamp(firstTimestampValue, true) }}
                                 <br>
-                                <span class="text-caption font-italic">Converted to the local timezone of this station ({{ station.timezone }}).</span>
+                                <span class="text-caption font-italic">Converted to the local timezone of this station ({{ station.timezone }}). Note this may differ by an hour from the raw timestamp due to DST (e.g., if the image was taken during DST but the timestamp was recorded in local standard time due to the logger settings).</span>
                               </td>
                             </tr>
                           </tbody>
@@ -307,11 +310,15 @@
                         </p>
                       </v-alert>
 
+                      <Alert class="mt-8" type="error" v-if="parseTimestamp(firstTimestampValue) === 'Invalid Date'" title="Failed to Parse Timestamp">
+                          Please check that the date is in 'YYYY-mm-dd' (e.g., '05-09-2023') and time in 'HH:MM' (e.g., '07:05' or '13:15') or HH:MM:SS (e.g., '07:05:02') format. Hours must use 24-hour time and not 12-hour time with AM/PM.
+                        </Alert>
+
                       <v-row class="mt-8 mb-4 px-3">
                         <v-btn text class="mr-4 px-4" @click="step -= 1">
                           <v-icon left>mdi-chevron-left</v-icon> Previous
                         </v-btn>
-                        <v-btn color="primary" class="mr-4 px-4" @click="nextTimestamp">
+                        <v-btn color="primary" class="mr-4 px-4" @click="nextTimestamp" :disabled="parseTimestamp(firstTimestampValue) === 'Invalid Date'">
                           Continue <v-icon right>mdi-chevron-right</v-icon>
                         </v-btn>
 
@@ -869,7 +876,9 @@ export default {
 
       const utcOffset = this.timestamp.utcOffset.selected
       const parsed = this.$luxon.DateTime.fromISO(v.replace(' ', 'T')).setZone(utcOffset.id, { keepLocalTime: true })
-      if (!parsed.isValid) return 'Invalid Date'
+      if (!parsed.isValid) {
+        return 'Invalid Date'
+      }
 
       return local ? parsed.setZone(this.station.timezone).toFormat('DD ttt') : parsed.setZone('UTC').toFormat('DD ttt')
     },
