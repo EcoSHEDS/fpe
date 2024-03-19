@@ -234,7 +234,7 @@ export default {
           variableId: series.variableId,
           data: seriesValues,
           yAxis: this.scaleValues ? 'values' : series.variableId,
-          gapSize: 10,
+          gapSize: 0,
           legend: {
             enabled: true
           },

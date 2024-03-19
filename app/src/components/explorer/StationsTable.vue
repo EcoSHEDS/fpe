@@ -144,7 +144,7 @@ export default {
           text: 'Affiliation',
           value: 'affiliation_code',
           align: 'center',
-          width: 120
+          width: 150
         },
         {
           text: 'Station Name',

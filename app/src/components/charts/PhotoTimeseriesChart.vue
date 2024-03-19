@@ -433,7 +433,7 @@ export default {
           data: seriesValues,
           daily: seriesValues,
           yAxis: this.scaleValues ? 'values' : series.variableId,
-          gapSize: 10,
+          gapSize: 0,
           legend: {
             enabled: true
           },
