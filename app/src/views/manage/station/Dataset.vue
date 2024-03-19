@@ -63,7 +63,7 @@
                       Uploaded
                     </td>
                     <td class="font-weight-bold">
-                      {{dataset.created_at | timestampFormat('lll') }} ({{ dataset.created_at | timestampFromNow }})
+                      {{dataset.created_at | formatTimestamp('local', 'DD t') }} ({{ dataset.created_at | timestampFromNow }})
                     </td>
                   </tr>
                   <tr>
@@ -96,7 +96,7 @@
                       Start
                     </td>
                     <td class="font-weight-bold">
-                      <span v-if="dataset.start_timestamp">{{ dataset.start_timestamp | timestampLocalFormat(station.timezone, 'lll z') }}</span>
+                      <span v-if="dataset.start_timestamp">{{ dataset.start_timestamp | formatTimestamp(station.timezone, 'DD ttt') }}</span>
                     </td>
                   </tr>
                   <tr v-if="dataset.status === 'DONE'">
@@ -106,7 +106,7 @@
                       End
                     </td>
                     <td class="font-weight-bold">
-                      <span v-if="dataset.end_timestamp">{{ dataset.end_timestamp | timestampLocalFormat(station.timezone, 'lll z') }}</span>
+                      <span v-if="dataset.end_timestamp">{{ dataset.end_timestamp | formatTimestamp(station.timezone, 'DD ttt') }}</span>
                     </td>
                   </tr>
                   <tr>

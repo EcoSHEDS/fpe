@@ -173,12 +173,12 @@
               <v-divider></v-divider>
             </template>
             <template v-slot:item.created_at="{ item }">
-              {{ item.created_at | timestampFormat('lll') }}
+              {{ item.created_at | formatTimestamp('local', 'DD t') }}
             </template>
             <template v-slot:item.period="{ item }">
               <span v-if="item.start_timestamp">
-                {{ item.start_timestamp | timestampLocalFormat(station.timezone, 'll') }} &#8211;
-                {{ item.end_timestamp | timestampLocalFormat(station.timezone, 'll') }}
+                {{ item.start_timestamp | formatTimestamp(station.timezone, 'DD') }} &#8211;
+                {{ item.end_timestamp | formatTimestamp(station.timezone, 'DD') }}
               </span>
             </template>
             <template v-slot:item.filename="{ item }">

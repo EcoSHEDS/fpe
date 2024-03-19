@@ -15,7 +15,7 @@
     <div class="fpe-image-preview-filename text-subtitle-2 font-weight-bold">{{ image.filename }}</div>
     <div class="text-caption" style="width:100%">
       <div v-if="image.status === 'DONE'">
-        {{ timestampLocal }}
+        {{ image.timestamp | formatTimestamp(timezone, 'DD ttt') }}
       </div>
       <div>
         <v-chip :color="image.pii_off ? 'gray' : 'error'" v-if="image.pii_person >= 0.2" class="my-1 mr-1" small>Person Detected ({{image.pii_person.toFixed(2)}})</v-chip>
@@ -78,17 +78,6 @@ export default {
     timezone: {
       type: String,
       required: true
-    }
-  },
-  computed: {
-    timestampLocal () {
-      const { timestamp } = this.image
-
-      if (!timestamp) return 'Missing Timestamp'
-
-      return this.$date(timestamp)
-        .tz(this.timezone)
-        .format('M/DD/YYYY h:mm a z')
     }
   },
   methods: {

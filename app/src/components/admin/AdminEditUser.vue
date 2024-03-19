@@ -45,7 +45,7 @@
                     style="width:140px">
                     Created
                   </td>
-                  <td class="font-weight-bold">{{ this.$date(user.created_at).format('lll z') }}</td>
+                  <td class="font-weight-bold">{{ user.created_at | formatTimestamp('local', 'DD ttt') }}</td>
                 </tr>
                 <tr>
                   <td
@@ -53,7 +53,7 @@
                     style="width:140px">
                     Updated
                   </td>
-                  <td class="font-weight-bold">{{ this.$date(user.updated_at).format('lll z') }}</td>
+                  <td class="font-weight-bold">{{ user.updated_at | formatTimestamp('local', 'DD ttt') }}</td>
                 </tr>
                 <tr>
                   <td

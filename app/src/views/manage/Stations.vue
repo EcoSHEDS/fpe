@@ -38,8 +38,8 @@
       </template>
       <template v-slot:item.summary.images.period="{ item }">
         <span v-if="item.summary && item.summary.images && item.summary.images.n_images > 0">
-          {{ item.summary.images.start_date | timestampFormat('ll') }} &#8211;
-          {{ item.summary.images.end_date | timestampFormat('ll') }}
+          {{ item.summary.images.start_date | formatDate }} &#8211;
+          {{ item.summary.images.end_date | formatDate }}
         </span>
         <span v-else>No Photos</span>
       </template>

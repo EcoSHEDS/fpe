@@ -4,43 +4,60 @@
       <v-col cols="12" md="6">
         <highcharts :options="chartOptions" ref="chart"></highcharts>
       </v-col>
+      <v-divider vertical></v-divider>
       <v-col cols="12" md="6">
-        <v-sheet class="text-body-2 px-4">
-          <div class="text-caption mt-4">Timeseries Mode</div>
-          <div class="d-flex align-center">
-            <b>{{ mode === 'DAY' ? 'Daily Mean' : 'Sub-Daily' }}</b>
-            <v-tooltip bottom max-width="400">
-              <template v-slot:activator="{ on }">
-                <v-btn
-                  small
-                  icon
-                  v-on="on"
-                  color="default"
-                  class="ml-2"
-                ><v-icon small>mdi-information</v-icon></v-btn>
-              </template>
-              <div class="mb-2">When the selected time period is more than 30 days, the chart is in <b>Daily Mean</b> mode and each timeseries is aggregated to daily values. Only the photo taken closest to noon on each date will be shown.</div>
-              <div>Otherwise, the <b>Sub-Daily</b> values of each variable along with all available photos will be shown.</div>
-            </v-tooltip>
-          </div>
-          <div class="text-caption mt-4">Selected Time Period</div>
-          <div class="d-flex align-center">
-            <div>
-              <b>{{ timeRange[0] | timestampFormat('ll') }} - {{ timeRange[1] | timestampFormat('ll') }}</b>
-            </div>
-            <v-tooltip bottom>
-              <template v-slot:activator="{ on }">
-                <v-btn
-                  small
-                  icon
-                  v-on="on"
-                  color="default"
-                  class="ml-2"
-                ><v-icon small>mdi-information</v-icon></v-btn>
-              </template>
-              <span>Use the timeseries chart to change the time period</span>
-            </v-tooltip>
-          </div>
+        <v-sheet class="text-body-2">
+          <v-simple-table dense>
+            <tbody>
+              <tr>
+                <td
+                  class="text-right grey--text text--darken-2"
+                  style="width:180px">
+                  Mode:
+                </td>
+                <td class="font-weight-bold">
+                  <v-chip small label v-if="mode === 'DAY'">DAILY</v-chip>
+                  <v-chip small label v-else>SUB-DAILY</v-chip>
+                  <v-tooltip bottom>
+                    <template v-slot:activator="{ on }">
+                      <v-btn
+                        small
+                        icon
+                        v-on="on"
+                        color="default"
+                        class="ml-2 mb-1"
+                      ><v-icon small>mdi-information</v-icon></v-btn>
+                    </template>
+                    <span v-if="mode === 'DAY'">Select a time period of 30 days or less on the Timeseries chart to switch to Sub-daily mode</span>
+                    <span v-else>Select a time period longer than 30 days on the Timeseries chart to switch to Daily mode</span>
+                  </v-tooltip>
+                </td>
+              </tr>
+              <tr>
+                <td
+                  class="text-right grey--text text--darken-2"
+                  style="width:180px">
+                  Selected Time Period:
+                </td>
+                <td class="font-weight-bold">
+                  <b>{{ timeRange[0] | formatTimestamp(station.timezone, 'DD') }} - {{ timeRange[1] | formatTimestamp(station.timezone, 'DD') }}</b>
+                  <v-tooltip bottom>
+                    <template v-slot:activator="{ on }">
+                      <v-btn
+                        small
+                        icon
+                        v-on="on"
+                        color="default"
+                        class="ml-2 mb-1"
+                      ><v-icon small>mdi-information</v-icon></v-btn>
+                    </template>
+                    <span>Use the Timeseries chart to select a different time period</span>
+                  </v-tooltip>
+                </td>
+              </tr>
+            </tbody>
+          </v-simple-table>
+          <v-divider class="mb-2"></v-divider>
           <div v-if="series.length === 0">
             <Alert type="warning" title="No Data Available">
               This station does not have any observed data or model predictions.
@@ -80,6 +97,7 @@
               color="default"
               label="Show as Rank Percentile (0-100%)"
               hide-details
+              dense
               @change="$emit('update:scaleValues', !scaleValues)"
             >
             </v-checkbox>
@@ -110,17 +128,12 @@
         </v-sheet>
       </v-col>
     </v-row>
-    <!-- <div v-else class="mt-4 d-flex justify-center">
-      <Alert title="Insufficient Data" style="max-width:600px" type="error">
-        The Scatterplot Chart requires at least two variables of observed data and/or model results.
-      </Alert>
-    </div> -->
   </div>
 </template>
 
 <script>
 import { format } from 'd3-format'
-import dayjs from 'dayjs'
+import { timestampFormat } from '@/lib/time'
 
 export default {
   name: 'ScatterChart',
@@ -276,9 +289,9 @@ export default {
         tooltip: {
           pointFormatter: function () {
             const header = this.mode === 'DAY'
-              ? dayjs(this.image.timestamp).tz(timezone).format('ll')
-              : dayjs(this.image.timestamp).tz(timezone).format('lll')
-            const modeLabel = this.mode === 'DAY' ? 'Daily Mean' : 'Sub-daily'
+              ? timestampFormat(this.image.timestamp, timezone, 'DD')
+              : timestampFormat(this.image.timestamp, timezone)
+            const modeLabel = this.mode === 'DAY' ? 'Daily Mean' : ''
 
             const valueFormat = (x) => {
               return (x === null || x === undefined) ? 'N/A' : format('.1f')(x)

@@ -1,80 +1,96 @@
 <template>
   <v-row class="justify-center mt-4">
-    <v-col cols="12" md="7">
+    <v-col cols="12" md="6">
       <highcharts :options="chartOptions" ref="chart"></highcharts>
     </v-col>
-    <v-col cols="12" md="5">
-      <v-sheet class="text-body-2 px-4">
-        <div class="text-caption">Timeseries Mode</div>
-        <div class="d-flex align-center">
-          <b>{{ mode === 'DAY' ? 'Daily Mean' : 'Sub-Daily' }}</b>
-          <v-tooltip bottom max-width="400">
-            <template v-slot:activator="{ on }">
-              <v-btn
-                small
-                icon
-                v-on="on"
-                color="default"
-                class="ml-2"
-              ><v-icon small>mdi-information</v-icon></v-btn>
-            </template>
-            <div class="mb-2">When the selected time period is more than 30 days, the chart is in <b>Daily Mean</b> mode and each timeseries is aggregated to daily values. Only the photo taken closest to noon on each date will be shown.</div>
-            <div>Otherwise, the <b>Sub-Daily</b> values of each variable along with all available photos will be shown.</div>
-          </v-tooltip>
-        </div>
-        <div class="text-caption mt-4">Selected Time Period</div>
-        <div class="d-flex align-center">
-          <div>
-            <b>{{ timeRange[0] | timestampFormat('ll') }} - {{ timeRange[1] | timestampFormat('ll') }}</b>
-          </div>
-          <v-tooltip bottom>
-            <template v-slot:activator="{ on }">
-              <v-btn
-                small
-                icon
-                v-on="on"
-                color="default"
-                class="ml-2"
-              ><v-icon small>mdi-information</v-icon></v-btn>
-            </template>
-            <span>Use the timeseries chart to change the time period</span>
-          </v-tooltip>
-        </div>
-
-        <div class="mt-4">
-          <v-menu offset-y>
-            <template v-slot:activator="{ on }">
-              <v-btn
-                small
-                depressed
-                v-on="on"
-                color="default"
-              >About This Chart <v-icon right small>mdi-menu-down</v-icon></v-btn>
-            </template>
-            <v-card max-width="400">
-              <v-card-text class="black--text text-body-2">
-                <p>
-                  The Distribution Chart shows the cumulative distribution of each variable.
-                </p>
-                <p>
-                  The x-axis represents the percentile rank, and the y-axis represents the value of each date or photo depending on whether the Timeseries Mode is Daily or Sub-Daily.
-                </p>
-                <p class="mb-0">
-                  Hover over the chart to see the photo associated with each point. If multiple variables are available, then all points corresponding to the current photo will be highlighted (one for each variable).
-                </p>
-              </v-card-text>
-            </v-card>
-          </v-menu>
-        </div>
+    <v-divider vertical></v-divider>
+    <v-col cols="12" md="6">
+      <v-sheet class="text-body-2">
+        <v-simple-table dense>
+          <tbody>
+            <tr>
+              <td
+                class="text-right grey--text text--darken-2"
+                style="width:180px">
+                Mode:
+              </td>
+              <td class="font-weight-bold">
+                <v-chip small label v-if="mode === 'DAY'">DAILY</v-chip>
+                <v-chip small label v-else>SUB-DAILY</v-chip>
+                <v-tooltip bottom>
+                  <template v-slot:activator="{ on }">
+                    <v-btn
+                      small
+                      icon
+                      v-on="on"
+                      color="default"
+                      class="ml-2 mb-1"
+                    ><v-icon small>mdi-information</v-icon></v-btn>
+                  </template>
+                  <span v-if="mode === 'DAY'">Select a time period of 30 days or less on the Timeseries chart to switch to Sub-daily mode</span>
+                  <span v-else>Select a time period longer than 30 days on the Timeseries chart to switch to Daily mode</span>
+                </v-tooltip>
+              </td>
+            </tr>
+            <tr>
+              <td
+                class="text-right grey--text text--darken-2"
+                style="width:180px">
+                Selected Time Period:
+              </td>
+              <td class="font-weight-bold">
+                <b>{{ timeRange[0] | formatTimestamp(station.timezone, 'DD') }} - {{ timeRange[1] | formatTimestamp(station.timezone, 'DD') }}</b>
+                <v-tooltip bottom>
+                  <template v-slot:activator="{ on }">
+                    <v-btn
+                      small
+                      icon
+                      v-on="on"
+                      color="default"
+                      class="ml-2 mb-1"
+                    ><v-icon small>mdi-information</v-icon></v-btn>
+                  </template>
+                  <span>Use the Timeseries chart to select a different time period</span>
+                </v-tooltip>
+              </td>
+            </tr>
+          </tbody>
+        </v-simple-table>
       </v-sheet>
+
+      <div class="mt-4 d-flex">
+        <v-menu offset-y>
+          <template v-slot:activator="{ on }">
+            <v-btn
+              small
+              depressed
+              v-on="on"
+              color="default"
+            >About This Chart <v-icon right small>mdi-menu-down</v-icon></v-btn>
+          </template>
+          <v-card max-width="400">
+            <v-card-text class="black--text text-body-2">
+              <p>
+                The Distribution Chart shows the cumulative distribution of each variable.
+              </p>
+              <p>
+                The x-axis represents the percentile rank, and the y-axis represents the value of each date or photo depending on whether the Timeseries Mode is Daily or Sub-Daily.
+              </p>
+              <p class="mb-0">
+                Hover over the chart to see the photo associated with each point. If multiple variables are available, then all points corresponding to the current photo will be highlighted (one for each variable).
+              </p>
+            </v-card-text>
+          </v-card>
+        </v-menu>
+      </div>
     </v-col>
   </v-row>
 </template>
 
 <script>
 import { variables } from '@/lib/constants'
+import { timestampFormat } from '@/lib/time'
 import { format } from 'd3-format'
-import dayjs from 'dayjs'
 
 const variableAxes = variables.map((variable, i) => {
   return {
@@ -103,7 +119,6 @@ export default {
   name: 'DistributionChart',
   props: ['series', 'images', 'station', 'image', 'timeRange', 'mode'],
   data () {
-    // const $date = this.$date
     return {
       scaleValues: false,
       chartOptions: {
@@ -215,10 +230,10 @@ export default {
           tooltip: {
             pointFormatter: function () {
               const header = this.mode === 'DAY'
-                ? dayjs(this.image.timestamp).tz(station.timezone).format('ll')
-                : dayjs(this.image.timestamp).tz(station.timezone).format('lll')
+                ? timestampFormat(this.image.timestamp, station.timezone, 'DD')
+                : timestampFormat(this.image.timestamp, station.timezone)
 
-              const modeLabel = mode === 'DAY' ? 'Daily Mean' : 'Sub-Daily'
+              const modeLabel = mode === 'DAY' ? 'Daily' : 'Sub-Daily'
 
               const valueFormatter = format('.1f')
               const rankFormatter = format('.1%')

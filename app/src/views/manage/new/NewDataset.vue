@@ -287,7 +287,7 @@
                             <tr>
                               <td class="text-right px-4" style="vertical-align:top">UTC Timestamp:</td>
                               <td class="font-weight-bold">
-                                {{ parseTimestamp(firstTimestampValue) ? `${parseTimestamp(firstTimestampValue).format('MMM D, YYYY h:mm:ss a')} UTC` : 'Invalid Date' }}
+                                {{ parseTimestamp(firstTimestampValue) }}
                                 <br>
                                 <span class="text-caption font-italic">Adjusted by the selected UTC offset ({{-1 * timestamp.utcOffset.selected.value}} hours).</span>
                               </td>
@@ -295,7 +295,7 @@
                             <tr>
                               <td class="text-right px-4" style="vertical-align:top">Local Timestamp:</td>
                               <td class="font-weight-bold">
-                                {{ parseTimestamp(firstTimestampValue, true) ? parseTimestamp(firstTimestampValue, true).format('MMM D, YYYY h:mm:ss a z') : 'Invalid Date' }}
+                                {{ parseTimestamp(firstTimestampValue, true) }}
                                 <br>
                                 <span class="text-caption font-italic">Converted to the local timezone of this station ({{ station.timezone }}).</span>
                               </td>
@@ -657,7 +657,6 @@
 import { parseFile } from '@/lib/parsers'
 import { utcOffsets, variables } from '@/lib/constants'
 import { mapGetters } from 'vuex'
-import dayjs from 'dayjs'
 
 export default {
   name: 'NewDataset',
@@ -868,11 +867,11 @@ export default {
     parseTimestamp (v, local) {
       if (!this.timestamp.utcOffset.selected) return 'Missing UTC offset'
 
-      const utcOffset = this.timestamp.utcOffset.selected.value
-      const parsed = dayjs(v).utc(true).subtract(utcOffset, 'hour')
-      if (!parsed.isValid()) return 'Invalid Date'
+      const utcOffset = this.timestamp.utcOffset.selected
+      const parsed = this.$luxon.DateTime.fromISO(v.replace(' ', 'T')).setZone(utcOffset.id, { keepLocalTime: true })
+      if (!parsed.isValid) return 'Invalid Date'
 
-      return local ? parsed.tz(this.station.timezone) : parsed
+      return local ? parsed.setZone(this.station.timezone).toFormat('DD ttt') : parsed.setZone('UTC').toFormat('DD ttt')
     },
     nextTimestamp () {
       this.timestamp.error = null

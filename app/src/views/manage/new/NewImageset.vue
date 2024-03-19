@@ -539,7 +539,6 @@
 
 <script>
 import ExifParser from 'exif-parser'
-import dayjs from 'dayjs'
 
 import { utcOffsets, MAX_IMAGES_PER_IMAGESET } from '@/lib/constants'
 
@@ -736,17 +735,23 @@ export default {
 
       const exifDatetime = exif.tags.DateTimeOriginal || exif.tags.CreateDate
       const rawTimestamp = new Date(exifDatetime * 1000)
-      const utcOffset = this.timestamp.utcOffset.selected.value
-      const timestamp = dayjs(rawTimestamp).utc().subtract(utcOffset, 'hour')
-      if (!timestamp.isValid()) return 'Invalid Date'
+      const utcOffset = this.timestamp.utcOffset.selected
+      const timestamp = this.$luxon.DateTime.fromJSDate(rawTimestamp).setZone(utcOffset.id, { keepLocalTime: true })
+      if (!timestamp.isValid) return 'Invalid Date'
+
+      console.log(timestamp)
+
+      const exifTimestamp = timestamp.toFormat('DD tt')
+      const localTimestamp = timestamp.setZone(this.station.timezone).toFormat('DD ttt')
+      const utcTimestamp = timestamp.setZone('UTC').toFormat('DD ttt')
 
       this.timestamp.verify = {
         file,
         url,
         ...exif.imageSize,
-        exifTimestamp: dayjs(rawTimestamp).utc().format('MMM D, YYYY h:mm:ss a'),
-        localTimestamp: timestamp.tz(this.station.timezone).format('MMM D, YYYY h:mm:ss a z'),
-        utcTimestamp: `${timestamp.format('MMM D, YYYY h:mm:ss a')} UTC`
+        exifTimestamp,
+        localTimestamp,
+        utcTimestamp
       }
 
       setTimeout(() => this.$vuetify.goTo(this.$refs.bottom), 100)

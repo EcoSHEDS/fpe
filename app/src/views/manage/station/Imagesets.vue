@@ -138,12 +138,12 @@
               <v-divider></v-divider>
             </template>
             <template v-slot:item.created_at="{ item }">
-              {{ item.created_at | timestampFormat('lll') }}
+              {{ item.created_at | formatTimestamp('local', 'DD t') }}
             </template>
             <template v-slot:item.period="{ item }">
               <span v-if="item.status === 'DONE' && item.start_timestamp">
-                {{ item.start_timestamp | timestampFormat('ll') }} &#8211;
-                {{ item.end_timestamp | timestampFormat('ll') }}
+                {{ item.start_timestamp | formatTimestamp(station.timezone, 'DD') }} &#8211;
+                {{ item.end_timestamp | formatTimestamp(station.timezone, 'DD') }}
               </span>
             </template>
             <template v-slot:item.n_images="{ item }">

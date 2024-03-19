@@ -35,7 +35,7 @@
             <ul>
               <li>Ben Letcher, USGS - Principal Investigator</li>
               <li>Jenn Fair, USGS - Research Hydrologist and Field Coordinator</li>
-              <li>Phillip Goodling, USGS - Research Hydrologist and Outreach Coordinator</li>
+              <li>Phillip Goodling, USGS - Hydrologist and Outreach Coordinator</li>
               <li>Jeff Walker, Walker Environmental Research - Database, Model, and Web Application Developer</li>
               <li>Amrita Gupta, Microsoft AI for Good - Machine Learning Model Developer</li>
               <li>Todd Dubreuil, USGS - Ecologist and Field Technician</li>

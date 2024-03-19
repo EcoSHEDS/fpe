@@ -28,14 +28,14 @@
             {{ station.latitude.toFixed(5) }}, {{ station.longitude.toFixed(5) }}
           </td>
         </tr>
-        <!-- <tr>
+        <tr>
           <td class="text-right grey--text text--darken-2">
             Timezone
           </td>
           <td class="font-weight-bold">
             {{ station.timezone }}
           </td>
-        </tr> -->
+        </tr>
         <tr>
           <td class="text-right grey--text text--darken-2">
             Waterbody Type
@@ -138,7 +138,7 @@
                       <td>{{ model.code }}</td>
                       <td>{{ model.model_type_id }}</td>
                       <td>{{ model.variable_id }}</td>
-                      <td>{{ model.updated_at | timestampFormat('ll') }}</td>
+                      <td>{{ model.updated_at | formatTimestamp('local', 'DD') }}</td>
                       <td>
                         <a :href="model.diagnostics_url" target="_blank">Diagnostics</a> <v-icon small right>mdi-open-in-new</v-icon>
                       </td>
@@ -188,8 +188,8 @@
               Period
             </td>
             <td class="font-weight-bold">
-              {{ station.summary.images.start_date | timestampFormat('ll') }} &#8211;
-              {{ station.summary.images.end_date | timestampFormat('ll') }}
+              {{ station.summary.images.start_date | formatDate }} &#8211;
+              {{ station.summary.images.end_date | formatDate }}
             </td>
           </tr>
           <tr>
@@ -332,8 +332,8 @@
                 Period
               </td>
               <td class="font-weight-bold">
-                {{ station.summary.values.start_date | timestampFormat('ll') }} &#8211;
-                {{ station.summary.values.end_date | timestampFormat('ll') }}
+                {{ station.summary.values.start_date | formatDate }} &#8211;
+                {{ station.summary.values.end_date | formatDate }}
               </td>
             </tr>
             <tr>

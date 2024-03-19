@@ -101,12 +101,12 @@
     </template>
     <template v-slot:item.images.start_date="{ item }">
       <span v-if="item.images && item.images.count > 0">
-        {{ item.images.start_date | timestampFormat('ll') }}
+        {{ item.images.start_date | formatDate }}
       </span>
     </template>
     <template v-slot:item.images.end_date="{ item }">
       <span v-if="item.images && item.images.count > 0">
-        {{ item.images.end_date | timestampFormat('ll') }}
+        {{ item.images.end_date | formatDate }}
       </span>
     </template>
     <template v-slot:item.has_obs="{ item }">

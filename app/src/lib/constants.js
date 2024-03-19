@@ -245,13 +245,6 @@ export const utcOffsets = [
   }
 ]
 
-// https://day.js.org/docs/en/parse/string-format
-export const timestampFormats = [
-  'YYYY-MM-DDTHH:mm:ss',
-  'YYYY-MM-DD HH:mm:ss',
-  'YYYY-MM-DD HH:mm'
-]
-
 export const MAX_IMAGES_PER_IMAGESET = 10000
 
 export const stationStatusTypes = [

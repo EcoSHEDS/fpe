@@ -45,7 +45,7 @@
       </template>
 
       <template v-slot:item.created_at="{ item }">
-        {{ item.created_at | timestampFormat('ll') }}
+        {{ item.created_at | formatTimestamp('local', 'DD t') }}
       </template>
       <template v-slot:item.id="{ item }">
         {{ item.id.substr(1, 7) }}...
