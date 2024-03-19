@@ -23,7 +23,7 @@ async function notifyMessage (id) {
   return `New photoset has been uploaded to FPE
 
 Imageset ID: ${imageset.id}
-Uploaded at: ${DateTime.fromISO(imageset.created_at).tz('US/Eastern').toFormat('DD ttt')}
+Uploaded at: ${DateTime.fromJSDate(imageset.created_at).setZone('US/Eastern').toFormat('DD ttt')}
 Status: ${imageset.status}
 
 User ID: ${imageset.station.user.id}
@@ -32,7 +32,7 @@ Station: ${imageset.station.name}
 Station URL: https://www.usgs.gov/apps/ecosheds/fpe/#/explorer/${imageset.station.id}/
 
 # Images: ${imageset.n_images}
-Period: ${DateTime.fromISO(imageset.start_timestamp).setZone(imageset.station.timezone).toFormat('DD')} to ${DateTime.fromISO(imageset.end_timestamp).setZone(imageset.station.timezone).toFormat('DD')}
+Period: ${DateTime.fromJSDate(imageset.start_timestamp).setZone(imageset.station.timezone).toFormat('DD')} to ${DateTime.fromJSDate(imageset.end_timestamp).setZone(imageset.station.timezone).toFormat('DD')}
 `
 }
 
