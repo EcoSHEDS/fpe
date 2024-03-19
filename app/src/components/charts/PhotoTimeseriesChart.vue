@@ -144,7 +144,10 @@ export default {
         plotOptions: {
           series: {
             animation: false,
-            turboThreshold: 0
+            turboThreshold: 0,
+            dataGrouping: {
+              enabled: false
+            }
           }
         },
         rangeSelector: {
@@ -194,6 +197,9 @@ export default {
           adaptToUpdatedData: false,
           series: {
             type: 'line',
+            dataGrouping: {
+              enabled: false
+            },
             marker: {
               enabled: true
             }
