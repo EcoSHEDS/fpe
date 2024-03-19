@@ -44,7 +44,6 @@ const getPublicStations = async (req, res, next) => {
 const getAllStations = async (req, res, next) => {
   const rows = await stationsQuery()
     .where(req.query)
-    .debug(true)
   return res.status(200).json(rows)
 }
 
