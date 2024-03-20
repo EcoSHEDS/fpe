@@ -84,12 +84,10 @@ export default {
           enabled: true
         },
         tooltip: {
+          headerFormat: '',
           animation: false,
           outside: true,
-          // split: false,
-          // shared: true,
-          xDateFormat: '%b %e, %Y'
-          // hideDelay: 999999999
+          shared: true
         },
         navigator: {
           enabled: false
@@ -234,7 +232,8 @@ export default {
           variableId: series.variableId,
           data: seriesValues,
           yAxis: this.scaleValues ? 'values' : series.variableId,
-          gapSize: 0,
+          gapSize: 60 * 60 * 1000, // 1 hour
+          gapUnit: 'value',
           legend: {
             enabled: true
           },
@@ -333,6 +332,12 @@ export default {
       }, true, true, false)
       if (this.image) {
         this.highlightImage(this.image)
+      }
+
+      if (this.series.length === 0) {
+        this.chart.showNoData()
+      } else {
+        this.chart.hideNoData()
       }
     },
     highlightImage (image) {

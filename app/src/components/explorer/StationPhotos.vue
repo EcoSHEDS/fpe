@@ -3,10 +3,15 @@
     <v-overlay v-if="loading" absolute class="rounded">
       <v-progress-circular indeterminate size="64"></v-progress-circular>
     </v-overlay>
-    <div v-else-if="error" class="px-4">
+    <div v-else-if="error" class="px-4 mt-4">
       <Alert type="error" title="Server Error">
         <div>There was an error loading the station.</div>
         <div class="mt-4 font-weight-bold">{{ error }}</div>
+      </Alert>
+    </div>
+    <div v-else-if="images.length === 0" class="px-4 mt-4">
+      <Alert type="error" title="No Photos Available">
+        <div>No photos are available for this station.</div>
       </Alert>
     </div>
     <div v-else>
@@ -422,6 +427,11 @@ export default {
       this.error = null
       try {
         const images = await this.fetchDailyImages()
+
+        if (images.length === 0) {
+          this.loading = false
+          return
+        }
 
         const startDate = images[0].date
         const endDate = images[images.length - 1].date

@@ -255,6 +255,7 @@ export default {
   },
   async mounted () {
     this.chart = this.$refs.chart.chart
+    window.chart = this.chart
     await this.updateChart()
   },
   methods: {
@@ -275,7 +276,9 @@ export default {
       // console.log('render: done')
     },
     renderInstantaneous () {
-      // console.log('renderInstantaneous: start')
+      // console.log('renderInstantaneous()')
+
+      if (!this.instantaneous) return
 
       this.chart.series.forEach(s => {
         if (s.name === 'Navigator 1') return
@@ -310,6 +313,9 @@ export default {
                   y: this.scaleValues ? d.rank : d.value
                 }
               }).filter(d => d.y !== null && d.y !== undefined)
+              s.update({
+                gapSize: 60 * 60 * 1000 // 1 hour
+              }, false)
               s.setData(seriesValues)
             }
           }
@@ -317,15 +323,32 @@ export default {
       })
       this.chart.render(true, false, false)
       // console.log('renderInstantaneous: done')
+
+      if (this.instantaneous.series.length === 0) {
+        this.chart.showNoData()
+      } else {
+        this.chart.hideNoData()
+      }
     },
     renderDaily () {
+      // console.log('renderDaily()', this.series.length)
       this.chart.series.forEach(s => {
+        if (!s.options.marker.enabled) {
+          s.update({
+            gapSize: 2 * 24 * 60 * 60 * 1000 // 2 days
+          }, false)
+        }
         s.setData(s.options.daily)
       })
       this.chart.render(true, false, false)
+      if (this.series.length === 0) {
+        this.chart.showNoData()
+      } else {
+        this.chart.hideNoData()
+      }
     },
     updateChart () {
-      // console.log('updateChart: start')
+      // console.log('updateChart()', this.images)
       const seriesVariableIds = this.series.map(d => d.variableId)
       let dataAxes = []
       if (this.scaleValues) {
@@ -384,10 +407,11 @@ export default {
       })
       const timezone = this.station.timezone
       const that = this
+      console.log('dailyImages', dailyImages)
       const imagesSeries = {
         name: 'Photo',
         data: dailyImages,
-        daily: dailyImages,
+        daily: dailyImages.slice(),
         yAxis: 'images',
         showInLegend: false,
         lineWidth: 0,
@@ -433,7 +457,8 @@ export default {
           data: seriesValues,
           daily: seriesValues,
           yAxis: this.scaleValues ? 'values' : series.variableId,
-          gapSize: 0,
+          gapSize: 2 * 24 * 60 * 60 * 1000, // 2 days
+          gapUnit: 'value',
           legend: {
             enabled: true
           },
@@ -525,12 +550,12 @@ export default {
       }, true, true, false)
       this.render()
 
-      console.log('n', variableSeries.length)
-      if (variableSeries.length === 0) {
-        this.chart.showNoData()
-      } else {
-        this.chart.hideNoData()
-      }
+      // console.log('n', variableSeries.length)
+      // if (variableSeries.length === 0) {
+      //   this.chart.showNoData()
+      // } else {
+      //   this.chart.hideNoData()
+      // }
 
       // console.log('updateChart: done')
     },
