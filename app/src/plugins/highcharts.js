@@ -33,7 +33,13 @@ Highcharts.setOptions({
     '#17becf'
   ]
 })
+// console.log(Highcharts.Pointer.prototype.reset)
 // Highcharts.Pointer.prototype.reset = function () {
-//   return undefined
+//   this.chart.tooltip.hide()
+//   this.chart.axes.forEach(function (axis) {
+//     if (axis.crosshair) {
+//       axis.hideCrosshair()
+//     }
+//   })
 // }
 Vue.use(HighchartsVue)

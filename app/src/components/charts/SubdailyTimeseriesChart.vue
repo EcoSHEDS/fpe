@@ -65,7 +65,12 @@ export default {
       chartOptions: {
         chart: {
           animation: false,
-          height: '300px'
+          height: '300px',
+          events: {
+            click: () => {
+              this.onClick()
+            }
+          }
         },
         noData: {
           style: {
@@ -77,15 +82,20 @@ export default {
         plotOptions: {
           series: {
             animation: false,
-            turboThreshold: 0
+            turboThreshold: 0,
+            events: {
+              click: () => {
+                this.onClick()
+              }
+            }
           }
         },
         legend: {
           enabled: true
         },
         tooltip: {
-          headerFormat: '',
           animation: false,
+          headerFormat: '',
           outside: true,
           shared: true
         },
@@ -114,25 +124,39 @@ export default {
     image () {
       this.highlightImage(this.image)
     }
-    // loading () {
-    //   // console.log('watch:loading')
-    //   if (!this.chart) return
-    //   if (this.loading) {
-    //     // console.log('watch:loading show')
-    //     this.chart.showLoading()
-    //   } else {
-    //     // console.log('watch:loading hide')
-    //     this.chart.hideLoading()
-    //   }
-    // }
   },
   async mounted () {
     this.chart = this.$refs.chart.chart
-    // window.chart = this.chart
+    this.chart.container.onmouseout = () => {
+      this.highlightImage(this.image)
+    }
     await this.updateChart()
   },
+  beforeDestroy () {
+    this.chart.container.onmouseout = null
+  },
   methods: {
+    onClick () {
+      // console.log('onClick')
+      this.chart.series.forEach(s => {
+        s.update({
+          enableMouseTracking: false
+        }, false)
+      })
+      this.highlightImage(this.image)
+
+      setTimeout(() => {
+        this.chart.series.forEach(s => {
+          if (!s.options.marker.enabled) return
+          s.update({
+            enableMouseTracking: true
+          }, false)
+        })
+        this.highlightImage(this.image)
+      }, 1000)
+    },
     updateChart () {
+      // console.log('updateChart')
       const seriesVariableIds = this.series.map(d => d.variableId)
       let dataAxes = []
       if (this.scaleValues) {
@@ -315,10 +339,10 @@ export default {
 
       // first clear out chart to reset series and yAxes
       // in case the set of series (variables) has changed
-      // this.chart.update({
-      //   yAxis: [],
-      //   series: []
-      // }, true, true, false)
+      this.chart.update({
+        yAxis: [],
+        series: []
+      }, false, true, false)
       this.chart.update({
         time: {
           timezone
@@ -330,6 +354,7 @@ export default {
         yAxis: yAxes,
         series: newSeries
       }, true, true, false)
+
       if (this.image) {
         this.highlightImage(this.image)
       }
@@ -341,6 +366,8 @@ export default {
       }
     },
     highlightImage (image) {
+      // console.log('highlightImage', image)
+      if (!this.chart) return
       if (this.chart.hoverPoints !== undefined && this.chart.hoverPoints !== null) {
         // user is mousing over chart
         this.chart.series.forEach(s => {
@@ -358,6 +385,7 @@ export default {
           // console.log(s.name)
           s.points.forEach(p => {
             // console.log(p.image)
+            p.setState('')
             if (p.image && p.image.id === image.id) {
               if (p.state !== 'hover') {
                 p.setState('hover')
@@ -365,26 +393,10 @@ export default {
               if (s.name !== 'Photo' && s.name !== 'Navigator 1' && p.graphic) {
                 p.graphic.toFront()
               }
-            } else {
-              if (p.state === 'hover') {
-                p.setState('')
-              }
             }
           })
         })
       }
-    },
-    clearHighlight () {
-      // console.log('clearHighlight: start')
-      this.chart.series.forEach(s => {
-        if (s.name === 'Navigator 1') return
-        s.data.forEach(p => {
-          if (p.state === 'hover') {
-            p.setState('')
-          }
-        })
-      })
-      // console.log('clearHighlight: done')
     }
   }
 }

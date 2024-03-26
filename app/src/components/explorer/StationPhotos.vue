@@ -22,60 +22,67 @@
               <canvas ref="image" class="elevation-4"></canvas>
             </div>
 
-            <div style="max-width: 600px;" class="d-flex mx-auto mt-4">
-              <v-btn
-                rounded
-                outlined
-                color="primary"
-                @click="prevImage"
-                :disabled="player.playing"
-                class="mx-1"
-                title="Previous Image"
-              >
-                <v-icon>mdi-menu-left</v-icon> Prev
-              </v-btn>
-              <v-btn
-                rounded
-                outlined
-                color="primary"
-                @click="nextImage"
-                :disabled="player.playing"
-                class="mx-1"
-                title="Next Image"
-              >
-                <v-icon>mdi-menu-right</v-icon> Next
-              </v-btn>
-              <v-divider vertical class="mx-4"></v-divider>
-              <v-btn
-                v-if="!player.playing"
-                rounded
-                outlined
-                color="primary"
-                @click="startPlaying"
-                title="Start Playing"
-              >
-                <v-icon small>mdi-play</v-icon> Play
-              </v-btn>
-              <v-btn
-                v-else
-                rounded
-                color="error"
-                @click="stopPlaying"
-                title="Stop Playing"
-              >
-                <v-icon small>mdi-stop</v-icon> Stop
-              </v-btn>
-              <v-slider
-                v-model="player.speed"
-                color="black"
-                label="Speed"
-                min="1"
-                max="100"
-                step="1"
-                hide-details
-                class="ml-4"
-                title="Animation Speed"
-              ></v-slider>
+            <div class="mt-4 text-center">
+              <div style="display:inline-block" class="mx-4 my-2">
+                <v-btn
+                  rounded
+                  outlined
+                  color="primary"
+                  @click="prevImage"
+                  :disabled="player.playing"
+                  class="mx-1"
+                  title="Previous Image"
+                >
+                  <v-icon left>mdi-chevron-left</v-icon>Prev
+                </v-btn>
+                <v-btn
+                  rounded
+                  outlined
+                  color="primary"
+                  @click="nextImage"
+                  :disabled="player.playing"
+                  class="mx-1"
+                  title="Next Image"
+                >
+                  Next<v-icon right>mdi-chevron-right</v-icon>
+                </v-btn>
+              </div>
+              <div style="display:inline-block" class="my-2">
+                <div style="display:inline-block">
+                  <v-btn
+                    v-if="!player.playing"
+                    rounded
+                    color="primary"
+                    @click="startPlaying"
+                    title="Start Playing"
+                  >
+                    <v-icon small>mdi-play</v-icon> Play
+                  </v-btn>
+                  <v-btn
+                    v-else
+                    rounded
+                    color="error"
+                    @click="stopPlaying"
+                    title="Stop Playing"
+                  >
+                    <v-icon small>mdi-stop</v-icon> Stop
+                  </v-btn>
+                </div>
+                <div style="width:200px;display:inline-block">
+                  <v-slider
+                    v-model="player.speed"
+                    color="black"
+                    label="Speed"
+                    min="1"
+                    max="100"
+                    step="1"
+                    hide-details
+                    class="ml-4"
+                    title="Animation Speed"
+                  >
+                  </v-slider>
+                </div>
+              </div>
             </div>
           </v-col>
 

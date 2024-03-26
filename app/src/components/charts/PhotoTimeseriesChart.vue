@@ -132,7 +132,12 @@ export default {
       chartOptions: {
         chart: {
           animation: false,
-          zoomType: 'x'
+          zoomType: 'x',
+          events: {
+            click: () => {
+              this.onClick()
+            }
+          }
         },
         noData: {
           style: {
@@ -147,6 +152,11 @@ export default {
             turboThreshold: 0,
             dataGrouping: {
               enabled: false
+            },
+            events: {
+              click: () => {
+                this.onClick()
+              }
             }
           }
         },
@@ -255,10 +265,37 @@ export default {
   },
   async mounted () {
     this.chart = this.$refs.chart.chart
-    window.chart = this.chart
+    this.chart.container.onmouseout = () => {
+      this.highlightImage(this.image)
+    }
     await this.updateChart()
   },
+  beforeDestroy () {
+    this.chart.container.onmouseout = null
+  },
   methods: {
+    onClick () {
+      const chart = this.chart
+      chart.update({
+        plotOptions: {
+          series: {
+            enableMouseTracking: false
+          }
+        }
+      })
+      this.highlightImage(this.image)
+
+      setTimeout(() => {
+        chart.update({
+          plotOptions: {
+            series: {
+              enableMouseTracking: true
+            }
+          }
+        })
+        this.highlightImage(this.image)
+      }, 1000)
+    },
     async afterSetExtremes (event) {
       // console.log('afterSetExtremes', event)
       // this.clearHighlight()
@@ -321,7 +358,8 @@ export default {
           }
         }
       })
-      this.chart.render(true, false, false)
+      // this.chart.render(true, false, false)
+      this.chart.redraw()
       // console.log('renderInstantaneous: done')
 
       if (this.instantaneous.series.length === 0) {
@@ -333,14 +371,17 @@ export default {
     renderDaily () {
       // console.log('renderDaily()', this.series.length)
       this.chart.series.forEach(s => {
+        // console.log(s)
+        s.setData(s.options.daily, false)
         if (!s.options.marker.enabled) {
           s.update({
             gapSize: 2 * 24 * 60 * 60 * 1000 // 2 days
           }, false)
         }
-        s.setData(s.options.daily)
       })
-      this.chart.render(true, false, false)
+      // this.chart.zoomOut()
+      // this.chart.render(true, false, false)
+      this.chart.redraw()
       if (this.series.length === 0) {
         this.chart.showNoData()
       } else {
@@ -407,11 +448,11 @@ export default {
       })
       const timezone = this.station.timezone
       const that = this
-      console.log('dailyImages', dailyImages)
+
       const imagesSeries = {
         name: 'Photo',
-        data: dailyImages,
-        daily: dailyImages.slice(),
+        data: dailyImages.slice(),
+        daily: dailyImages,
         yAxis: 'images',
         showInLegend: false,
         lineWidth: 0,
@@ -451,10 +492,11 @@ export default {
           }
         })
         const lineSeries = {
+          id: series.name,
           name: series.name,
           source: series.source,
           variableId: series.variableId,
-          data: seriesValues,
+          data: seriesValues.slice(),
           daily: seriesValues,
           yAxis: this.scaleValues ? 'values' : series.variableId,
           gapSize: 2 * 24 * 60 * 60 * 1000, // 2 days
@@ -488,10 +530,10 @@ export default {
         })
         const markerSeries = {
           name: series.name,
-          linkedTo: ':previous',
+          linkedTo: series.name,
           source: series.source,
           variableId: series.variableId,
-          data: imageValues,
+          data: imageValues.slice(),
           daily: imageValues,
           yAxis: this.scaleValues ? 'values' : series.variableId,
           color: COLORS[i],
@@ -549,22 +591,15 @@ export default {
         series: newSeries
       }, true, true, false)
       this.render()
-
-      // console.log('n', variableSeries.length)
-      // if (variableSeries.length === 0) {
-      //   this.chart.showNoData()
-      // } else {
-      //   this.chart.hideNoData()
-      // }
-
-      // console.log('updateChart: done')
     },
     highlightImage (image) {
       // console.log(image)
-      // console.log('highlightImage: start')
+      // console.log('highlightImage()', image.date, this.chart.hoverPoints)
+      if (!this.chart) return
       if (this.chart.hoverPoints !== undefined && this.chart.hoverPoints !== null) {
         // user is mousing over chart
         this.chart.series.forEach(s => {
+          if (s.name === 'Navigator 1') return
           if (!s.options.marker.enabled) return
           s.points.forEach(p => {
             if (!this.chart.hoverPoints.includes(p) && p.state === 'hover') {
@@ -575,39 +610,34 @@ export default {
       } else {
         // highlight is triggered by parent (next/prev, play)
         this.chart.series.forEach(s => {
+          if (s.name === 'Navigator 1') return
           if (!s.options.marker.enabled) return
-          // console.log(s.name)
           s.points.forEach(p => {
-            // console.log(p.image)
             if (p.image && p.image.id === image.id) {
-              if (p.state !== 'hover') {
-                p.setState('hover')
-              }
-              if (s.name !== 'Photo' && s.name !== 'Navigator 1' && p.graphic) {
+              p.setState('hover')
+              if (s.name !== 'Photo' && p.graphic) {
                 p.graphic.toFront()
               }
             } else {
-              if (p.state === 'hover') {
-                p.setState('')
-              }
+              p.setState('')
             }
           })
         })
       }
       // console.log('highlightImage: done')
-    },
-    clearHighlight () {
-      // console.log('clearHighlight: start')
-      this.chart.series.forEach(s => {
-        if (s.name === 'Navigator 1') return
-        s.data.forEach(p => {
-          if (p.state === 'hover') {
-            p.setState('')
-          }
-        })
-      })
-      // console.log('clearHighlight: done')
     }
+    // clearHighlight () {
+    //   // console.log('clearHighlight: start')
+    //   this.chart.series.forEach(s => {
+    //     if (s.name === 'Navigator 1') return
+    //     s.data.forEach(p => {
+    //       if (p.state === 'hover') {
+    //         p.setState('')
+    //       }
+    //     })
+    //   })
+    // console.log('clearHighlight: done')
+    // }
   }
 }
 </script>

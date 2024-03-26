@@ -1,12 +1,16 @@
 <template>
   <div style="min-height:420px">
     <v-row class="justify-center mt-4">
-      <v-col cols="12" md="6">
-        <highcharts :options="chartOptions" ref="chart"></highcharts>
+      <v-col cols="12" lg="6">
+        <highcharts
+          :options="chartOptions"
+          ref="chart"
+          style="max-width:500px;margin:0 auto"
+        ></highcharts>
       </v-col>
       <v-divider vertical></v-divider>
-      <v-col cols="12" md="6">
-        <v-sheet class="text-body-2">
+      <v-col cols="12" lg="6">
+        <v-sheet class="text-body-2 pr-4" style="max-width:500px">
           <v-simple-table dense>
             <tbody>
               <tr>
@@ -151,7 +155,12 @@ export default {
         chart: {
           type: 'scatter',
           zoomType: 'xy',
-          height: '400px'
+          height: '400px',
+          events: {
+            click: () => {
+              this.onClick()
+            }
+          }
         },
         title: {
           text: null
@@ -162,8 +171,8 @@ export default {
             turboThreshold: 0,
             point: {
               events: {
-                mouseOver: (e) => {
-                  this.$emit('hover', e.target.image)
+                click: () => {
+                  this.onClick()
                 }
               }
             }
@@ -173,6 +182,7 @@ export default {
           enabled: false
         },
         tooltip: {
+          animation: false,
           outside: true,
           useHTML: true,
           headerFormat: '',
@@ -209,9 +219,32 @@ export default {
   },
   async mounted () {
     this.chart = this.$refs.chart.chart
+    this.chart.container.onmouseout = () => {
+      this.highlightImage(this.image)
+    }
     await this.updateChart()
   },
+  beforeDestroy () {
+    this.chart.container.onmouseout = null
+  },
   methods: {
+    onClick () {
+      this.chart.series.forEach(s => {
+        s.update({
+          enableMouseTracking: false
+        })
+      })
+      this.highlightImage(this.image)
+
+      setTimeout(() => {
+        this.chart.series.forEach(s => {
+          s.update({
+            enableMouseTracking: true
+          })
+        })
+        this.highlightImage(this.image)
+      }, 1000)
+    },
     generatePoints () {
       if (!this.images) {
         return []
@@ -254,6 +287,7 @@ export default {
       }
 
       this.points = this.generatePoints()
+      const that = this
       const timezone = this.station.timezone
       const pointSeries = {
         name: `${this.xSeries.name} vs ${this.ySeries.name}`,
@@ -288,6 +322,7 @@ export default {
         },
         tooltip: {
           pointFormatter: function () {
+            that.$emit('hover', this.image)
             const header = this.mode === 'DAY'
               ? timestampFormat(this.image.timestamp, timezone, 'DD')
               : timestampFormat(this.image.timestamp, timezone)
@@ -413,32 +448,26 @@ export default {
         xAxis: [],
         yAxis: [],
         series: []
-      }, true, true)
+      }, true, true, false)
 
       this.chart.update({
-        // time: {
-        //   timezone: this.station.timezone
-        // },
         xAxis,
         yAxis,
         series: pointSeries,
         tooltip: {
           container: this.$refs.tooltip
         }
-      }, true, true)
+      }, true, true, false)
+      // this.chart.render()
     },
     highlightImage (image) {
+      if (!this.chart) return
       this.chart.series.forEach(s => {
-        s.data.forEach(p => {
-          if (p.image && p.image === image) {
-            if (p.state !== 'hover') {
-              p.setState('hover')
-            }
-            p.graphic.toFront()
-          } else {
-            if (p.state === 'hover') {
-              p.setState('')
-            }
+        s.points.forEach(p => {
+          p.setState('')
+          if (p.image.id === image.id) {
+            p.setState('hover')
+            p.graphic && p.graphic.toFront()
           }
         })
       })

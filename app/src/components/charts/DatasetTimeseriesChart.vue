@@ -111,7 +111,8 @@ export default {
           text: this.series.variable.description
         }
       }, false)
-      chart.render()
+      // chart.render()
+      chart.redraw()
     }
   }
 }

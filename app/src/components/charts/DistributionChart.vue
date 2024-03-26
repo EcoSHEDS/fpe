@@ -1,10 +1,14 @@
 <template>
   <v-row class="justify-center mt-4">
-    <v-col cols="12" md="6">
-      <highcharts :options="chartOptions" ref="chart"></highcharts>
+    <v-col cols="12" lg="6" class="text-center">
+      <highcharts
+        :options="chartOptions"
+        ref="chart"
+        style="max-width:500px;margin:0 auto"
+      ></highcharts>
     </v-col>
     <v-divider vertical></v-divider>
-    <v-col cols="12" md="6">
+    <v-col cols="12" lg="6">
       <v-sheet class="text-body-2">
         <v-simple-table dense>
           <tbody>
@@ -132,7 +136,12 @@ export default {
         chart: {
           type: 'scatter',
           zoomType: 'xy',
-          height: '400px'
+          height: '400px',
+          events: {
+            click: () => {
+              this.onClick()
+            }
+          }
         },
         title: {
           text: null
@@ -141,18 +150,15 @@ export default {
           series: {
             animation: false,
             turboThreshold: 0,
-            point: {
-              events: {
-                mouseOver: (e) => {
-                  // console.log('mouseOver', e.target.image.id)
-                  this.highlightImage(e.target.image)
-                  this.$emit('hover', e.target.image)
-                }
+            events: {
+              click: () => {
+                this.onClick()
               }
             }
           }
         },
         tooltip: {
+          animation: false,
           outside: true,
           useHTML: true,
           headerFormat: '',
@@ -193,13 +199,37 @@ export default {
   },
   async mounted () {
     this.chart = this.$refs.chart.chart
+    this.chart.container.onmouseout = () => {
+      this.highlightImage(this.image)
+    }
     await this.updateChart()
   },
+  beforeDestroy () {
+    this.chart.container.onmouseout = null
+  },
   methods: {
+    onClick () {
+      this.chart.series.forEach(s => {
+        s.update({
+          enableMouseTracking: false
+        })
+      })
+      this.highlightImage(this.image)
+
+      setTimeout(() => {
+        this.chart.series.forEach(s => {
+          s.update({
+            enableMouseTracking: true
+          })
+        })
+        this.highlightImage(this.image)
+      }, 1000)
+    },
     updateChart () {
       const chart = this.chart
       const mode = this.mode
       const station = this.station
+      const that = this
       const pointSeries = this.series.map((series, i) => {
         const values = this.images.map(d => {
           const value = d.values.find(v => v.name === series.name)
@@ -235,6 +265,7 @@ export default {
           yAxis: series.variableId,
           tooltip: {
             pointFormatter: function () {
+              that.$emit('hover', this.image)
               const header = this.mode === 'DAY'
                 ? timestampFormat(this.image.timestamp, station.timezone, 'DD')
                 : timestampFormat(this.image.timestamp, station.timezone)
@@ -307,48 +338,19 @@ export default {
         yAxis: yAxes,
         series: pointSeries
       }, true, true, false)
+      this.chart.render()
     },
     highlightImage (image) {
-      // console.log('highlightImage', image)
-      if (this.chart.hoverPoints !== undefined && this.chart.hoverPoints !== null) {
-        // console.log('mousing', this.chart.hoverPoints)
-        // user is mousing over chart
-        this.chart.series.forEach(s => {
-          s.points.forEach(p => {
-            if (this.chart.hoverPoints.includes(p) && p.graphic) {
-              // bring hovered point to front
-              p.graphic.toFront()
-            } else if (p.image.id === image.id) {
-              // hover paired point (same image)
-              p.setState('hover')
-              if (p.graphic) {
-                p.graphic.toFront()
-              }
-            } else if (p.state === 'hover') {
-              // unhighlight point
-              p.setState('')
-            }
-          })
+      if (!this.chart) return
+      this.chart.series.forEach(s => {
+        s.points.forEach(p => {
+          p.setState('')
+          if (p.image.id === image.id) {
+            p.setState('hover')
+            p.graphic && p.graphic.toFront()
+          }
         })
-      } else {
-        // highlight is triggered by parent (next/prev, play)
-        this.chart.series.forEach(s => {
-          s.points.forEach(p => {
-            if (p.image.id === image.id) {
-              if (p.state !== 'hover') {
-                p.setState('hover')
-              }
-              if (p.graphic) {
-                p.graphic.toFront()
-              }
-            } else {
-              if (p.state === 'hover') {
-                p.setState('')
-              }
-            }
-          })
-        })
-      }
+      })
     }
   }
 }
