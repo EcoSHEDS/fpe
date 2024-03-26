@@ -59,16 +59,16 @@ variableAxes.push({
 
 export default {
   name: 'SubdailyTimeseriesChart',
-  props: ['loading', 'series', 'images', 'station', 'image', 'date', 'scaleValues'],
+  props: ['loading', 'series', 'images', 'station', 'image', 'date'],
   data () {
     return {
       chartOptions: {
         chart: {
           animation: false,
-          height: '300px',
-          events: {
-            click: () => {
-              this.onClick()
+          height: '275px',
+          zooming: {
+            mouseWheel: {
+              enabled: false
             }
           }
         },
@@ -82,12 +82,7 @@ export default {
         plotOptions: {
           series: {
             animation: false,
-            turboThreshold: 0,
-            events: {
-              click: () => {
-                this.onClick()
-              }
-            }
+            turboThreshold: 0
           }
         },
         legend: {
@@ -118,9 +113,6 @@ export default {
     series () {
       this.updateChart()
     },
-    scaleValues () {
-      this.updateChart()
-    },
     image () {
       this.highlightImage(this.image)
     }
@@ -136,59 +128,15 @@ export default {
     this.chart.container.onmouseout = null
   },
   methods: {
-    onClick () {
-      // console.log('onClick')
-      this.chart.series.forEach(s => {
-        s.update({
-          enableMouseTracking: false
-        }, false)
-      })
-      this.highlightImage(this.image)
-
-      setTimeout(() => {
-        this.chart.series.forEach(s => {
-          if (!s.options.marker.enabled) return
-          s.update({
-            enableMouseTracking: true
-          }, false)
-        })
-        this.highlightImage(this.image)
-      }, 1000)
-    },
     updateChart () {
       // console.log('updateChart')
       const seriesVariableIds = this.series.map(d => d.variableId)
-      let dataAxes = []
-      if (this.scaleValues) {
-        dataAxes = [{
-          id: 'values',
-          title: {
-            text: 'Rank Percentile'
-          },
-          min: 0,
-          max: 1,
-          type: 'linear',
-          top: '25%',
-          height: '75%',
-          labels: {
-            formatter: function () {
-              return (this.value * 100).toFixed(0) + '%'
-            },
-            y: 5
-          },
-          opposite: false,
-          startOnTick: true,
-          endOnTick: true,
-          tickAmount: 5,
-          showLastLabel: true
-        }]
-      } else {
-        dataAxes = variableAxes.filter(d => seriesVariableIds.includes(d.id))
-        dataAxes.forEach((axis, i) => {
-          axis.opposite = i > 0
-          axis.gridLineWidth = i > 0 ? 0 : 1
-        })
-      }
+      const dataAxes = variableAxes.filter(d => seriesVariableIds.includes(d.id))
+      dataAxes.forEach((axis, i) => {
+        axis.opposite = i > 0
+        axis.gridLineWidth = i > 0 ? 0 : 1
+      })
+
       const yAxes = [
         {
           id: 'images',
@@ -247,7 +195,7 @@ export default {
         const seriesValues = series.data.map(d => {
           return {
             x: d.timestamp.valueOf(),
-            y: this.scaleValues ? d.rank : d.value
+            y: d.value
           }
         })
         const lineSeries = {
@@ -255,7 +203,7 @@ export default {
           source: series.source,
           variableId: series.variableId,
           data: seriesValues,
-          yAxis: this.scaleValues ? 'values' : series.variableId,
+          yAxis: series.variableId,
           gapSize: 60 * 60 * 1000, // 1 hour
           gapUnit: 'value',
           legend: {
@@ -281,7 +229,7 @@ export default {
           const value = d.values.find(v => v.name === series.name)
           return {
             x: d.timestamp.valueOf(),
-            y: value !== undefined ? (this.scaleValues ? value.rank : value.value) : null,
+            y: value !== undefined ? value.value : null,
             image: d
           }
         })
@@ -291,7 +239,7 @@ export default {
           source: series.source,
           variableId: series.variableId,
           data: imageValues,
-          yAxis: this.scaleValues ? 'values' : series.variableId,
+          yAxis: series.variableId,
           color: COLORS[i],
           lineWidth: 0,
           marker: {
@@ -319,15 +267,10 @@ export default {
           }
         }
 
-        if (this.scaleValues) {
-          markerSeries.tooltip.pointFormatter = function () {
-            return `<span style="color:${this.color}">\u25CF</span> ${this.series.name.toUpperCase()}: <b>${format('.1%')(this.y)}</b><br/>`
-          }
-        } else {
-          markerSeries.tooltip.pointFormatter = function () {
-            return `<span style="color:${this.color}">\u25CF</span> ${this.series.name.toUpperCase()}: <b>${format('.1f')(this.y)}</b><br/>`
-          }
+        markerSeries.tooltip.pointFormatter = function () {
+          return `<span style="color:${this.color}">\u25CF</span> ${this.series.name.toUpperCase()}: <b>${format('.1f')(this.y)}</b><br/>`
         }
+
         return [lineSeries, markerSeries]
       }).flat()
 
@@ -365,7 +308,7 @@ export default {
         this.chart.hideNoData()
       }
     },
-    highlightImage (image) {
+    highlightImage () {
       // console.log('highlightImage', image)
       if (!this.chart) return
       if (this.chart.hoverPoints !== undefined && this.chart.hoverPoints !== null) {
@@ -386,7 +329,7 @@ export default {
           s.points.forEach(p => {
             // console.log(p.image)
             p.setState('')
-            if (p.image && p.image.id === image.id) {
+            if (p.image && this.image && p.image.id === this.image.id) {
               if (p.state !== 'hover') {
                 p.setState('hover')
               }

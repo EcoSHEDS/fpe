@@ -127,7 +127,7 @@
                         class="text-right grey--text text--darken-2"
                         style="width:200px"
                       >
-                        # Photos Available:
+                        # Photos on This Date:
                       </td>
                       <td class="font-weight-bold">
                         {{ image.n_images ? image.n_images.toLocaleString() : '' }}
@@ -143,11 +143,11 @@
                   color="grey"
                   text
                   class="text-body-2 black--text mt-4"
-                  :value="true"
+                  :value="!subdaily.enabled"
                   dismissible
                 >
                   <div class="black--text" v-if="mode === 'DAY'">
-                    In <b>Daily</b> mode, only the photo taken closest to noon is shown for each date. However, this photo may not reflect the daily mean values of the observed and/or model data. Click the following button to explore all photos and sub-daily data taken on this date, or select a time period shorter than 30 days on the Timeseries chart.
+                    In <b>Daily</b> mode, only the photo taken closest to noon is shown for each date. However, this photo may not reflect the daily mean values of the observed and/or model data. Click the following button to explore all photos and sub-daily data taken on this date, or select a time period shorter than 10 days on the Timeseries chart.
                   </div>
                 </v-alert>
               </v-sheet>
@@ -157,18 +157,10 @@
                   color="primary"
                   title="Explore all images on this date"
                   :loading="subdaily.loading"
-                  @click="exploreSubdaily"
+                  @click="exploreSubdaily(true)"
                   v-if="!subdaily.enabled"
                 >
-                  Show Sub-Daily [{{ image.date | formatDate('DD') }}]
-                </v-btn>
-                <v-btn
-                  color="warning"
-                  title="Return to daily"
-                  @click="subdaily.enabled = false"
-                  v-else
-                >
-                  Return to Daily
+                  Show Sub-Daily on [{{ image.date | formatDate('DD') }}]
                 </v-btn>
               </div>
 
@@ -176,9 +168,8 @@
                 {{ subdaily.error }}
               </Alert>
               <div v-else>
-                <div v-if="subdaily.images.length > 0">
+                <div v-if="subdaily.enabled && subdaily.images.length > 0">
                   <SubdailyTimeseriesChart
-                    v-if="subdaily.enabled"
                     :key="`${station.id}-${subdaily.date}`"
                     :loading="loadingData"
                     :station="station"
@@ -191,6 +182,16 @@
                     ref="subChart"
                   >
                   </SubdailyTimeseriesChart>
+
+                  <div class="text-center">
+                    <v-btn
+                      color="warning"
+                      title="Return to daily"
+                      @click="subdaily.enabled = false"
+                    >
+                      <v-icon left>mdi-chevron-left</v-icon> Return to Daily
+                    </v-btn>
+                  </div>
                 </div>
               </div>
             </div>
@@ -228,7 +229,7 @@
                   dismissible
                 >
                   <div class="black--text">
-                    In <b>Sub-daily</b> mode, the charts below show all photos during the selected time period. When the observed and model values are shown as Rank Percentile, then the ranks are computed only over the selected time period rather than over the entire period of record. The Distribution and Scatterplot charts also only show sub-daily photos during the selected time period. Select a period longer than 30 days to switch back to <b>Daily</b> mode.
+                    In <b>Sub-daily</b> mode, the charts below show all photos during the selected time period. When the observed and model values are shown as Rank Percentile, then the ranks are computed only over the selected time period rather than over the entire period of record. The Distribution and Scatterplot charts also only show sub-daily photos during the selected time period. Select a period longer than 10 days to switch back to <b>Daily</b> mode.
                   </div>
                 </v-alert>
               </v-sheet>
@@ -353,7 +354,7 @@ import ScatterplotChart from '@/components/charts/ScatterplotChart'
 import SubdailyTimeseriesChart from '@/components/charts/SubdailyTimeseriesChart'
 // import { Canvg } from 'canvg'
 
-const MODE_DAY_MINIMUM = 30 // minimum number of days for mode='DAY'
+const MODE_DAY_MINIMUM = 10 // minimum number of days for mode='DAY'
 
 export default {
   name: 'StationPhotos',
@@ -777,7 +778,13 @@ export default {
       if (!image.subdaily) {
         this.subdaily.enabled = false
       }
-      this.queue.push(image)
+
+      if (this.queue.length === 0 ||
+          this.queue[this.queue.length - 1].id !== image.id) {
+        // add image if queue is empty or
+        // image is not already last in queue
+        this.queue.push(image)
+      }
 
       if (!this.drawing) {
         this.drawImageFromQueue()

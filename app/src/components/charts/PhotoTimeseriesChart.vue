@@ -17,7 +17,7 @@
               class="ml-2"
             ><v-icon small>mdi-information</v-icon></v-btn>
           </template>
-          <div class="mb-2">When the selected time period is more than 30 days, the chart is in <b>Daily</b> mode and each timeseries is aggregated to daily values. Only the photo taken closest to noon on each date will be shown.</div>
+          <div class="mb-2">When the selected time period is more than 10 days, the chart is in <b>Daily</b> mode and each timeseries is aggregated to daily values. Only the photo taken closest to noon on each date will be shown.</div>
           <div>Otherwise, the <b>Sub-daily</b> values of each variable along with all available photos will be shown.</div>
         </v-tooltip>
       </div>
@@ -56,7 +56,7 @@
                 <b>Hover</b> over the chart to see the photo and values at each date and time.
               </p>
               <p>
-                Use the <b>time period selector</b> near the bottom of the chart, the zoom present buttons (1m, 3m, etc), or the date inputs to zoom in on a specific period. When the selected period is less than 30 days, the chart will show sub-daily values of each variable. Otherwise, it will show daily mean values along with the photos taken closest to noon on each date.
+                Use the <b>time period selector</b> near the bottom of the chart, the zoom present buttons (1m, 3m, etc), or the date inputs to zoom in on a specific period. When the selected period is less than 10 days, the chart will show sub-daily values of each variable. Otherwise, it will show daily mean values along with the photos taken closest to noon on each date.
               </p>
               <p class="mb-0">
                 Use the legend to <b>show/hide</b> individual variables.
@@ -158,6 +158,17 @@ export default {
                 this.onClick()
               }
             }
+            // point: {
+            //   events: {
+            //     mouseOver: function () {
+            //       // if (this.image) {
+            //       //   this.series.chart.tooltip.refresh([this])
+            //       // }
+            //       // console.log('point.mouseOver', this.series.name, this.x, this.y)
+            //       // return false
+            //     }
+            //   }
+            // }
           }
         },
         rangeSelector: {
@@ -240,8 +251,12 @@ export default {
     scaleValues () {
       this.updateChart()
     },
-    image () {
-      this.highlightImage(this.image)
+    image (val, old) {
+      // console.log('watch:image', val)
+      if (val?.id !== old?.id) {
+        this.highlightImage()
+      }
+      // this.highlightImage()
     },
     instantaneous () {
       this.render()
@@ -265,16 +280,19 @@ export default {
   },
   async mounted () {
     this.chart = this.$refs.chart.chart
-    this.chart.container.onmouseout = () => {
-      this.highlightImage(this.image)
-    }
+    window.chart = this.chart
+    // this.chart.container.onmouseout = () => {
+    //   console.log('container:mouseout')
+    //   this.highlightImage()
+    // }
     await this.updateChart()
   },
   beforeDestroy () {
-    this.chart.container.onmouseout = null
+    // this.chart.container.onmouseout = null
   },
   methods: {
     onClick () {
+      // console.log('onClick')
       const chart = this.chart
       chart.update({
         plotOptions: {
@@ -283,7 +301,7 @@ export default {
           }
         }
       })
-      this.highlightImage(this.image)
+      this.highlightImage()
 
       setTimeout(() => {
         chart.update({
@@ -293,7 +311,7 @@ export default {
             }
           }
         })
-        this.highlightImage(this.image)
+        this.highlightImage()
       }, 1000)
     },
     async afterSetExtremes (event) {
@@ -304,7 +322,7 @@ export default {
       }
     },
     render () {
-      // console.log('render: start')
+      // console.log('render')
       if (this.mode === 'INST') {
         this.renderInstantaneous()
       } else {
@@ -592,9 +610,9 @@ export default {
       }, true, true, false)
       this.render()
     },
-    highlightImage (image) {
+    highlightImage () {
       // console.log(image)
-      // console.log('highlightImage()', image.date, this.chart.hoverPoints)
+      // console.log('highlightImage()', this.image.id, this.chart.hoverPoints)
       if (!this.chart) return
       if (this.chart.hoverPoints !== undefined && this.chart.hoverPoints !== null) {
         // user is mousing over chart
@@ -613,7 +631,7 @@ export default {
           if (s.name === 'Navigator 1') return
           if (!s.options.marker.enabled) return
           s.points.forEach(p => {
-            if (p.image && p.image.id === image.id) {
+            if (p.image && this.image && p.image.id === this.image.id) {
               p.setState('hover')
               if (s.name !== 'Photo' && p.graphic) {
                 p.graphic.toFront()
@@ -626,18 +644,6 @@ export default {
       }
       // console.log('highlightImage: done')
     }
-    // clearHighlight () {
-    //   // console.log('clearHighlight: start')
-    //   this.chart.series.forEach(s => {
-    //     if (s.name === 'Navigator 1') return
-    //     s.data.forEach(p => {
-    //       if (p.state === 'hover') {
-    //         p.setState('')
-    //       }
-    //     })
-    //   })
-    // console.log('clearHighlight: done')
-    // }
   }
 }
 </script>

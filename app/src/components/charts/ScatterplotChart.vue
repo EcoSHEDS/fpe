@@ -32,8 +32,8 @@
                         class="ml-2 mb-1"
                       ><v-icon small>mdi-information</v-icon></v-btn>
                     </template>
-                    <span v-if="mode === 'DAY'">Select a time period of 30 days or less on the Timeseries chart to switch to Sub-daily mode</span>
-                    <span v-else>Select a time period longer than 30 days on the Timeseries chart to switch to Daily mode</span>
+                    <span v-if="mode === 'DAY'">Select a time period of 10 days or less on the Timeseries chart to switch to Sub-daily mode</span>
+                    <span v-else>Select a time period longer than 10 days on the Timeseries chart to switch to Daily mode</span>
                   </v-tooltip>
                 </td>
               </tr>
@@ -229,6 +229,7 @@ export default {
   },
   methods: {
     onClick () {
+      console.log('onClick')
       this.chart.series.forEach(s => {
         s.update({
           enableMouseTracking: false
@@ -462,15 +463,29 @@ export default {
     },
     highlightImage (image) {
       if (!this.chart) return
-      this.chart.series.forEach(s => {
-        s.points.forEach(p => {
-          p.setState('')
-          if (p.image.id === image.id) {
-            p.setState('hover')
-            p.graphic && p.graphic.toFront()
-          }
+
+      if (this.chart.hoverPoints !== undefined && this.chart.hoverPoints !== null) {
+        const imageIds = this.chart.hoverPoints.map(p => p.image.id)
+        this.chart.series.forEach(s => {
+          s.points.forEach(p => {
+            p.setState('')
+            if (imageIds.includes(p.image.id)) {
+              p.setState('hover')
+              p.graphic && p.graphic.toFront()
+            }
+          })
         })
-      })
+      } else {
+        this.chart.series.forEach(s => {
+          s.points.forEach(p => {
+            p.setState('')
+            if (p.image && this.image && p.image.id === this.image.id) {
+              p.setState('hover')
+              p.graphic && p.graphic.toFront()
+            }
+          })
+        })
+      }
     }
   }
 }

@@ -31,8 +31,8 @@
                       class="ml-2 mb-1"
                     ><v-icon small>mdi-information</v-icon></v-btn>
                   </template>
-                  <span v-if="mode === 'DAY'">Select a time period of 30 days or less on the Timeseries chart to switch to Sub-daily mode</span>
-                  <span v-else>Select a time period longer than 30 days on the Timeseries chart to switch to Daily mode</span>
+                  <span v-if="mode === 'DAY'">Select a time period of 10 days or less on the Timeseries chart to switch to Sub-daily mode</span>
+                  <span v-else>Select a time period longer than 10 days on the Timeseries chart to switch to Daily mode</span>
                 </v-tooltip>
               </td>
             </tr>
@@ -131,6 +131,7 @@ export default {
   data () {
     return {
       scaleValues: false,
+      disableHover: false,
       chartOptions: {
         animation: false,
         chart: {
@@ -150,9 +151,11 @@ export default {
           series: {
             animation: false,
             turboThreshold: 0,
-            events: {
-              click: () => {
-                this.onClick()
+            point: {
+              events: {
+                click: () => {
+                  this.onClick()
+                }
               }
             }
           }
@@ -194,13 +197,13 @@ export default {
       this.updateChart()
     },
     image () {
-      this.highlightImage(this.image)
+      this.highlightImage()
     }
   },
   async mounted () {
     this.chart = this.$refs.chart.chart
     this.chart.container.onmouseout = () => {
-      this.highlightImage(this.image)
+      this.highlightImage()
     }
     await this.updateChart()
   },
@@ -209,20 +212,25 @@ export default {
   },
   methods: {
     onClick () {
+      // console.log('onClick', this.disableHover)
+      if (this.disableHover) return
+
+      this.disableHover = true
       this.chart.series.forEach(s => {
         s.update({
           enableMouseTracking: false
         })
       })
-      this.highlightImage(this.image)
+      this.highlightImage()
 
       setTimeout(() => {
+        this.disableHover = false
         this.chart.series.forEach(s => {
           s.update({
             enableMouseTracking: true
           })
         })
-        this.highlightImage(this.image)
+        this.highlightImage()
       }, 1000)
     },
     updateChart () {
@@ -266,6 +274,7 @@ export default {
           tooltip: {
             pointFormatter: function () {
               that.$emit('hover', this.image)
+
               const header = this.mode === 'DAY'
                 ? timestampFormat(this.image.timestamp, station.timezone, 'DD')
                 : timestampFormat(this.image.timestamp, station.timezone)
@@ -340,17 +349,31 @@ export default {
       }, true, true, false)
       this.chart.render()
     },
-    highlightImage (image) {
+    highlightImage () {
       if (!this.chart) return
-      this.chart.series.forEach(s => {
-        s.points.forEach(p => {
-          p.setState('')
-          if (p.image.id === image.id) {
-            p.setState('hover')
-            p.graphic && p.graphic.toFront()
-          }
+
+      if (this.chart.hoverPoints !== undefined && this.chart.hoverPoints !== null) {
+        const imageIds = this.chart.hoverPoints.map(p => p.image.id)
+        this.chart.series.forEach(s => {
+          s.points.forEach(p => {
+            p.setState('')
+            if (imageIds.includes(p.image.id)) {
+              p.setState('hover')
+              p.graphic && p.graphic.toFront()
+            }
+          })
         })
-      })
+      } else {
+        this.chart.series.forEach(s => {
+          s.points.forEach(p => {
+            p.setState('')
+            if (p.image && this.image && p.image.id === this.image.id) {
+              p.setState('hover')
+              p.graphic && p.graphic.toFront()
+            }
+          })
+        })
+      }
     }
   }
 }
