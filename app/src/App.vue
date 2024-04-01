@@ -141,7 +141,7 @@
       <router-link :to="{ name: 'home' }" class="toolbar-title">
         <v-toolbar-title class="headline">
           <v-icon left>mdi-camera-outline</v-icon>
-          Flow Photo Explorer
+          Flow Photo Explorer <span style="font-size:50%;opacity:50%" class="pl-1">v{{ version }}</span>
         </v-toolbar-title>
       </router-link>
 
@@ -294,6 +294,7 @@ export default {
     UsgsFooter
   },
   data: () => ({
+    version: process.env.VUE_APP_VERSION,
     snackbar: {
       show: false,
       color: 'primary',
