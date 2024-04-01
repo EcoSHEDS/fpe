@@ -447,6 +447,7 @@ export default {
         const variableIds = this.station.summary.values.variables.map(d => d.variable_id)
 
         const models = await this.fetchModels()
+        models.sort((a, b) => a.created_at < b.created_at ? 1 : -1)
         const series = await this.fetchDailySeries(variableIds, startDate, endDate, models)
 
         images.forEach(d => {

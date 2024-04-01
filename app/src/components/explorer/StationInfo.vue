@@ -88,7 +88,7 @@
               Model Types:
             </td>
             <td class="font-weight-bold">
-              {{ station.models.map(m => `${m.model_type_id}[${m.variable_id}]`).join(', ') }}
+              {{ Array.from(new Set(station.models.map(m => `${m.model_type_id}[${m.variable_id}]`))).join(', ') }}
             </td>
           </tr>
         </tbody>
