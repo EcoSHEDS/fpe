@@ -315,6 +315,7 @@ export default {
         // user is mousing over chart
         this.chart.series.forEach(s => {
           if (!s.options.marker.enabled) return
+          if (!s.points || !s.visible) return
           s.points.forEach(p => {
             if (!this.chart.hoverPoints.includes(p) && p.state === 'hover') {
               p.setState('')
@@ -325,6 +326,7 @@ export default {
         // highlight is triggered by parent (next/prev, play)
         this.chart.series.forEach(s => {
           if (!s.options.marker.enabled) return
+          if (!s.points || !s.visible) return
           // console.log(s.name)
           s.points.forEach(p => {
             // console.log(p.image)

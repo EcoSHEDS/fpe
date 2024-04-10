@@ -17,13 +17,13 @@
               class="ml-2"
             ><v-icon small>mdi-information</v-icon></v-btn>
           </template>
-          <div class="mb-2">When the selected time period is more than 10 days, the chart is in <b>Daily</b> mode and each timeseries is aggregated to daily values. Only the photo taken closest to noon on each date will be shown.</div>
+          <div class="mb-2">When the selected time period is more than 30 days, the chart is in <b>Daily</b> mode and each timeseries is aggregated to daily values. Only the photo taken closest to noon on each date will be shown.</div>
           <div>Otherwise, the <b>Sub-daily</b> values of each variable along with all available photos will be shown.</div>
         </v-tooltip>
       </div>
       <v-divider vertical class="mx-4"></v-divider>
       <v-checkbox
-        :value="scaleValues"
+        :input-value="scaleValues"
         color="default"
         hide-details
         class="mt-0 pt-0"
@@ -56,7 +56,7 @@
                 <b>Hover</b> over the chart to see the photo and values at each date and time.
               </p>
               <p>
-                Use the <b>time period selector</b> near the bottom of the chart, the zoom present buttons (1m, 3m, etc), or the date inputs to zoom in on a specific period. When the selected period is less than 10 days, the chart will show sub-daily values of each variable. Otherwise, it will show daily mean values along with the photos taken closest to noon on each date.
+                Use the <b>time period selector</b> near the bottom of the chart, the zoom present buttons (1m, 3m, etc), or the date inputs to zoom in on a specific period. When the selected period is less than 30 days, the chart will show sub-daily values of each variable. Otherwise, it will show daily mean values along with the photos taken closest to noon on each date.
               </p>
               <p class="mb-0">
                 Use the legend to <b>show/hide</b> individual variables.
@@ -619,6 +619,7 @@ export default {
         this.chart.series.forEach(s => {
           if (s.name === 'Navigator 1') return
           if (!s.options.marker.enabled) return
+          if (!s.points || !s.visible) return
           s.points.forEach(p => {
             if (!this.chart.hoverPoints.includes(p) && p.state === 'hover') {
               p.setState('')
@@ -630,6 +631,7 @@ export default {
         this.chart.series.forEach(s => {
           if (s.name === 'Navigator 1') return
           if (!s.options.marker.enabled) return
+          if (!s.points || !s.visible) return
           s.points.forEach(p => {
             if (p.image && this.image && p.image.id === this.image.id) {
               p.setState('hover')

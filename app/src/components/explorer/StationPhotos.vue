@@ -147,7 +147,7 @@
                   dismissible
                 >
                   <div class="black--text" v-if="mode === 'DAY'">
-                    In <b>Daily</b> mode, only the photo taken closest to noon is shown for each date. However, this photo may not reflect the daily mean values of the observed and/or model data. Click the following button to explore all photos and sub-daily data taken on this date, or select a time period shorter than 10 days on the Timeseries chart.
+                    In <b>Daily</b> mode, only the photo taken closest to noon is shown for each date. However, this photo may not reflect the daily mean values of the observed and/or model data. Click the following button to explore all photos and sub-daily data taken on this date, or select a time period shorter than 30 days on the Timeseries chart.
                   </div>
                 </v-alert>
               </v-sheet>
@@ -229,7 +229,7 @@
                   dismissible
                 >
                   <div class="black--text">
-                    In <b>Sub-daily</b> mode, the charts below show all photos during the selected time period. When the observed and model values are shown as Rank Percentile, then the ranks are computed only over the selected time period rather than over the entire period of record. The Distribution and Scatterplot charts also only show sub-daily photos during the selected time period. Select a period longer than 10 days to switch back to <b>Daily</b> mode.
+                    In <b>Sub-daily</b> mode, the charts below show all photos during the selected time period. When the observed and model values are shown as Rank Percentile, then the ranks are computed only over the selected time period rather than over the entire period of record. The Distribution and Scatterplot charts also only show sub-daily photos during the selected time period. Select a period longer than 30 days to switch back to <b>Daily</b> mode.
                   </div>
                 </v-alert>
               </v-sheet>
@@ -354,7 +354,7 @@ import ScatterplotChart from '@/components/charts/ScatterplotChart'
 import SubdailyTimeseriesChart from '@/components/charts/SubdailyTimeseriesChart'
 // import { Canvg } from 'canvg'
 
-const MODE_DAY_MINIMUM = 10 // minimum number of days for mode='DAY'
+const MODE_DAY_MINIMUM = 30 // minimum number of days for mode='DAY'
 
 export default {
   name: 'StationPhotos',
@@ -448,6 +448,14 @@ export default {
 
         const models = await this.fetchModels()
         models.sort((a, b) => a.created_at < b.created_at ? 1 : -1)
+
+        // show data as rank percentile by default if model is available
+        if (models.length > 0) {
+          this.scaleValues = true
+        } else {
+          this.scaleValues = false
+        }
+
         const series = await this.fetchDailySeries(variableIds, startDate, endDate, models)
 
         images.forEach(d => {
