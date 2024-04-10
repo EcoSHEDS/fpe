@@ -22,19 +22,37 @@
         layer-type="base"
       ></l-tile-layer>
       <l-circle-marker
-        v-for="s in stations"
+        v-for="s in stations.filter(d => !d.has_model)"
         :key="s.id"
         :lat-lng="[s.latitude, s.longitude]"
         color="#3388ff"
-        :radius="6"
+        fill-color="#3388ff"
+        :radius="8"
         :weight="3"
-        :opacity="0.8"
-        :fill-opacity="0.05"
+        :opacity="1"
+        :fill-opacity="0.5"
         @click="$emit('select', s)"
       >
         <l-tooltip>
           <div class="text-subtitle-1">{{s.name}}</div>
-          <div class="text-subheading">{{s.affiliation_name}}</div>
+          <div class="text-subheading">{{s.affiliation_code}}</div>
+        </l-tooltip>
+      </l-circle-marker>
+      <l-circle-marker
+        v-for="s in stations.filter(d => d.has_model)"
+        :key="s.id"
+        :lat-lng="[s.latitude, s.longitude]"
+        color="goldenrod"
+        fill-color="goldenrod"
+        :radius="8"
+        :weight="3"
+        :opacity="1"
+        :fill-opacity="0.5"
+        @click="$emit('select', s)"
+      >
+        <l-tooltip>
+          <div class="text-subtitle-1">{{s.name}}</div>
+          <div class="text-subheading">{{s.affiliation_code}}</div>
         </l-tooltip>
       </l-circle-marker>
       <l-circle-marker
@@ -42,22 +60,34 @@
         key="selected"
         :lat-lng="[station.latitude, station.longitude]"
         color="orangered"
-        :radius="6"
+        :radius="8"
         :weight="3"
         @click="$emit('select')"
       >
         <l-tooltip>
           <div class="text-subtitle-1">{{station.name}}</div>
-          <div class="text-subheading">{{station.affiliation_name}}</div>
+          <div class="text-subheading">{{station.affiliation_code}}</div>
         </l-tooltip>
       </l-circle-marker>
+      <l-control position="bottomright">
+        <v-sheet style="background:rgba(255, 255, 255, 0.75);border-radius:4px" class="px-2 pt-2 pb-1">
+          <div>
+            <div style="display:inline-block;border-radius:50%;width:16px;height:16px;background:goldenrod"></div>
+            <div style="display:inline-block;height:16px;vertical-align:top;margin-left:4px">Model Available</div>
+          </div>
+          <div>
+            <div style="display:inline-block;border-radius:50%;width:16px;height:16px;background:#3388ff"></div>
+            <div style="display:inline-block;height:16px;vertical-align:top;margin-left:4px">No Model</div>
+          </div>
+        </v-sheet>
+      </l-control>
     </l-map>
     <slot v-if="ready"></slot>
   </div>
 </template>
 
 <script>
-import { LMap, LTileLayer, LControlLayers, LControlScale, LCircleMarker, LTooltip } from 'vue2-leaflet'
+import { LMap, LTileLayer, LControlLayers, LControl, LControlScale, LCircleMarker, LTooltip } from 'vue2-leaflet'
 
 const basemaps = [
   {
@@ -127,6 +157,7 @@ export default {
   },
   components: {
     LMap,
+    LControl,
     LControlLayers,
     LControlScale,
     LTileLayer,
