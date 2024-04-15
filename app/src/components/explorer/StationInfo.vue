@@ -103,7 +103,7 @@
           scrollable
         >
           <template v-slot:activator="{ on }">
-            <v-btn color="success" depressed block v-on="on">View Available Models</v-btn>
+            <v-btn color="success" depressed block v-on="on">View Model Diagnostics <v-icon right>mdi-open-in-new</v-icon></v-btn>
           </template>
 
           <v-card>
@@ -214,7 +214,7 @@
           style="z-index:1000"
         >
           <template v-slot:activator="{ on }">
-            <v-btn depressed block small v-on="on">View Photo Methodology</v-btn>
+            <v-btn depressed block small v-on="on">View Photo Methodology <v-icon small right>mdi-open-in-new</v-icon></v-btn>
           </template>
 
           <v-card>
@@ -272,22 +272,12 @@
     <!-- DATA [NWIS] -->
     <div v-if="!!station.nwis_id">
       <div class="text-subtitle-2 text--secondary pa-2 grey lighten-4">
-        Observed Data (NWIS)
+        Observed Data [NWIS]
       </div>
       <v-divider></v-divider>
       <div>
         <v-simple-table dense>
           <tbody>
-            <tr>
-              <td class="text-right grey--text text--darken-2">
-                Source
-              </td>
-              <td class="font-weight-bold">
-                <a href="https://waterdata.usgs.gov/nwis" target="_blank" >
-                  USGS NWIS
-                </a>
-              </td>
-            </tr>
             <tr>
               <td class="text-right grey--text text--darken-2">
                 Station ID
@@ -315,7 +305,7 @@
     <!-- DATA [FPE] -->
     <div v-if="station.summary.values.count > 0">
       <div class="text-subtitle-2 text--secondary pa-2 grey lighten-4">
-        Observed Data
+        Observed Data [FPE]
       </div>
       <v-divider></v-divider>
       <div>
@@ -355,7 +345,7 @@
             scrollable
           >
             <template v-slot:activator="{ on }">
-              <v-btn depressed small block v-on="on">View Data Methodology</v-btn>
+              <v-btn depressed small block v-on="on">View Data Methodology <v-icon small right>mdi-open-in-new</v-icon></v-btn>
             </template>
 
             <v-card>

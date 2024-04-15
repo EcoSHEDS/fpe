@@ -338,14 +338,17 @@ export default {
       this.chart.series.forEach(s => {
         if (s.name === 'Navigator 1') return
 
+        // console.log(`s: ${s.name}`)
         if (s.name === 'Photo') {
           const images = this.instantaneous.images.map(d => {
             return { x: d.timestamp.valueOf(), y: 0, image: d }
           })
+          // console.log(images)
           s.setData(images)
         } else {
-          // console.log(s.name, s)
+          // console.log(`find ${s.name} in ${this.instantaneous.series.map(d => d.name)}`)
           const instantaneousSeries = this.instantaneous.series.find(ss => ss.name === s.name)
+          // console.log(instantaneousSeries)
           if (instantaneousSeries) {
             if (s.options.marker.enabled) {
               // console.log('marker.enabled')
@@ -358,6 +361,7 @@ export default {
                   image: d
                 }
               }).filter(d => d.y !== null && d.y !== undefined)
+              // console.log(imageValues)
               s.setData(imageValues)
             } else {
               // console.log('!marker.enabled')
@@ -371,6 +375,7 @@ export default {
               s.update({
                 gapSize: 60 * 60 * 1000 // 1 hour
               }, false)
+              // console.log(seriesValues)
               s.setData(seriesValues)
             }
           }
@@ -468,6 +473,7 @@ export default {
       const that = this
 
       const imagesSeries = {
+        id: 'Photo',
         name: 'Photo',
         data: dailyImages.slice(),
         daily: dailyImages,
@@ -547,6 +553,7 @@ export default {
           }
         })
         const markerSeries = {
+          id: series.name + ':marker',
           name: series.name,
           linkedTo: series.name,
           source: series.source,

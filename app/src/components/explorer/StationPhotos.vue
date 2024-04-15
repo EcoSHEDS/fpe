@@ -344,7 +344,7 @@
 </template>
 
 <script>
-import { rank, rollup, mean, max } from 'd3-array'
+import { rank, rollup, mean, max, deviation } from 'd3-array'
 import { csv } from 'd3-fetch'
 import { scaleUtc } from 'd3-scale'
 import nwis from '@/lib/nwis'
@@ -355,6 +355,7 @@ import SubdailyTimeseriesChart from '@/components/charts/SubdailyTimeseriesChart
 // import { Canvg } from 'canvg'
 
 const MODE_DAY_MINIMUM = 30 // minimum number of days for mode='DAY'
+const MAX_GAP_MS = 60 * 60 * 1000 // max interpolation gap (1 hour)
 
 export default {
   name: 'StationPhotos',
@@ -504,26 +505,45 @@ export default {
       const images = await this.fetchInstantaneousImages(startDate, endDate)
       const series = await this.fetchInstantaneousSeriesData(this.series, this.models, startDate, endDate)
 
+      // console.log('merging values and images')
+      // console.log(images)
       images.forEach(d => {
         d.values = []
       })
       series.forEach(s => {
+        // console.log(s.name)
         const values = s.data.filter(d => d.value !== null)
-        const valueScale = scaleUtc(values.map(d => d.timestamp), values.map(d => d.value))
-        const rankScale = scaleUtc(values.map(d => d.timestamp), values.map(d => d.rank))
-        images.forEach(d => {
-          const nextIndex = values.findIndex(v => v.timestamp >= d.timestamp)
-          // only add if image timestamp within 60 minutes from prev or next value
-          if (nextIndex > 0 &&
-              ((values[nextIndex].timestamp - d.timestamp) < 60 * 60 * 1000) &&
-              ((d.timestamp - values[nextIndex - 1].timestamp) < 60 * 60 * 1000)) {
-            d.values.push({
+        if (values.length === 0) return
+        // console.log(values)
+        const valueScale = scaleUtc(values.map(v => v.timestamp), values.map(v => v.value))
+        const rankScale = scaleUtc(values.map(v => v.timestamp), values.map(v => v.rank))
+        images.forEach(image => {
+          const nextIndex = values.findIndex(v => v.timestamp >= image.timestamp)
+          if (nextIndex < 0) return // all value timestamps < image timestamp (image is after last value)
+
+          const timeToNext = (values[nextIndex].timestamp - image.timestamp)
+          if (nextIndex === 0 && (timeToNext < 60 * 1000)) {
+            // image is 1 minute or less before first value
+            image.values.push({
               variableId: s.variableId,
               name: s.name,
               source: s.source,
-              value: valueScale(d.timestamp),
-              rank: rankScale(d.timestamp)
+              value: values[0].value,
+              rank: values[0].rank
             })
+          } else if (nextIndex > 0) {
+            const prevIndex = nextIndex - 1
+            const timeToPrev = image.timestamp - values[prevIndex].timestamp
+            if ((timeToNext <= MAX_GAP_MS) && (timeToPrev <= MAX_GAP_MS)) {
+              // image within 60 minutes between prev and next value
+              image.values.push({
+                variableId: s.variableId,
+                name: s.name,
+                source: s.source,
+                value: valueScale(image.timestamp),
+                rank: rankScale(image.timestamp)
+              })
+            }
           }
         })
       })
@@ -698,14 +718,19 @@ export default {
 
     async fetchModelPredictions (model) {
       if (!model || !model.predictions_url) return []
-      const values = await csv(model.predictions_url, (d, i) => {
+      const data = await csv(model.predictions_url, (d, i) => {
         return {
           date: d.timestamp.substring(0, 10),
           timestamp: new Date(d.timestamp),
           value: +d.score
         }
       })
-      return values
+      const m = mean(data, d => d.value)
+      const s = deviation(data, d => d.value)
+      data.forEach(d => {
+        d.value = (d.value - m) / s
+      })
+      return data
     },
     async fetchModels () {
       const models = this.station.models
@@ -750,26 +775,39 @@ export default {
           this.subdaily.image = currentImage
         }
 
-        // this.subdaily.series.forEach(s => {
-        //   s.data = s.data.filter(d => d.timestamp >= start.toJSDate() && d.timestamp < end.toJSDate())
-        // })
         this.subdaily.series.forEach(s => {
           const values = s.data.filter(d => d.value !== null)
+          if (values.length === 0) return
+
           const valueScale = scaleUtc(values.map(d => d.timestamp), values.map(d => d.value))
           const rankScale = scaleUtc(values.map(d => d.timestamp), values.map(d => d.rank))
-          this.subdaily.images.forEach(d => {
-            const nextIndex = values.findIndex(v => v.timestamp >= d.timestamp)
-            // only add if image timestamp within 60 minutes from prev or next value
-            if (nextIndex > 0 &&
-                ((values[nextIndex].timestamp - d.timestamp) < 60 * 60 * 1000) &&
-                ((d.timestamp - values[nextIndex - 1].timestamp) < 60 * 60 * 1000)) {
-              d.values.push({
+          this.subdaily.images.forEach(image => {
+            const nextIndex = values.findIndex(v => v.timestamp >= image.timestamp)
+            if (nextIndex < 0) return // all value timestamps < image timestamp (image is after last value)
+
+            const timeToNext = (values[nextIndex].timestamp - image.timestamp)
+            if (nextIndex === 0 && (timeToNext < 60 * 1000)) {
+              // image is 1 minute or less before first value
+              image.values.push({
                 variableId: s.variableId,
                 name: s.name,
                 source: s.source,
-                value: valueScale(d.timestamp),
-                rank: rankScale(d.timestamp)
+                value: values[0].value,
+                rank: values[0].rank
               })
+            } else if (nextIndex > 0) {
+              const prevIndex = nextIndex - 1
+              const timeToPrev = image.timestamp - values[prevIndex].timestamp
+              if ((timeToNext <= MAX_GAP_MS) && (timeToPrev <= MAX_GAP_MS)) {
+                // image within 60 minutes between prev and next value
+                image.values.push({
+                  variableId: s.variableId,
+                  name: s.name,
+                  source: s.source,
+                  value: valueScale(image.timestamp),
+                  rank: rankScale(image.timestamp)
+                })
+              }
             }
           })
         })

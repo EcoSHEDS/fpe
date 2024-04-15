@@ -289,7 +289,7 @@ export default {
                 const rankLabel = d.rank === null || d.rank === undefined ? 'N/A' : rankFormatter(d.rank)
 
                 const series = chart.series.find(s => s.name === d.name)
-                if (!series.visible) return ''
+                if (!series || !series.visible) return ''
 
                 return `
                   <tr>
