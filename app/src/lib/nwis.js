@@ -1,5 +1,10 @@
 import http from 'axios'
 
+const parameterCodes = {
+  FLOW_CFS: '00060',
+  STAGE_FT: '00065'
+}
+
 async function getStation (id) {
   const url = `https://waterservices.usgs.gov/nwis/site/?format=rdb&sites=${id}`
   try {
@@ -24,8 +29,11 @@ async function getStation (id) {
   }
 }
 
-async function getFlows (service, stationId, startDate, endDate) {
-  let url = `https://nwis.waterservices.usgs.gov/nwis/${service}/?format=json&sites=${stationId}&startDT=${startDate}&endDT=${endDate}&parameterCd=00060&siteStatus=all`
+async function getData (service, stationId, startDate, endDate, variable = 'FLOW_CFS') {
+  const parameterCd = parameterCodes[variable]
+  if (!parameterCd) throw new Error(`Invalid variable: ${variable}`)
+
+  let url = `https://nwis.waterservices.usgs.gov/nwis/${service}/?format=json&sites=${stationId}&startDT=${startDate}&endDT=${endDate}&parameterCd=${parameterCd}&siteStatus=all`
   if (service === 'dv') {
     url += '&statCd=00003'
   }
@@ -36,19 +44,19 @@ async function getFlows (service, stationId, startDate, endDate) {
   return json.value.timeSeries[0].values[0].value
 }
 
-async function getInstantaneousFlows (stationId, startDate, endDate) {
-  const values = await getFlows('iv', stationId, startDate, endDate)
+async function getInstantaneousValues (stationId, startDate, endDate, variable = 'FLOW_CFS') {
+  const values = await getData('iv', stationId, startDate, endDate, variable)
 
   return values.map(d => ({
-    timestamp: d.dateTime,
+    timestamp: new Date(d.dateTime),
     value: Number(d.value),
     provisional: d.qualifiers.includes('P')
     // qualifiers: d.qualifiers
-  })).filter(d => d.value >= 0)
+  }))
 }
 
-async function getDailyFlows (stationId, startDate, endDate) {
-  const values = await getFlows('dv', stationId, startDate, endDate)
+async function getDailyValues (stationId, startDate, endDate, variable = 'FLOW_CFS') {
+  const values = await getData('dv', stationId, startDate, endDate, variable)
 
   const x = values.map(d => ({
     date: d.dateTime.substr(0, 10),
@@ -63,7 +71,7 @@ async function getDailyFlows (stationId, startDate, endDate) {
 
 export default {
   getStation,
-  getFlows,
-  getInstantaneousFlows,
-  getDailyFlows
+  getData,
+  getInstantaneousValues,
+  getDailyValues
 }

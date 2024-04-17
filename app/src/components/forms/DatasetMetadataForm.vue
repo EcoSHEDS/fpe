@@ -58,7 +58,7 @@
           </p>
           <p>
             If you obtained the data from another organization, describe how you obtained it and if the values were modified.<br>
-            <span class="text--secondary">Example: "Instantaneous flow rates were downloaded from USGS NWIS for Station 01059000 and adjusted using a drainage area ratio of 1.232..."</span>
+            <span class="text--secondary">Example: "Flow rates were downloaded from USGS NWIS for Station 01059000 and adjusted using a drainage area ratio of 1.232..."</span>
           </p>
           <v-textarea
             v-model="methodology.value"

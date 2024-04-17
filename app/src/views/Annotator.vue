@@ -134,7 +134,7 @@
               <v-col cols="6">
                 <v-sheet elevation="2" class="pa-4">
                   <div class="fpe-image-url text-center"><a :href="currentPair.left.image.thumb_url">{{ currentPair.left.image.filename }}</a></div>
-                  <div class="text-center">{{ currentPair.left.image.timestamp | timestampLocalFormat(station ? station.timezone : 'US/Eastern', 'lll z') }}</div>
+                  <div class="text-center">{{ currentPair.left.image.timestamp | formatTimestamp(station.timezone) }}</div>
                   <v-img
                     lazy-src="img/placeholder.png"
                     max-height="400"
@@ -173,7 +173,7 @@
               <v-col cols="6">
                 <v-sheet elevation="2" class="pa-4">
                   <div class="fpe-image-url text-center"><a :href="currentPair.right.image.thumb_url">{{ currentPair.right.image.filename }}</a></div>
-                  <div class="text-center">{{ currentPair.right.image.timestamp | timestampLocalFormat(station ? station.timezone : 'US/Eastern', 'lll z') }}</div>
+                  <div class="text-center">{{ currentPair.right.image.timestamp | formatTimestamp(station.timezone) }}</div>
                   <v-img
                     lazy-src="img/placeholder.png"
                     max-height="400"
@@ -316,7 +316,7 @@
 </template>
 
 <script>
-import { ascending } from 'd3'
+import { ascending } from 'd3-array'
 import { mapGetters } from 'vuex'
 import evt from '@/events'
 export default {
@@ -390,6 +390,18 @@ export default {
   beforeDestroy () {
     window.removeEventListener('keyup', this.onKeyUp)
   },
+  beforeRouteLeave (to, from, next) {
+    if (this.completedPairs.length > 0) {
+      const message = 'Are you sure you want to leave? Your annotations will not be saved.'
+      if (window.confirm(message)) {
+        next()
+      } else {
+        next(false)
+      }
+    } else {
+      next()
+    }
+  },
   methods: {
     async fetchStations () {
       this.loading.stations = true
@@ -429,6 +441,10 @@ export default {
       try {
         const response = await this.$http.public.get(`/stations/${this.station.id}/image-pairs?n_pairs=${this.nPairs}`)
         this.pairs = response.data.map(d => {
+          d.left.timestamp = new Date(d.left.timestamp)
+          d.left.hour = this.$luxon.DateTime.fromJSDate(d.left.timestamp).setZone(this.station.timezone).hour
+          d.right.timestamp = new Date(d.right.timestamp)
+          d.right.hour = this.$luxon.DateTime.fromJSDate(d.right.timestamp).setZone(this.station.timezone).hour
           return {
             left: {
               image: d.left,
@@ -505,13 +521,13 @@ export default {
           n: this.completedPairs.length,
           n_daytime: this.completedPairs
             .filter(d => {
-              const leftHour = this.$date(d.left.image.timestamp).tz(this.station.timezone).hour()
-              const rightHour = this.$date(d.right.image.timestamp).tz(this.station.timezone).hour()
-              const daytime = leftHour >= 7 && leftHour <= 18 && rightHour >= 7 && rightHour <= 18
-              return daytime
-            })
-            .length
+              return d.left.image.hour >= 7 &&
+                     d.left.image.hour <= 18 &&
+                     d.right.image.hour >= 7 &&
+                     d.right.image.hour <= 18
+            }).length
         }
+        console.log(payload)
         const response = await this.$http.restricted.post('/annotations', payload)
         const annotation = response.data
 

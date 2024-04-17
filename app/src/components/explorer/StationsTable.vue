@@ -4,7 +4,9 @@
     :items="filtered"
     :loading="loading"
     :value="selectedArray"
-    :options="{ itemsPerPage: 10 }"
+    :options="{ itemsPerPage: 5 }"
+    :sort-by="['has_model', 'images.count']"
+    :sort-desc="[true, true]"
     @click:row="select"
     single-select
     dense
@@ -12,104 +14,110 @@
     class="row-cursor-pointer"
   >
     <template v-slot:top>
-      <v-toolbar flat dense>
-        <v-toolbar-title class="text-h5">
-          Available Stations
-        </v-toolbar-title>
-      </v-toolbar>
-
-      <v-toolbar flat dense>
-        <v-row justify="space-between" class="mt-n8">
-          <v-col cols="2" v-if="!$vuetify.breakpoint.mobile">
-            <v-select
-              :items="affiliations"
-              v-model="filters.affiliation"
-              label="Affiliation"
-              clearable
-              hide-details
-              @change="filter"
-            ></v-select>
-          </v-col>
-          <v-col cols="12" md="3">
-            <v-text-field
-              v-model="filters.search"
-              append-icon="mdi-magnify"
-              label="Search by Name"
-              single-line
-              hide-details
-              @input="filter"
-            ></v-text-field>
-          </v-col>
-          <v-col cols="2" v-if="!$vuetify.breakpoint.mobile">
-            <div class="d-flex justify-center">
-              <v-switch
-                v-model="filters.hasImages"
-                label="Has Photos"
+      <div class="d-flex align-end px-4 pt-2 pb-4">
+        <v-text-field
+          v-model="search"
+          append-icon="mdi-magnify"
+          label="Search stations"
+          single-line
+          hide-details
+          @input="filter"
+          style="max-width: 300px;"
+          class="pt-0"
+        ></v-text-field>
+        <v-spacer></v-spacer>
+        <v-menu
+          v-model="filterMenu"
+          :close-on-content-click="false"
+          offset-y
+        >
+          <template v-slot:activator="{ on }">
+            <v-btn
+              v-on="on"
+              outlined
+              small
+              :color="filtersOn ? 'primary' : 'grey darken-2'"
+            >
+              <v-icon left v-if="filtersOn">mdi-filter</v-icon>
+              <v-icon left v-else>mdi-filter-outline</v-icon>
+              Filters
+            </v-btn>
+          </template>
+          <v-sheet class="py-2" width="300">
+            <div class="mt-2 text-subtitle-1 px-4 font-weight-medium">Filter Stations By:</div>
+            <v-divider class="my-2"></v-divider>
+            <div class="px-4">
+              <v-autocomplete
+                :items="affiliations"
+                v-model="filters.affiliation"
+                label="Select affiliation"
+                clearable
                 hide-details
                 @change="filter"
+              ></v-autocomplete>
+              <v-switch
+                v-model="filters.hasModels"
+                label="Has Model Results"
+                hide-details
+                @change="filter"
+                class="my-4"
               ></v-switch>
-            </div>
-          </v-col>
-          <v-col cols="2" v-if="!$vuetify.breakpoint.mobile">
-            <div class="d-flex justify-center">
               <v-switch
                 v-model="filters.hasValues"
-                label="Has Obs. Data"
+                label="Has Observed Data"
                 hide-details
                 @change="filter"
+                class="my-4"
               ></v-switch>
-            </div>
-          </v-col>
-          <v-col cols="2" v-if="!$vuetify.breakpoint.mobile && user">
-            <div class="d-flex justify-center">
               <v-switch
                 v-model="filters.userOnly"
-                label="My Stations"
+                label="My Stations Only"
                 hide-details
                 @change="filter"
+                class="my-4"
               ></v-switch>
             </div>
-          </v-col>
-        </v-row>
-      </v-toolbar>
-      <div class="body-2 text--secondary mx-4 mb-2">
-        <v-icon x-small>mdi-information-outline</v-icon> Click on a row to select a station.
+          </v-sheet>
+        </v-menu>
       </div>
-
       <v-divider></v-divider>
     </template>
-    <!-- eslint-disable-next-line vue/valid-v-slot -->
+    <template v-slot:footer.prepend>
+      <div class="ml-2">
+        Click on a row to select a station.
+      </div>
+    </template>
+    <template v-slot:item.affiliation_code="{ item }">
+      {{ item.affiliation_code | truncate(10) }}
+    </template>
     <template v-slot:item.name="{ item }">
       {{ item.name | truncate(40) }}
     </template>
-    <!-- eslint-disable-next-line vue/valid-v-slot -->
-    <template v-slot:item.waterbody_type="{ item }">
+    <!-- <template v-slot:item.waterbody_type="{ item }">
       {{ item.waterbody_type | waterbodyType | truncate(17) }}
-    </template>
-    <!-- eslint-disable-next-line vue/valid-v-slot -->
+    </template> -->
     <template v-slot:item.images.count="{ item }">
       <span v-if="item.images && item.images.count > 0">
         {{ item.images.count.toLocaleString() }}
       </span>
       <span v-else>0</span>
     </template>
-    <!-- eslint-disable-next-line vue/valid-v-slot -->
     <template v-slot:item.images.start_date="{ item }">
       <span v-if="item.images && item.images.count > 0">
-        {{ item.images.start_date | timestampFormat('ll') }}
+        {{ item.images.start_date | formatDate }}
       </span>
     </template>
-    <!-- eslint-disable-next-line vue/valid-v-slot -->
     <template v-slot:item.images.end_date="{ item }">
       <span v-if="item.images && item.images.count > 0">
-        {{ item.images.end_date | timestampFormat('ll') }}
+        {{ item.images.end_date | formatDate }}
       </span>
     </template>
-    <!-- eslint-disable-next-line vue/valid-v-slot -->
     <template v-slot:item.has_obs="{ item }">
       <v-simple-checkbox :value="item.has_obs" disabled></v-simple-checkbox>
     </template>
-    <!-- eslint-disable-next-line vue/valid-v-slot -->
+    <template v-slot:item.has_model="{ item }">
+      <v-simple-checkbox :value="item.has_model" disabled></v-simple-checkbox>
+    </template>
     <template v-slot:item.private="{ item }">
       <v-simple-checkbox :value="item.private" disabled></v-simple-checkbox>
     </template>
@@ -123,34 +131,35 @@ export default {
   props: ['stations', 'filtered', 'selected', 'loading'],
   data () {
     return {
+      filterMenu: false,
+      search: '',
       filters: {
         affiliation: null,
-        search: '',
-        hasImages: false,
         hasValues: false,
+        hasModels: false,
         userOnly: false
       },
       headers: [
         {
           text: 'Affiliation',
           value: 'affiliation_code',
-          align: 'left',
-          width: 120
+          align: 'center',
+          width: 150
         },
         {
           text: 'Station Name',
           value: 'name',
           align: 'left'
         },
-        {
-          text: 'Waterbody Type',
-          value: 'waterbody_type',
-          align: 'left'
-        },
+        // {
+        //   text: 'Waterbody Type',
+        //   value: 'waterbody_type',
+        //   align: 'left'
+        // },
         {
           text: '# Photos',
           value: 'images.count',
-          align: 'center',
+          align: 'right',
           width: 120
         },
         {
@@ -166,11 +175,16 @@ export default {
           sortable: true
         },
         {
-          text: 'Has Obs. Data',
+          text: 'Obs. Data',
           value: 'has_obs',
           align: 'center',
-          sortable: true,
-          width: 140
+          sortable: true
+        },
+        {
+          text: 'Model',
+          value: 'has_model',
+          align: 'center',
+          sortable: true
         }
       ]
     }
@@ -184,25 +198,29 @@ export default {
     selectedArray () {
       // wrap in array for v-data-table in StationTable
       return this.selected ? [this.selected] : []
+    },
+    filtersOn () {
+      return Object.values(this.filters).some(d => !!d)
     }
   },
   mounted () {
-    if (this.user) {
-      this.headers.push({
-        text: 'Private',
-        value: 'private',
-        align: 'center',
-        width: 120
-      })
-    }
+    // if (this.user) {
+    //   this.headers.push({
+    //     text: 'Private',
+    //     value: 'private',
+    //     align: 'center',
+    //     width: 120
+    //   })
+    // }
   },
   methods: {
     filter () {
       const filtered = this.stations
         .filter(d => (!this.filters.affiliation || d.affiliation_code === this.filters.affiliation))
-        .filter(d => (!this.filters.search || d.name.toLowerCase().includes(this.filters.search.toLowerCase())))
-        .filter(d => (!this.filters.hasImages || (d.images && d.images.count > 0)))
+        .filter(d => (!this.search || d.name.toLowerCase().includes(this.search.toLowerCase())))
+        .filter(d => (d.images && d.images.count > 0))
         .filter(d => (!this.filters.hasValues || (d.has_obs)))
+        .filter(d => (!this.filters.hasModels || (d.models && d.models.length > 0)))
         .filter(d => (!this.filters.userOnly || (this.user && d.user_id === this.user.username)))
       this.$emit('filter', filtered)
     },

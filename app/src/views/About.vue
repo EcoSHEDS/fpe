@@ -35,10 +35,11 @@
             <ul>
               <li>Ben Letcher, USGS - Principal Investigator</li>
               <li>Jenn Fair, USGS - Research Hydrologist and Field Coordinator</li>
+              <li>Phillip Goodling, USGS - Hydrologist and Outreach Coordinator</li>
+              <li>Jeff Walker, Walker Environmental Research - Database, Model, and Web Application Developer</li>
+              <li>Amrita Gupta, Microsoft AI for Good - Machine Learning Model Developer</li>
               <li>Todd Dubreuil, USGS - Ecologist and Field Technician</li>
               <li>Mike Hayden, USGS - Fish Biologist and Field Technician</li>
-              <li>Jeff Walker, Walker Environmental Research - Database and Web Application Developer</li>
-              <li>Amrita Gupta, Microsoft AI for Good - Machine Learning Model Developer</li>
             </ul>
 
             <div class="mt-2 font-weight-medium">Project Management</div>
@@ -63,7 +64,7 @@
 
             <div class="text-h6">Contact Us</div>
             <p>
-              Please send any questions or comments about this project to the ecoSHEDS team at <a href="mailto:ecosheds@usgs.gov">ecosheds@usgs.gov</a>.
+              Please send any questions or comments about this project to the EcoSHEDS team at <a href="mailto:ecosheds@usgs.gov">ecosheds@usgs.gov</a>.
             </p>
           </v-card-text>
         </v-card>

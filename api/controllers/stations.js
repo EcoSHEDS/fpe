@@ -4,12 +4,13 @@ const createError = require('http-errors')
 const knex = require('../db/knex')
 const { deleteDatasetFiles } = require('./datasets')
 const { deleteImagesetFiles } = require('./imagesets')
-const { Station } = require('../db/models')
+const { Station, Model } = require('../db/models')
 
 const stationsQuery = function () {
   return Station.query()
     .select('stations.*', 'user.affiliation_code', 'user.affiliation_name', 'i.images', 'v.variables')
     .leftJoinRelated('user')
+    .withGraphFetched('[models]')
     .leftJoin(
       knex.raw('stations_summary_images as i'),
       'stations.id',
@@ -27,7 +28,7 @@ const attachStation = async (req, res, next) => {
     .findById(req.params.stationId)
     .select('stations.*', 'user.affiliation_code', 'user.affiliation_name')
     .leftJoinRelated('user')
-    // .withGraphFetched('[datasets, imagesets]')
+    .withGraphFetched('[models]')
   if (!row) throw createError(404, `Station (id = ${req.params.stationId}) not found`)
   res.locals.station = row
   return next()
@@ -43,7 +44,6 @@ const getPublicStations = async (req, res, next) => {
 const getAllStations = async (req, res, next) => {
   const rows = await stationsQuery()
     .where(req.query)
-    .debug(true)
   return res.status(200).json(rows)
 }
 
@@ -162,12 +162,19 @@ const getStationValues = async (req, res, next) => {
 }
 
 const getStationRandomImagePairs = async (req, res, next) => {
-  const n_pairs = Math.min(req.query.n_pairs || 100, 10000)
+  const nPairs = Math.min(req.query.n_pairs || 100, 10000)
   const result = await knex.raw(
     'select * from f_station_random_image_pairs(?,?,?,?)',
-    [res.locals.station.id, n_pairs, 7, 18]
+    [res.locals.station.id, nPairs, 7, 18]
   )
   const rows = result.rows
+  return res.status(200).json(rows)
+}
+
+const getStationModels = async (req, res, next) => {
+  const rows = await Model.query()
+    .select('*')
+    .where('station_id', res.locals.station.id)
   return res.status(200).json(rows)
 }
 
@@ -187,6 +194,8 @@ module.exports = {
   getStationDaily,
   getStationDailyValues,
   getStationDailyImages,
+
+  getStationModels,
 
   getStationRandomImagePairs
 }

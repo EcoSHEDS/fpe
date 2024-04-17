@@ -50,7 +50,7 @@
             </v-list-item-content>
           </v-list-item>
 
-          <v-list-item :to="{ name: 'explorer' }" class="pr-8">
+          <v-list-item :to="{ name: 'explorerHome' }" class="pr-8">
             <v-list-item-icon>
               <v-icon>mdi-image-multiple-outline</v-icon>
             </v-list-item-icon>
@@ -141,7 +141,7 @@
       <router-link :to="{ name: 'home' }" class="toolbar-title">
         <v-toolbar-title class="headline">
           <v-icon left>mdi-camera-outline</v-icon>
-          Flow Photo Explorer
+          Flow Photo Explorer <span style="font-size:50%;opacity:50%" class="pl-1">v{{ version }}</span>
         </v-toolbar-title>
       </router-link>
 
@@ -156,7 +156,7 @@
       <v-btn text :to="{ name: 'user-guide' }" class="mx-2">
         <v-icon small left>mdi-book</v-icon> User Guide
       </v-btn>
-      <v-btn text :to="{ name: 'explorer' }" class="mx-2">
+      <v-btn text :to="{ name: 'explorerHome' }" class="mx-2">
         <v-icon small left>mdi-image-multiple-outline</v-icon> Photo Explorer
       </v-btn>
 
@@ -294,6 +294,7 @@ export default {
     UsgsFooter
   },
   data: () => ({
+    version: process.env.VUE_APP_VERSION,
     snackbar: {
       show: false,
       color: 'primary',

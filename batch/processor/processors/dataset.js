@@ -2,13 +2,7 @@ const AWS = require('aws-sdk')
 const Papa = require('papaparse')
 const stripBom = require('strip-bom')
 const Joi = require('joi')
-const dayjs = require('dayjs')
-const timezone = require('dayjs/plugin/timezone')
-const utc = require('dayjs/plugin/utc')
-
-dayjs.extend(timezone)
-dayjs.extend(utc)
-dayjs.tz.setDefault('UTC')
+const { DateTime } = require('../lib/time')
 
 const { Dataset } = require('../models')
 
@@ -66,10 +60,11 @@ function createRowParser (timestamp, variable, timezone) {
 
   return (d, i) => {
     const rawTimestamp = timestamp.timeColumn
-      ? `${d[timestamp.column]} ${d[timestamp.timeColumn]}`
+      ? `${d[timestamp.column]}T${d[timestamp.timeColumn]}`
       : d[timestamp.column]
-    const parsedTimestamp = dayjs(rawTimestamp).utc(true).subtract(utcOffset, 'hour')
-    if (!parsedTimestamp.isValid()) {
+    const parsedTimestamp = DateTime.fromISO(rawTimestamp.replace(' ', 'T'))
+      .setZone(`UTC${utcOffset}`, { keepLocalTime: true })
+    if (!parsedTimestamp.isValid) {
       throw new Error(`Failed to parse timestamp at row ${i.toLocaleString()} ("${rawTimestamp}").`)
     }
 
@@ -78,8 +73,8 @@ function createRowParser (timestamp, variable, timezone) {
     const parsedFlag = variable.flag && d[variable.flag].length > 0 ? d[variable.flag] : null
 
     return {
-      date: parsedTimestamp.local().tz(timezone).format('YYYY-MM-DD'),
-      timestamp: parsedTimestamp.toISOString(),
+      date: parsedTimestamp.setZone(timezone).toISODate(),
+      timestamp: parsedTimestamp.toISO(),
       value: parsedValue,
       flag: parsedFlag
     }

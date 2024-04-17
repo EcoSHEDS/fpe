@@ -1,11 +1,3 @@
-const dayjs = require('dayjs')
-const timezone = require('dayjs/plugin/timezone')
-const utc = require('dayjs/plugin/utc')
-
-dayjs.extend(timezone)
-dayjs.extend(utc)
-dayjs.tz.setDefault('UTC')
-
 const { Station } = require('../models')
 
 async function processStation (id, dryRun) {

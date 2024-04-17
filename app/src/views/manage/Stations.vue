@@ -21,38 +21,31 @@
         </div>
         <v-divider></v-divider>
       </template>
-      <!-- eslint-disable-next-line vue/valid-v-slot -->
       <template v-slot:item.name="{ item }">
         {{ item.name | truncate(45) }}
       </template>
-      <!-- eslint-disable-next-line vue/valid-v-slot -->
       <template v-slot:item.waterbody_type="{ item }">
         {{ item.waterbody_type | waterbodyType }}
       </template>
-      <!-- eslint-disable-next-line vue/valid-v-slot -->
       <template v-slot:item.status="{ item }">
         {{ item.status | stationStatus }}
       </template>
-      <!-- eslint-disable-next-line vue/valid-v-slot -->
       <template v-slot:item.summary.images.n_images="{ item }">
         <span v-if="item.summary && item.summary.images && item.summary.images.n_images > 0">
           {{ item.summary.images.n_images.toLocaleString() }}
         </span>
         <span v-else>0</span>
       </template>
-      <!-- eslint-disable-next-line vue/valid-v-slot -->
       <template v-slot:item.summary.images.period="{ item }">
         <span v-if="item.summary && item.summary.images && item.summary.images.n_images > 0">
-          {{ item.summary.images.start_date | timestampFormat('ll') }} &#8211;
-          {{ item.summary.images.end_date | timestampFormat('ll') }}
+          {{ item.summary.images.start_date | formatDate }} &#8211;
+          {{ item.summary.images.end_date | formatDate }}
         </span>
         <span v-else>No Photos</span>
       </template>
-      <!-- eslint-disable-next-line vue/valid-v-slot -->
       <template v-slot:item.hasValues="{ item }">
         <v-simple-checkbox :value="item.hasValues" disabled></v-simple-checkbox>
       </template>
-      <!-- eslint-disable-next-line vue/valid-v-slot -->
       <template v-slot:item.private="{ item }">
         <v-simple-checkbox :value="item.private" disabled></v-simple-checkbox>
       </template>

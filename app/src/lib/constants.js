@@ -16,7 +16,10 @@ export const variables = [
         scale: Math.pow(0.3048, 3),
         offset: 0
       }
-    ]
+    ],
+    axis: {
+      type: 'logarithmic'
+    }
   },
   {
     id: 'STAGE_FT',
@@ -47,7 +50,10 @@ export const variables = [
         scale: 3.28084 / 100,
         offset: 0
       }
-    ]
+    ],
+    axis: {
+      type: 'linear'
+    }
   },
   {
     id: 'PRESSURE_KPA',
@@ -85,7 +91,10 @@ export const variables = [
         scale: 0.1,
         offset: 0
       }
-    ]
+    ],
+    axis: {
+      type: 'linear'
+    }
   },
   {
     id: 'SPCOND_USCM25',
@@ -99,7 +108,10 @@ export const variables = [
         scale: 1,
         offset: 0
       }
-    ]
+    ],
+    axis: {
+      type: 'linear'
+    }
   },
   {
     id: 'WTEMP_C',
@@ -118,7 +130,10 @@ export const variables = [
         scale: 5 / 9,
         offset: -32
       }
-    ]
+    ],
+    axis: {
+      type: 'linear'
+    }
   },
   {
     id: 'ATEMP_C',
@@ -137,7 +152,10 @@ export const variables = [
         scale: 5 / 9,
         offset: -32
       }
-    ]
+    ],
+    axis: {
+      type: 'linear'
+    }
   },
   {
     id: 'OTHER',
@@ -150,7 +168,10 @@ export const variables = [
         scale: 1,
         offset: 0
       }
-    ]
+    ],
+    axis: {
+      type: 'linear'
+    }
   }
 ]
 
@@ -222,13 +243,6 @@ export const utcOffsets = [
     label: 'UTC-10 (HAST)',
     value: -10
   }
-]
-
-// https://day.js.org/docs/en/parse/string-format
-export const timestampFormats = [
-  'YYYY-MM-DDTHH:mm:ss',
-  'YYYY-MM-DD HH:mm:ss',
-  'YYYY-MM-DD HH:mm'
 ]
 
 export const MAX_IMAGES_PER_IMAGESET = 10000

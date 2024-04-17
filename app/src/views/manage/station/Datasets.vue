@@ -172,26 +172,21 @@
               </div>
               <v-divider></v-divider>
             </template>
-            <!-- eslint-disable-next-line vue/valid-v-slot -->
             <template v-slot:item.created_at="{ item }">
-              {{ item.created_at | timestampFormat('lll') }}
+              {{ item.created_at | formatTimestamp('local', 'DD t') }}
             </template>
-            <!-- eslint-disable-next-line vue/valid-v-slot -->
             <template v-slot:item.period="{ item }">
               <span v-if="item.start_timestamp">
-                {{ item.start_timestamp | timestampLocalFormat(station.timezone, 'll') }} &#8211;
-                {{ item.end_timestamp | timestampLocalFormat(station.timezone, 'll') }}
+                {{ item.start_timestamp | formatTimestamp(station.timezone, 'DD') }} &#8211;
+                {{ item.end_timestamp | formatTimestamp(station.timezone, 'DD') }}
               </span>
             </template>
-            <!-- eslint-disable-next-line vue/valid-v-slot -->
             <template v-slot:item.filename="{ item }">
               {{ item.filename | truncate(32) }}
             </template>
-            <!-- eslint-disable-next-line vue/valid-v-slot -->
             <template v-slot:item.n_rows="{ item }">
               {{ item.n_rows ? item.n_rows.toLocaleString() : '' }}
             </template>
-            <!-- eslint-disable-next-line vue/valid-v-slot -->
             <template v-slot:item.actions="{ item }">
               <v-icon
                 small
@@ -199,7 +194,6 @@
                 mdi-delete
               </v-icon>
             </template>
-            <!-- eslint-disable-next-line vue/valid-v-slot -->
             <template v-slot:item.status="{ item }">
               <StatusChip :status="item.status"></StatusChip>
             </template>

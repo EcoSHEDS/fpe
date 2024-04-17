@@ -1,15 +1,7 @@
 const ExifParser = require('exif-parser')
 const fs = require('fs')
 const path = require('path')
-const dayjs = require('dayjs')
-const timezone = require('dayjs/plugin/timezone')
-const advancedFormat = require('dayjs/plugin/advancedFormat')
-const utc = require('dayjs/plugin/utc')
-
-dayjs.extend(timezone)
-dayjs.extend(utc)
-dayjs.extend(advancedFormat)
-dayjs.tz.setDefault('UTC')
+const { DateTime } = require('./lib/time')
 
 // const files = [
 //   // filenames = EDT
@@ -41,15 +33,15 @@ for (let i = 0; i < files.length; i++) {
   // console.log(exif.tags.DateTimeOriginal, exif.tags.CreateDate)
   const exifDatetime = exif.tags.DateTimeOriginal || exif.tags.CreateDate
   const rawDate = new Date(exifDatetime * 1000)
-  const timestamp = dayjs(rawDate).subtract(offset, 'hour')
-  const timestampUtc = dayjs.utc(rawDate).subtract(offset, 'hour')
-  const timestampLocal = timestampUtc.local().tz('US/Eastern')
-  // console.log(rawDate.toISOString(), timestamp.toISOString())
+  const timestamp = DateTime.fromJSDate(rawDate).setZone(`UTC${offset}`, { keepLocalTime: true })
+  const timestampUtc = timestamp.setZone('UTC')
+  const timestampLocal = timestamp.setZone('US/Eastern')
+
   console.log(
     path.basename(file).substr(0, 13),
-    rawDate.toISOString(),
-    timestamp.toISOString(),
-    timestampUtc.toISOString(),
-    timestampLocal.format('YYYY-MM-DD HH:mm:ss z')
+    rawDate.toISO(),
+    timestamp.toISO(),
+    timestampUtc.toISO(),
+    timestampLocal.toFormat('DD ttt')
   )
 }

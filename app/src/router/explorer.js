@@ -1,15 +1,17 @@
-import Explorer from '@/views/explorer/Explorer.vue'
-import ExplorerStation from '@/views/explorer/Station.vue'
+import ExplorerHome from '@/views/explorer/ExplorerHome'
+import ExplorerStation from '@/views/explorer/ExplorerStation'
 
 export default [
   {
     path: '/explorer',
-    name: 'explorer',
-    component: Explorer
-  },
-  {
-    path: '/explorer/:stationId',
-    name: 'explorerStation',
-    component: ExplorerStation
+    name: 'explorerHome',
+    component: ExplorerHome,
+    children: [
+      {
+        path: ':id',
+        name: 'explorerStation',
+        component: ExplorerStation
+      }
+    ]
   }
 ]

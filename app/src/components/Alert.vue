@@ -5,6 +5,7 @@
     colored-border
     border="left"
     class="body-2"
+    :color="color"
     :value="true"
   >
     <div class="font-weight-bold body-1">{{ title }}</div>
@@ -15,6 +16,6 @@
 <script>
 export default {
   name: 'Alert',
-  props: ['type', 'title']
+  props: ['type', 'title', 'color']
 }
 </script>

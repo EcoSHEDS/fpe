@@ -11,14 +11,15 @@
   "dependencies": {
     "aws-sdk": "^2.1053.0",
     "commander": "^6.2.1",
-    "dayjs": "^1.10.4",
+    "dotenv": "^16.4.5",
     "exif-parser": "^0.1.12",
     "joi": "^17.4.0",
     "knex": "^0.21.12",
+    "luxon": "^3.4.4",
     "objection": "^2.2.18",
     "papaparse": "^5.3.0",
     "pg": "^8.5.1",
-    "sharp": "^0.29.3",
+    "sharp": "^0.33.2",
     "strip-bom": "^4.0.0"
   }
 }

@@ -13,11 +13,20 @@ const secretsmanager = new AWS.SecretsManager({
 })
 
 async function getCreds () {
-  const secret = await secretsmanager.getSecretValue({
-    SecretId: process.env.DB_SECRET_NAME,
-    VersionStage: 'AWSCURRENT'
-  }).promise()
-  return JSON.parse(secret.SecretString)
+  if (process.env.DB_SECRET_NAME) {
+    const secret = await secretsmanager.getSecretValue({
+      SecretId: process.env.DB_SECRET_NAME,
+      VersionStage: 'AWSCURRENT'
+    }).promise()
+    return JSON.parse(secret.SecretString)
+  }
+  return {
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    dbname: process.env.DB_DATABASE,
+    username: process.env.DB_USER,
+    password: process.env.DB_PASSWORD
+  }
 }
 
 const config = {

@@ -10,10 +10,10 @@ import './filters'
 
 import './plugins/amplify'
 import './plugins/axios'
-import './plugins/dayjs'
 import './plugins/error-message'
 import './plugins/highcharts'
 import './plugins/leaflet'
+import './plugins/luxon'
 import './plugins/vue-filter-pretty-bytes'
 
 import Alert from '@/components/Alert'

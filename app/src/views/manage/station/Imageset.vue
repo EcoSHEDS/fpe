@@ -60,7 +60,7 @@
                       style="width:130px">
                       Uploaded
                     </td>
-                    <td class="font-weight-bold">{{imageset.created_at | timestampFormat('lll') }} ({{ imageset.created_at | timestampFromNow }})</td>
+                    <td class="font-weight-bold">{{imageset.created_at | formatTimestamp('local', 'DD t') }} ({{ imageset.created_at | timestampFromNow }})</td>
                   </tr>
                   <tr>
                     <td
@@ -79,7 +79,7 @@
                       Start
                     </td>
                     <td class="font-weight-bold">
-                      <span v-if="imageset.status === 'DONE' && imageset.start_timestamp">{{ imageset.start_timestamp | timestampLocalFormat(station.timezone, 'lll z') }}</span>
+                      <span v-if="imageset.status === 'DONE' && imageset.start_timestamp">{{ imageset.start_timestamp | formatTimestamp(station.timezone, 'DD ttt') }}</span>
                     </td>
                   </tr>
                   <tr v-if="imageset.status === 'DONE'">
@@ -89,7 +89,7 @@
                       End
                     </td>
                     <td class="font-weight-bold">
-                      <span v-if="imageset.status === 'DONE' && imageset.end_timestamp">{{ imageset.end_timestamp | timestampLocalFormat(station.timezone, 'lll z') }}</span>
+                      <span v-if="imageset.status === 'DONE' && imageset.end_timestamp">{{ imageset.end_timestamp | formatTimestamp(station.timezone, 'DD ttt') }}</span>
                     </td>
                   </tr>
                   <tr>
@@ -553,23 +553,16 @@ export default {
       return Math.ceil(this.filteredImages.length / this.iterator.itemsPerPage)
     },
     filteredImages () {
-      console.log('filteredImages')
       if (!this.imageset) return []
 
-      const start = this.iterator.startDate
-        ? this.$date(this.iterator.startDate).tz(this.station.timezone)
-        : null
-      const end = this.iterator.endDate
-        ? this.$date(this.iterator.endDate).tz(this.station.timezone)
-        : null
       const images = this.imageset.images
         .filter(d => {
-          if (start === null) return true
-          return this.$date(d.timestamp).tz(this.station.timezone).startOf('day').isSameOrAfter(start)
+          if (this.iterator.startDate === null) return true
+          return this.$luxon.DateTime.fromJSDate(d.timestamp).setZone(this.station.timezone).toISODate() >= this.iterator.startDate
         })
         .filter(d => {
-          if (end === null) return true
-          return this.$date(d.timestamp).tz(this.station.timezone).startOf('day').isSameOrBefore(end)
+          if (this.iterator.endDate === null) return true
+          return this.$luxon.DateTime.fromJSDate(d.timestamp).setZone(this.station.timezone).toISODate() <= this.iterator.endDate
         })
         .filter(d => {
           return (!this.piiFilters.person || d.pii_person >= 0.2) &&
@@ -601,6 +594,12 @@ export default {
         this.imageset = response.data
         if (this.imageset.status === 'QUEUED' || this.imageset.status === 'PROCESSING') {
           this.queueRefresh()
+        } else if (this.imageset.status === 'DONE') {
+          this.imageset.start_timestamp = new Date(this.imageset.start_timestamp)
+          this.imageset.end_timestamp = new Date(this.imageset.end_timestamp)
+          this.imageset.images.forEach(d => {
+            d.timestamp = new Date(d.timestamp)
+          })
         }
       } catch (err) {
         this.error = err.message || err.toString()
@@ -624,6 +623,13 @@ export default {
         if (this.imageset.status === 'QUEUED' || this.imageset.status === 'PROCESSING') {
           this.queueRefresh()
         } else {
+          if (this.imageset.status === 'DONE') {
+            this.imageset.start_timestamp = new Date(this.imageset.start_timestamp)
+            this.imageset.end_timestamp = new Date(this.imageset.end_timestamp)
+            this.imageset.images.forEach(d => {
+              d.timestamp = new Date(d.timestamp)
+            })
+          }
           if (this.imageset.status !== prevStatus) {
             this.$emit('refresh')
           }
@@ -735,18 +741,18 @@ export default {
       if (this.iterator.startDate === null) {
         if (!this.imageset.start_timestamp) return
 
-        this.iterator.startDate = this.$date(this.imageset.start_timestamp)
-          .tz(this.station.timezone)
-          .format('YYYY-MM-DD')
+        this.iterator.startDate = this.$luxon.DateTime.fromJSDate(this.imageset.start_timestamp)
+          .setZone(this.station.timezone)
+          .toISODate()
       }
     },
     initializeEndDate () {
       if (this.iterator.endDate === null) {
         if (!this.imageset.end_timestamp) return
 
-        this.iterator.endDate = this.$date(this.imageset.end_timestamp)
-          .tz(this.station.timezone)
-          .format('YYYY-MM-DD')
+        this.iterator.endDate = this.$luxon.DateTime.fromJSDate(this.imageset.end_timestamp)
+          .setZone(this.station.timezone)
+          .toISODate()
       }
     },
     async processImageset () {

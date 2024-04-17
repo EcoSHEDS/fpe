@@ -2,16 +2,9 @@ const AWS = require('aws-sdk')
 const ExifParser = require('exif-parser')
 const sharp = require('sharp')
 const Joi = require('joi')
-const dayjs = require('dayjs')
-const timezone = require('dayjs/plugin/timezone')
-const utc = require('dayjs/plugin/utc')
-const localizedFormat = require('dayjs/plugin/localizedFormat')
-const { notify, batch } = require('../aws')
 
-dayjs.extend(timezone)
-dayjs.extend(utc)
-dayjs.extend(localizedFormat)
-dayjs.tz.setDefault('UTC')
+const { DateTime } = require('../lib/time')
+const { notify, batch } = require('../aws')
 
 const { Imageset } = require('../models')
 
@@ -30,7 +23,7 @@ async function notifyMessage (id) {
   return `New photoset has been uploaded to FPE
 
 Imageset ID: ${imageset.id}
-Uploaded at: ${dayjs(imageset.created_at).tz('US/Eastern').format('lll')} (US/Eastern)
+Uploaded at: ${DateTime.fromJSDate(imageset.created_at).setZone('US/Eastern').toFormat('DD ttt')}
 Status: ${imageset.status}
 
 User ID: ${imageset.station.user.id}
@@ -39,7 +32,7 @@ Station: ${imageset.station.name}
 Station URL: https://www.usgs.gov/apps/ecosheds/fpe/#/explorer/${imageset.station.id}/
 
 # Images: ${imageset.n_images}
-Period: ${dayjs(imageset.start_timestamp).tz(imageset.station.timezone).format('ll')} to ${dayjs(imageset.end_timestamp).tz(imageset.station.timezone).format('ll')}
+Period: ${DateTime.fromJSDate(imageset.start_timestamp).setZone(imageset.station.timezone).toFormat('DD')} to ${DateTime.fromJSDate(imageset.end_timestamp).setZone(imageset.station.timezone).toFormat('DD')}
 `
 }
 
@@ -66,6 +59,8 @@ async function processImage (image, utcOffset, timezone, dryRun) {
   // download file
   console.log(`downloading image file (image_id=${image.id}, Key=${image.full_s3.Key})`)
   const s3ImageFile = await s3.getObject(image.full_s3).promise()
+  let sharpImage = await sharp(s3ImageFile.Body)
+  const metadata = await sharpImage.metadata()
 
   // extract exif
   console.log(`extracting exif (image_id=${image.id})`)
@@ -88,10 +83,33 @@ async function processImage (image, utcOffset, timezone, dryRun) {
     throw new Error(`Image file (${image.filename}) is missing timestamp (DateTimeOriginal or CreateDate) in EXIF data`)
   }
 
+  // check if image needs to be rotated
+  if (metadata.orientation && metadata.orientation !== 1) {
+    console.log(`rotating image (image_id=${image.id}, orientation=${metadata.orientation})`)
+    sharpImage = await sharpImage.rotate()
+    const rotatedBuffer = await sharpImage.keepExif().toBuffer()
+    const rotatedMetadata = await sharp(rotatedBuffer).metadata()
+    // update exif after rotation
+    exif.imageSize = {
+      width: rotatedMetadata.width,
+      height: rotatedMetadata.height
+    }
+    // save to s3
+    if (!dryRun) {
+      console.log(`saving rotated image (image_id=${image.id})`)
+      await s3.putObject({
+        Bucket: image.full_s3.Bucket,
+        Key: image.full_s3.Key,
+        Body: rotatedBuffer,
+        ContentType: 'image'
+      }).promise()
+    }
+  }
+
   // create thumbnail
   console.log(`generating thumbnail (image_id=${image.id}, width=${THUMB_WIDTH})`)
   const thumbKey = image.full_s3.Key.replace('images/', 'thumbs/')
-  const thumbBuffer = await sharp(s3ImageFile.Body).resize(THUMB_WIDTH).toBuffer()
+  const thumbBuffer = await sharp(s3ImageFile.Body).rotate().resize(THUMB_WIDTH).toBuffer()
 
   if (!dryRun) {
     console.log(`saving thumbnail (image_id=${image.id})`)
@@ -106,11 +124,10 @@ async function processImage (image, utcOffset, timezone, dryRun) {
   // update record
   console.log(`updating image record (image_id=${image.id})`)
   const exifDatetime = exif.tags.DateTimeOriginal || exif.tags.CreateDate
-  const rawDate = new Date(exifDatetime * 1000)
-  const timestamp = dayjs(rawDate).subtract(utcOffset, 'hour')
+  const timestamp = DateTime.fromJSDate(new Date(exifDatetime * 1000)).setZone(`UTC${utcOffset}`, { keepLocalTime: true })
   const payload = {
     ...exif.imageSize,
-    timestamp: timestamp.toISOString(),
+    timestamp: timestamp.toISO(),
     thumb_s3: {
       Bucket: image.full_s3.Bucket,
       Key: thumbKey
@@ -207,9 +224,80 @@ async function processImageset (id, dryRun) {
   return imageset
 }
 
-module.exports = async function (id, { dryRun }) {
+async function rotateImage (image) {
+  console.log(`rotating image (image_id=${image.id})`)
+
+  // download full image file
+  console.log(`downloading image file (image_id=${image.id}, Key=${image.full_s3.Key})`)
+  let s3ImageFile = await s3.getObject(image.full_s3).promise()
+  let sharpImage = await sharp(s3ImageFile.Body)
+  let metadata = await sharpImage.metadata()
+  const orientation = metadata.orientation
+
+  if (orientation && orientation !== 1) {
+    console.log(`rotating image (image_id=${image.id}, orientation=${orientation})`)
+    sharpImage = await sharpImage.rotate()
+    let rotatedBuffer = await sharpImage.keepExif().toBuffer()
+    console.log(`saving rotated image (image_id=${image.id})`)
+    await s3.putObject({
+      Bucket: image.full_s3.Bucket,
+      Key: image.full_s3.Key,
+      Body: rotatedBuffer,
+      ContentType: 'image'
+    }).promise()
+
+    // download thumb image file
+    console.log(`downloading thumb file (image_id=${image.id}, Key=${image.thumb_s3.Key})`)
+    s3ImageFile = await s3.getObject(image.thumb_s3).promise()
+    sharpImage = await sharp(s3ImageFile.Body).withMetadata({ orientation })
+    metadata = await sharpImage.metadata()
+
+    console.log(`rotating thumb (image_id=${image.id}, orientation=${metadata.orientation})`)
+    sharpImage = await sharpImage.rotate()
+    rotatedBuffer = await sharpImage.keepExif().toBuffer()
+    console.log(`saving rotated thumb (image_id=${image.id}, key=${image.thumb_s3.Key})`)
+    await s3.putObject({
+      Bucket: image.thumb_s3.Bucket,
+      Key: image.thumb_s3.Key,
+      Body: rotatedBuffer,
+      ContentType: 'image'
+    }).promise()
+  } else {
+    console.log(`rotation not necessary (image_id=${image.id}, orientation=1)`)
+  }
+
+  return image
+}
+
+async function rotateImageset (id) {
+  console.log(`rotating imageset (id=${id})`)
+
+  console.log(`fetching imageset record (id=${id})`)
+  const imageset = await Imageset.query()
+    .findById(id)
+  if (!imageset) throw new Error(`Imageset record (id=${id}) not found`)
+
+  const images = await imageset.$relatedQuery('images').orderBy('id')
+  if (images.length === 0) {
+    console.log(`no images to rotate (id=${id})`)
+    return imageset
+  }
+
+  console.log(`rotating images (id=${id}, n=${images.length})`)
+  for (let i = 0; i < images.length; i++) {
+    await rotateImage(images[i])
+  }
+
+  return imageset
+}
+
+module.exports = async function (id, { dryRun, rotateOnly }) {
   try {
-    await processImageset(id, dryRun)
+    if (rotateOnly) {
+      await rotateImageset(id)
+    } else {
+      await processImageset(id, dryRun)
+    }
   } catch (e) {
     console.log(`failed (id=${id}): ${e.message || e.toString()}`)
     console.error(e)
@@ -220,8 +308,10 @@ module.exports = async function (id, { dryRun }) {
       })
       .findById(id)
   }
-  const message = await notifyMessage(id)
-  if (message) {
-    await notify('New Photo Upload', message)
+  if (process.env.NOTIFY_TOPIC) {
+    const message = await notifyMessage(id)
+    if (message) {
+      await notify('New Photo Upload', message)
+    }
   }
 }

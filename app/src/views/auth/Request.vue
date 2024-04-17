@@ -81,7 +81,7 @@
             If you don't get an email in the next few days, check your spam folder.
           </p>
           <p class="mb-0">
-            Until then, you can <router-link :to="{ name: 'explorer' }">explore existing flow photos</router-link>.
+            Until then, you can <router-link :to="{ name: 'explorerHome' }">explore existing flow photos</router-link>.
           </p>
         </Alert>
       </v-card-text>

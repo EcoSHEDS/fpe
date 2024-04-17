@@ -1,551 +1,381 @@
 <template>
-  <div>
-    <v-alert
-      type="error"
-      text
-      colored-border
-      border="left"
-      class="body-2 my-4"
-      v-if="distributionValues.length > 0 && !variableId"
-    >
-      <div class="font-weight-bold body-1">Variable Not Selected</div>
-      <div>
-        Select a variable from the dropdown above to view the distribution plot.
+  <v-row class="justify-center mt-4">
+    <v-col cols="12" lg="6" class="text-center">
+      <highcharts
+        :options="chartOptions"
+        ref="chart"
+        style="max-width:500px;margin:0 auto"
+      ></highcharts>
+    </v-col>
+    <v-divider vertical></v-divider>
+    <v-col cols="12" lg="6">
+      <v-sheet class="text-body-2">
+        <v-simple-table dense>
+          <tbody>
+            <tr>
+              <td
+                class="text-right grey--text text--darken-2"
+                style="width:180px">
+                Mode:
+              </td>
+              <td class="font-weight-bold">
+                <v-chip small label v-if="mode === 'DAY'">DAILY</v-chip>
+                <v-chip small label v-else>SUB-DAILY</v-chip>
+                <v-tooltip bottom>
+                  <template v-slot:activator="{ on }">
+                    <v-btn
+                      small
+                      icon
+                      v-on="on"
+                      color="default"
+                      class="ml-2 mb-1"
+                    ><v-icon small>mdi-information</v-icon></v-btn>
+                  </template>
+                  <span v-if="mode === 'DAY'">Select a time period of 30 days or less on the Timeseries chart to switch to Sub-daily mode</span>
+                  <span v-else>Select a time period longer than 30 days on the Timeseries chart to switch to Daily mode</span>
+                </v-tooltip>
+              </td>
+            </tr>
+            <tr>
+              <td
+                class="text-right grey--text text--darken-2"
+                style="width:180px">
+                Selected Time Period:
+              </td>
+              <td class="font-weight-bold">
+                <b>{{ timeRange[0] | formatTimestamp(station.timezone, 'DD') }} - {{ timeRange[1] | formatTimestamp(station.timezone, 'DD') }}</b>
+                <v-tooltip bottom>
+                  <template v-slot:activator="{ on }">
+                    <v-btn
+                      small
+                      icon
+                      v-on="on"
+                      color="default"
+                      class="ml-2 mb-1"
+                    ><v-icon small>mdi-information</v-icon></v-btn>
+                  </template>
+                  <span>Use the Timeseries chart to select a different time period</span>
+                </v-tooltip>
+              </td>
+            </tr>
+          </tbody>
+        </v-simple-table>
+      </v-sheet>
+      <v-divider class="mb-4"></v-divider>
+      <div v-if="series.length === 0">
+        <Alert type="warning" title="No Data Available">
+          This station does not have any observed data or model predictions.
+        </Alert>
       </div>
-    </v-alert>
-    <v-alert
-      type="error"
-      text
-      colored-border
-      border="left"
-      class="body-2 my-4"
-      v-else-if="distributionValues.length == 0"
-    >
-      <div class="font-weight-bold body-1">No Data Available</div>
-      <div>
-        A distribution plot cannot be created because there is no data during the selected time window.
+
+      <div class="mt-4 d-flex">
+        <v-menu offset-y>
+          <template v-slot:activator="{ on }">
+            <v-btn
+              small
+              depressed
+              v-on="on"
+              color="default"
+            >About This Chart <v-icon right small>mdi-menu-down</v-icon></v-btn>
+          </template>
+          <v-card max-width="400">
+            <v-card-text class="black--text text-body-2">
+              <p>
+                The Distribution Chart shows the cumulative distribution of each variable.
+              </p>
+              <p>
+                The x-axis represents the percentile rank, and the y-axis represents the value of each date or photo depending on whether the Timeseries Mode is Daily or Sub-Daily.
+              </p>
+              <p class="mb-0">
+                Hover over the chart to see the photo associated with each point. If multiple variables are available, then all points corresponding to the current photo will be highlighted (one for each variable).
+              </p>
+            </v-card-text>
+          </v-card>
+        </v-menu>
       </div>
-    </v-alert>
-  </div>
+    </v-col>
+  </v-row>
 </template>
 
 <script>
-import * as d3 from 'd3'
-import debounce from 'debounce'
+import { variables } from '@/lib/constants'
+import { timestampFormat } from '@/lib/time'
+import { format } from 'd3-format'
 
-import { lerp } from '@/lib/utils'
+const variableAxes = variables.map((variable, i) => {
+  return {
+    id: variable.id,
+    title: {
+      text: variable.id
+    },
+    alignTicks: true,
+    startOnTick: true,
+    endOnTick: true,
+    type: variable?.axis?.type || 'linear'
+  }
+})
+variableAxes.push({
+  id: 'SCORE',
+  title: {
+    text: 'MODEL SCORE'
+  },
+  alignTicks: true,
+  startOnTick: true,
+  endOnTick: true,
+  type: 'linear'
+})
 
 export default {
   name: 'DistributionChart',
-  props: ['station', 'variable', 'daily', 'instantaneous', 'mode', 'focus', 'hover', 'play', 'speed', 'nwis'],
+  props: ['series', 'images', 'station', 'image', 'timeRange', 'mode'],
   data () {
     return {
-      ready: false,
-      clipId: 'distribution',
-      width: 400,
-      height: 250,
-      margin: {
-        left: 60,
-        right: 20,
-        top: 10,
-        bottom: 40,
-        images: 10
-      },
-      player: {
-        i: 0,
-        timeout: null
+      scaleValues: false,
+      disableHover: false,
+      chartOptions: {
+        animation: false,
+        chart: {
+          type: 'scatter',
+          zoomType: 'xy',
+          height: '400px',
+          events: {
+            click: () => {
+              this.onClick()
+            }
+          }
+        },
+        title: {
+          text: null
+        },
+        plotOptions: {
+          series: {
+            animation: false,
+            turboThreshold: 0,
+            point: {
+              events: {
+                click: () => {
+                  this.onClick()
+                }
+              }
+            }
+          }
+        },
+        tooltip: {
+          animation: false,
+          outside: true,
+          useHTML: true,
+          headerFormat: '',
+          shape: 'rect',
+          positioner: function () {
+            return {
+              x: this.chart.container.getBoundingClientRect().width,
+              y: 10
+            }
+          }
+        },
+        xAxis: {
+          title: {
+            text: 'Rank Percentile'
+          },
+          min: 0,
+          max: 1,
+          labels: {
+            formatter: function () {
+              return (this.value * 100).toFixed(0) + '%'
+            }
+          },
+          gridLineWidth: 1
+        }
       }
     }
-  },
-  computed: {
-    variableId () {
-      if (!this.variable || !this.variable.id) return null
-      return this.variable.id
-    },
-    focusUtc () {
-      if (!this.focus) return this.focus
-      return this.focus.map(d => this.$date.tz(d, this.station.timezone).utc(true))
-    },
-    xDomain () {
-      if (!this.variableId || this.distributionValues.length === 0) return [0, 1]
-      const extent = d3.extent(this.distributionValues, d => d.value)
-      if (this.variableId === 'FLOW_CFS') {
-        extent[0] = extent[0] * 0.9
-        extent[1] = extent[1] * 1.1
-      } else {
-        extent[0] = extent[0] - 0.05 * (extent[1] - extent[0])
-        extent[1] = extent[1] + 0.05 * (extent[1] - extent[0])
-      }
-      return extent
-    },
-    x () {
-      return (this.variableId === 'FLOW_CFS' ? d3.scaleLog() : d3.scaleLinear())
-        .domain(this.xDomain)
-        .range([this.margin.left, this.width - this.margin.right])
-    },
-    y () {
-      return d3.scaleLinear()
-        .domain([0, 1])
-        .range([this.height - this.margin.bottom, this.margin.top + this.margin.images])
-    },
-    focusDailyValues () {
-      if (!this.variableId) return []
-      let values = this.daily.values
-      if (this.nwis) {
-        values = this.daily.nwis
-      }
-      return values.filter(d => d.dateUtc.isBetween(this.focusUtc[0], this.focusUtc[1], null, '[]'))
-    },
-    focusDailyImages () {
-      return this.daily.images.filter(d => !!d.image).filter(d => d.dateUtc.isBetween(this.focusUtc[0], this.focusUtc[1], null, '[]'))
-    },
-    focusDaily () {
-      const images = this.focusDailyImages.map(d => ([d.date, d]))
-      const imageMap = new Map(images)
-      return this.focusDailyValues.map(d => ({
-        ...d,
-        image: imageMap.has(d.date) ? imageMap.get(d.date).image : undefined
-      }))
-    },
-    distributionValues () {
-      if (this.mode === 'daily') {
-        if (!this.focusDaily || !this.variableId || !this.focusUtc) return []
-
-        return this.focusDaily
-          .slice()
-          .sort((a, b) => d3.ascending(a.mean, b.mean))
-          .map((d, i, arr) => ({
-            p: i / (arr.length + 1),
-            value: d.mean,
-            ...d
-          }))
-      } else {
-        if (!this.instantaneous || !this.variableId || !this.focusUtc) return []
-        let values = this.instantaneous.values
-        if (this.nwis) {
-          values = this.instantaneous.nwis
-        }
-        return values
-          .slice()
-          .sort((a, b) => d3.ascending(a.value, b.value))
-          .map((d, i, arr) => ({
-            p: i / (arr.length + 1),
-            value: d.value,
-            ...d
-          }))
-      }
-    },
-    distributionImages () {
-      if (this.mode === 'daily') {
-        return this.distributionValues
-          .filter(d => !!d.image)
-          .map(d => ({
-            date: d.date,
-            dateUtc: d.dateUtc,
-            image: d.image,
-            value: d,
-            p: d.p
-          }))
-      } else {
-        const valueBisector = d3.bisector(d => d.value).left
-        const interpolateProbability = (data, value) => {
-          if (!data || data.length === 0) return
-
-          if (value < data[0].value || value > data[data.length - 1].value) {
-            return null
-          }
-
-          const i = valueBisector(data, value)
-
-          const a = data[i - 1]
-          const b = data[i]
-
-          if (!a) return b.p
-          if (!b) return a.p
-
-          const t = (value - a.value) / (b.value - a.value)
-          const p = lerp(a.p, b.p, t)
-
-          return p
-        }
-        const images = this.instantaneous.images.map(d => {
-          let p
-          if (this.nwis) {
-            p = interpolateProbability(this.distributionValues, d.nwis)
-          } else {
-            p = interpolateProbability(this.distributionValues, d.value)
-          }
-          return {
-            ...d,
-            value: this.nwis ? d.nwis : d.value,
-            nwis: this.nwis,
-            p
-          }
-        })
-        return images.slice()
-          .filter(d => d.value !== null && d.p !== null)
-          .sort((a, b) => d3.ascending(a.value, b.value))
-      }
-    }
-  },
-  mounted () {
-    this.init()
-  },
-  beforeDestroy () {
-    this.stopAutoplay()
   },
   watch: {
-    focus () {
-      this.render()
+    images () {
+      this.updateChart()
     },
-    hover () {
-      this.renderHover()
+    series () {
+      this.updateChart()
     },
-    play () {
-      if (this.play) {
-        this.startAutoplay()
-      } else {
-        this.stopAutoplay()
-      }
+    image () {
+      this.highlightImage()
     }
   },
+  async mounted () {
+    this.chart = this.$refs.chart.chart
+    this.chart.container.onmouseout = () => {
+      this.highlightImage()
+    }
+    await this.updateChart()
+  },
+  beforeDestroy () {
+    this.chart.container.onmouseout = null
+  },
   methods: {
-    init () {
-      this.width = Math.min(this.$el.offsetWidth, this.width)
-      this.svg = d3.select(this.$el)
-        .append('svg')
-        .attr('width', this.width)
-        .attr('height', this.height)
+    onClick () {
+      // console.log('onClick', this.disableHover)
+      if (this.disableHover) return
 
-      this.svg.append('clipPath')
-        .attr('id', this.clipId)
-        .append('rect')
-        .attr('x', this.margin.left)
-        .attr('y', 0)
-        .attr('height', this.height)
-        .attr('width', this.width - this.margin.left - this.margin.right)
+      this.disableHover = true
+      this.chart.series.forEach(s => {
+        s.update({
+          enableMouseTracking: false
+        })
+      })
+      this.highlightImage()
 
-      this.g = {
-        xAxis: this.svg.append('g')
-          .attr('class', 'x axis')
-          .attr('transform', `translate(0,${this.height - this.margin.bottom})`),
-        yAxis: this.svg.append('g')
-          .attr('class', 'y axis')
-          .attr('transform', `translate(${this.margin.left},0)`),
-        values: this.svg.append('g')
-          .attr('class', 'values')
-          .attr('clip-path', `url(#${this.clipId})`),
-        images: this.svg.append('g')
-          .attr('class', 'images'),
-        focus: this.svg.append('g')
-          .attr('class', 'focus'),
-        noImages: this.svg.append('g')
-          .attr('class', 'no-images'),
-        noValues: this.svg.append('g')
-          .attr('class', 'no-values'),
-        input: this.svg.append('g')
-          .attr('class', 'input')
-      }
-
-      this.g.noImages
-        .append('text')
-        .attr('transform', `translate(${this.margin.left + (this.width - this.margin.left - this.margin.right) / 2},${this.height / 2})`)
-        .attr('fill', 'currentColor')
-        .attr('text-anchor', 'middle')
-        .text('No Photos Available')
-        .attr('display', this.distributionImages.length > 0 ? 'none' : null)
-
-      this.g.noValues
-        .append('text')
-        .attr('transform', `translate(${this.margin.left + (this.width - this.margin.left - this.margin.right) / 2},${this.height / 2 - 40})`)
-        .attr('fill', 'currentColor')
-        .attr('text-anchor', 'middle')
-        .text('No Data Available')
-
-      this.g.input
-        .append('rect')
-        .attr('pointer-events', 'all')
-        .attr('x', 0)
-        .attr('y', this.margin.top)
-        .attr('width', this.width)
-        .attr('height', this.height - this.margin.top - this.margin.bottom)
-        .style('fill', 'none')
-        .attr('clip-path', `url(#${this.clipId})`)
-        .on('mousemove', this.onMousemove)
-        // .on('mouseout', this.clearHover)
-
-      this.ready = true
-      this.render()
+      setTimeout(() => {
+        this.disableHover = false
+        this.chart.series.forEach(s => {
+          s.update({
+            enableMouseTracking: true
+          })
+        })
+        this.highlightImage()
+      }, 1000)
     },
-    onMousemove (event) {
-      if (this.play) return
-      const mouseValue = this.x.invert(event.offsetX)
+    updateChart () {
+      const chart = this.chart
+      const mode = this.mode
+      const station = this.station
+      const that = this
+      const pointSeries = this.series.map((series, i) => {
+        const values = this.images.map(d => {
+          const value = d.values.find(v => v.name === series.name)
+          return {
+            x: value ? value.rank : null,
+            y: value ? value.value : null,
+            image: d,
+            mode: this.mode
+          }
+        }).filter(d => d.x !== null && d.y !== null)
+        return {
+          name: series.name,
+          data: values,
+          marker: {
+            symbol: 'circle',
+            radius: 3,
+            lineWidth: 1,
+            states: {
+              hover: {
+                animation: false,
+                radiusPlus: 5
+              },
+              normal: {
+                animation: false
+              }
+            }
+          },
+          states: {
+            inactive: {
+              opacity: 1
+            }
+          },
+          yAxis: series.variableId,
+          tooltip: {
+            pointFormatter: function () {
+              that.$emit('hover', this.image)
 
-      if (this.mode === 'daily') {
-        if (this.distributionImages.length === 0) return this.emitHover()
-        const valueBisector = d3.bisector(d => d.value.mean).left
-        const bisectValue = (data, value) => {
-          const i = valueBisector(data, value, 1)
-          const a = data[i - 1]
-          const b = data[i]
-          if (!b) return a
-          return (value - a.value.mean) > (b.value.mean - value) ? b : a
-        }
-        const hoveredItem = bisectValue(this.distributionImages, mouseValue)
+              const header = this.mode === 'DAY'
+                ? timestampFormat(this.image.timestamp, station.timezone, 'DD')
+                : timestampFormat(this.image.timestamp, station.timezone)
 
-        const x = {
-          mode: this.mode,
-          dateUtc: hoveredItem.dateUtc,
-          image: hoveredItem.image,
-          p: hoveredItem.p,
-          nwis: this.nwis
-        }
-        if (this.nwis) {
-          x.nwis = hoveredItem.value
-        } else {
-          x.value = hoveredItem.value
-        }
-        this.emitHover(x)
-      } else if (this.mode === 'instantaneous') {
-        if (this.distributionImages.length === 0) return this.emitHover()
+              const modeLabel = mode === 'DAY' ? 'Daily' : 'Sub-Daily'
 
-        const valueBisector = d3.bisector(d => d.value).left
-        const bisectValue = (data, value) => {
-          const i = valueBisector(data, value, 1)
+              const valueFormatter = format('.1f')
+              const rankFormatter = format('.1%')
 
-          const a = data[i - 1]
-          const b = data[i]
-          if (!b) return a
-          const item = (value - a.value) > (b.value - value) ? b : a
-          return item
-        }
-        const hoveredImage = bisectValue(this.distributionImages, mouseValue)
+              const valueRows = this.image.values.map(d => {
+                const valueLabel = d.value === null || d.value === undefined ? 'N/A' : valueFormatter(d.value)
+                const rankLabel = d.rank === null || d.rank === undefined ? 'N/A' : rankFormatter(d.rank)
 
-        const x = {
-          mode: this.mode,
-          timestampUtc: hoveredImage.timestampUtc,
-          image: hoveredImage,
-          p: hoveredImage.p,
-          nwis: this.nwis
-        }
-        if (this.nwis) {
-          x.nwis = hoveredImage.value
-        } else {
-          x.value = hoveredImage.value
-        }
+                const series = chart.series.find(s => s.name === d.name)
+                if (!series || !series.visible) return ''
 
-        this.emitHover(x)
-      }
+                return `
+                  <tr>
+                    <td><span style="color:${series.color}">●</span></td>
+                    <td>${d.name}</td>
+                    <td class="text-right">${valueLabel}</td>
+                    <td class="text-right">${rankLabel}</td>
+                  </tr>
+                `
+              }).join('')
+
+              return `
+                <b>${header}</b>
+                <br>
+                <table style="border-spacing: 10px 5px; margin-left: -10px; margin-right: -10px">
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th></th>
+                      <th colspan="2" class="text-center">${modeLabel}</th>
+                    </tr>
+                    <tr>
+                      <th></th>
+                      <th style="text-align:left">Variable</th>
+                      <th class="text-right">Value</th>
+                      <th class="text-right">Rank</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${valueRows}
+                  </tbody>
+                </table>
+              `
+            }
+          }
+        }
+      })
+
+      const seriesVariableIds = this.series.map(d => d.variableId)
+      const yAxes = [
+        ...variableAxes.filter(d => seriesVariableIds.includes(d.id))
+      ]
+      yAxes.forEach((d, i) => {
+        d.opposite = i > 0
+        d.gridLineWidth = i > 0 ? 0 : 1
+      })
+
+      // first clear out chart to reset series and yAxes
+      // in case the set of series (variables) has changed
+      this.chart.update({
+        yAxis: [],
+        series: []
+      }, true, true, false)
+      this.chart.update({
+        yAxis: yAxes,
+        series: pointSeries
+      }, true, true, false)
+      this.chart.render()
     },
-    clearHover () {
-      this.g.focus.selectAll('circle').remove()
-      this.emitHover()
-    },
-    emitHover: debounce(function (hover) {
-      this.$emit('hover', hover)
-    }, 10),
-    render () {
-      if (!this.ready || !this.focus) return
+    highlightImage () {
+      if (!this.chart) return
 
-      if (!this.variableId || this.distributionValues.length === 0) {
-        this.svg.attr('display', 'none')
-        return
+      if (this.chart.hoverPoints !== undefined && this.chart.hoverPoints !== null) {
+        const imageIds = this.chart.hoverPoints.map(p => p.image.id)
+        this.chart.series.forEach(s => {
+          if (!s.points || !s.visible) return
+          s.points.forEach(p => {
+            p.setState('')
+            if (imageIds.includes(p.image.id)) {
+              p.setState('hover')
+              p.graphic && p.graphic.toFront()
+            }
+          })
+        })
       } else {
-        this.svg.attr('display', null)
+        this.chart.series.forEach(s => {
+          if (!s.points || !s.visible) return
+          s.points.forEach(p => {
+            p.setState('')
+            if (p.image && this.image && p.image.id === this.image.id) {
+              p.setState('hover')
+              p.graphic && p.graphic.toFront()
+            }
+          })
+        })
       }
-
-      // clear existing values and images
-      this.g.values.selectAll('path').remove()
-      this.g.images.selectAll('circle').remove()
-
-      this.renderAxes()
-      if (this.mode === 'instantaneous') {
-        this.renderInstantaneous()
-      } else {
-        this.renderDaily()
-      }
-    },
-    renderAxes () {
-      const xAxis = d3.axisBottom(this.x)
-        .ticks(5)
-        .tickSizeOuter(0)
-
-      this.g.xAxis.call(xAxis)
-      const yAxis = d3.axisLeft(this.y)
-        .ticks(6)
-        .tickFormat(d3.format('.0%'))
-      this.g.yAxis.call(yAxis)
-
-      const yLabel = this.g.yAxis.select('text.label')
-      if (yLabel.empty()) {
-        this.g.yAxis.append('text')
-          .attr('class', 'label')
-          .attr('transform', `translate(0,${this.margin.top})`)
-          .attr('text-anchor', 'end')
-          .attr('font-size', 12)
-          .attr('fill', 'currentColor')
-          .text('Percentile')
-      }
-
-      const xLabel = this.g.xAxis.select('text.label')
-      if (xLabel.empty()) {
-        this.g.xAxis.append('text')
-          .attr('class', 'label')
-          .attr('transform', `translate(${(this.width - this.margin.right - this.margin.left) / 2 + this.margin.left},30)`)
-          .attr('text-anchor', 'middle')
-          .attr('font-size', 12)
-          .attr('fill', 'currentColor')
-      }
-      this.g.xAxis.select('text.label')
-        .text(
-          this.distributionValues.length > 0
-            ? `${this.mode === 'daily' ? 'Daily Mean Observed ' : 'Observed '}${this.variable.label} (${this.variable.units})`
-            : ''
-        )
-
-      this.g.xAxis.selectAll('g.tick')
-        .attr('visibility', this.distributionValues.length > 0 ? 'visible' : 'hidden')
-      this.g.yAxis.selectAll('g.tick')
-        .attr('visibility', this.distributionValues.length > 0 ? 'visible' : 'hidden')
-    },
-    renderDaily () {
-      // this.mode = 'daily'
-
-      if (this.variableId) {
-        const line = d3.line()
-          .x(d => this.x(d.value))
-          .y(d => this.y(d.p))
-
-        this.g.values.selectAll('path.mean')
-          .data([this.distributionValues])
-          .join('path')
-          .attr('class', 'mean')
-          .attr('fill', 'none')
-          .attr('stroke', this.nwis ? 'deepskyblue' : 'steelblue')
-          .attr('stroke-width', '2px')
-          .attr('d', line)
-
-        this.g.images.selectAll('circle')
-          .data(this.distributionImages)
-          .join('circle')
-          .attr('fill', 'gold')
-          .attr('stroke', 'goldenrod')
-          .attr('opacity', 0.6)
-          .attr('cx', d => this.x(d.value.mean))
-          .attr('cy', d => this.y(d.p))
-          .attr('r', this.margin.images / 2)
-      }
-
-      this.g.noValues.attr('visibility', this.distributionValues.length > 0 ? 'hidden' : 'visible')
-      this.g.noImages.attr('visibility', this.distributionImages.length > 0 ? 'hidden' : 'visible')
-    },
-    renderInstantaneous () {
-      const line = d3.line()
-        .defined(d => !isNaN(d.value))
-        .x(d => this.x(d.value))
-        .y(d => this.y(d.p))
-
-      this.g.values.selectAll('path.value')
-        .data([this.distributionValues])
-        .join('path')
-        .attr('class', 'value')
-        .attr('fill', 'none')
-        .attr('stroke', this.nwis ? 'deepskyblue' : 'steelblue')
-        .attr('stroke-width', '2px')
-        .attr('d', line)
-
-      this.g.images.selectAll('circle.image')
-        .data(this.distributionImages)
-        .join('circle')
-        .attr('class', 'image')
-        .attr('fill', 'gold')
-        .attr('stroke', 'goldenrod')
-        .attr('opacity', 0.6)
-        .attr('cx', d => this.x(d.value))
-        .attr('cy', d => this.y(d.p))
-        .attr('r', this.margin.images / 2)
-
-      this.g.noValues.attr('visibility', this.distributionValues.length > 0 ? 'hidden' : 'visible')
-      this.g.noImages.attr('visibility', this.distributionImages.length > 0 ? 'hidden' : 'visible')
-    },
-    renderHover () {
-      if (!this.hover) {
-        this.g.focus.selectAll('circle').remove()
-      } else if (this.mode === 'daily') {
-        this.g.focus.selectAll('circle.value')
-          .data(this.hover ? [this.hover] : [])
-          .join('circle')
-          .attr('class', 'value')
-          .attr('fill', 'none')
-          .attr('stroke', 'orangered')
-          .attr('stroke-width', '2px')
-          .attr('cx', d => this.x(this.nwis ? d.nwis.mean : d.value.mean))
-          .attr('cy', d => this.y(d.p))
-          .attr('r', 5)
-      } else if (this.mode === 'instantaneous') {
-        this.g.focus.selectAll('circle.image')
-          .data(this.hover ? [this.hover] : [], d => d.id)
-          .join('circle')
-          .attr('class', 'image')
-          .attr('fill', 'none')
-          .attr('stroke', 'orangered')
-          .attr('stroke-width', '2px')
-          .attr('cx', d => this.x(this.nwis ? d.nwis : d.value))
-          .attr('cy', d => this.y(d.p))
-          .attr('r', 5)
-      }
-    },
-    startAutoplay () {
-      let i = 0
-      if (this.hover) {
-        const pBisector = d3.bisector(d => d.p).left
-        i = pBisector(this.distributionImages, this.hover.p, 1)
-      }
-      this.playFrame(i)
-    },
-    playFrame (i) {
-      this.player.i = i
-      if (this.mode === 'daily') {
-        const row = this.distributionImages[i]
-        const x = {
-          mode: this.mode,
-          dateUtc: row.dateUtc,
-          image: row.image,
-          // value: row.value,
-          p: row.p
-        }
-        if (this.nwis) {
-          x.nwis = row.value
-        } else {
-          x.value = row.value
-        }
-        this.emitHover(x)
-      } else if (this.mode === 'instantaneous') {
-        const row = this.distributionImages[i]
-        const x = {
-          mode: this.mode,
-          timestampUtc: row.timestampUtc,
-          image: row,
-          p: row.p
-        }
-        if (this.nwis) {
-          x.nwis = row.value
-        } else {
-          x.value = row.value
-        }
-        this.emitHover(x)
-      }
-
-      this.player.timeout = setTimeout(() => {
-        if (i >= (this.distributionImages.length - 1)) {
-          this.playFrame(0)
-        } else {
-          this.playFrame(i + 1)
-        }
-      }, 1e3 / this.speed)
-    },
-    stopAutoplay () {
-      clearTimeout(this.player.timeout)
     }
   }
 }
