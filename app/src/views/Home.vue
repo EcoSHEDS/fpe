@@ -84,7 +84,7 @@
               Lastly, we have created an official email list that will be used to announce updates. If you'd like to receive these, please <a href="https://public.govdelivery.com/accounts/USDOIGS/subscriber/new?topic_id=USDOIGS_120">Sign Up here</a>.
             </p>
             <p>
-              To read more about these changes, please see our <a href="">latest newsletter</a>.
+              To read more about these changes, please see our <a href="https://content.govdelivery.com/accounts/USDOIGS/bulletins/397081f">latest newsletter</a>.
             </p>
           </div>
           <div v-if="showMoreNews">
