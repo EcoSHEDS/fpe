@@ -52,6 +52,87 @@
                       hide-details
                       class="mb-4 mt-8"
                     ></v-text-field>
+                    <p class="body-2">The following inputs are optional, and should only be used when requested. Leave blank to defaults, which will include only daytime photos (7:00 am to 6:59 pm) from any available date at the selected station.</p>
+                    <v-row>
+                      <v-col>
+                        <v-text-field
+                          v-model="minHour"
+                          label="Minimum Photo Hour"
+                          outlined
+                          hint="Integer (0-23) in 24H time (default = 7 for 7:00 AM)"
+                          persistent-hint
+                          type="number"
+                        ></v-text-field>
+                      </v-col>
+                      <v-col>
+                        <v-text-field
+                          v-model="maxHour"
+                          label="Maximum Photo Hour"
+                          outlined
+                          hint="Integer (0-23) in 24H time (default = 18 for 6:59 PM)"
+                          persistent-hint
+                          type="number"
+                        ></v-text-field>
+                      </v-col>
+                    </v-row>
+                    <v-row>
+                      <v-col>
+                        <v-menu
+                          v-model="menus.minDate"
+                          :close-on-content-click="false"
+                          transition="scale-transition"
+                          offset-y
+                          max-width="290px"
+                          min-width="auto"
+                        >
+                          <template v-slot:activator="{ on, attrs }">
+                            <v-text-field
+                              v-model="minDate"
+                              label="Minimum Photo Date"
+                              clearable
+                              outlined
+                              persistent-hint
+                              hint="YYYY-MM-DD format (default = first available)"
+                              v-bind="attrs"
+                              v-on="on"
+                            ></v-text-field>
+                          </template>
+                          <v-date-picker
+                            v-model="minDate"
+                            no-title
+                            @input="menus.minDate = false"
+                          ></v-date-picker>
+                        </v-menu>
+                      </v-col>
+                      <v-col>
+                        <v-menu
+                          v-model="menus.maxDate"
+                          :close-on-content-click="false"
+                          transition="scale-transition"
+                          offset-y
+                          max-width="290px"
+                          min-width="auto"
+                        >
+                          <template v-slot:activator="{ on, attrs }">
+                            <v-text-field
+                              v-model="maxDate"
+                              label="Maximum Photo Date"
+                              clearable
+                              outlined
+                              persistent-hint
+                              hint="YYYY-MM-DD format (default = last available)"
+                              v-bind="attrs"
+                              v-on="on"
+                            ></v-text-field>
+                          </template>
+                          <v-date-picker
+                            v-model="maxDate"
+                            no-title
+                            @input="menus.maxDate = false"
+                          ></v-date-picker>
+                        </v-menu>
+                      </v-col>
+                    </v-row>
                   </v-col>
                 </v-row>
 
@@ -66,11 +147,11 @@
 
               <!-- INSTRUCTIONS -->
               <v-col cols="6">
-                <v-sheet max-height="400" elevation="2" class="pa-4" style="overflow-y:scroll;">
+                <v-sheet max-height="800" elevation="2" class="pa-4" style="overflow-y:scroll;">
                   <div class="text-h6">Instructions</div>
                   <v-divider class="mb-2"></v-divider>
                   <ol>
-                    <li>Select a station, enter the number of photo pairs you would like to annotate, and click <code>Start Annotating</code>.</li>
+                    <li>Select a station, enter the number of photo pairs you would like to annotate, and specify the minimum/maximum hours and dates (optional). Then click <code>Start Annotating</code>.</li>
                     <li>For each photo pair:
                       <ol>
                         <li>
@@ -115,7 +196,7 @@
                     </li>
                   </ol>
                 </v-sheet>
-                <div class="text-right text-caption mb-0">Scroll down to see all instructions</div>
+                <!-- <div class="text-right text-caption mb-0">Scroll down to see all instructions</div> -->
               </v-col>
             </v-row>
           </v-card-text>
@@ -338,6 +419,14 @@ export default {
       stationArray: [],
       search: '',
       nPairs: 100,
+      minHour: null,
+      maxHour: null,
+      minDate: null,
+      maxDate: null,
+      menus: {
+        minDate: false,
+        maxDate: false
+      },
       currentIndex: null,
       startedAt: new Date(),
       pairs: [],
@@ -438,8 +527,31 @@ export default {
     async fetchStationPairs () {
       if (!this.station) return
       this.loading.station = true
+      this.pairs = []
+      this.pairsStationId = null
       try {
-        const response = await this.$http.public.get(`/stations/${this.station.id}/image-pairs?n_pairs=${this.nPairs}`)
+        let query = `n_pairs=${this.nPairs}`
+        const minHour = parseInt(this.minHour)
+        const maxHour = parseInt(this.maxHour)
+        if (!isNaN(minHour)) {
+          query += `&min_hour=${this.minHour}`
+        }
+        if (!isNaN(maxHour)) {
+          query += `&max_hour=${this.maxHour}`
+        }
+        if (this.minDate) {
+          query += `&min_date=${this.minDate}`
+        }
+        if (this.maxDate) {
+          query += `&max_date=${this.maxDate}`
+        }
+        const url = `/stations/${this.station.id}/image-pairs?${query}`
+        const response = await this.$http.public.get(url)
+
+        if (response.data.length === 0) {
+          throw new Error('No image pairs found for given inputs')
+        }
+
         this.pairs = response.data.map(d => {
           d.left.timestamp = new Date(d.left.timestamp)
           d.left.hour = this.$luxon.DateTime.fromJSDate(d.left.timestamp).setZone(this.station.timezone).hour
@@ -527,7 +639,6 @@ export default {
                      d.right.image.hour <= 18
             }).length
         }
-        console.log(payload)
         const response = await this.$http.restricted.post('/annotations', payload)
         const annotation = response.data
 
@@ -589,9 +700,46 @@ export default {
         this.error.start = 'Select a station in the table above'
         return
       }
-      if (!this.nPairs || this.nPairs <= 0 || this.nPairs > 10000) {
+      const nPairs = parseInt(this.nPairs)
+      if (isNaN(nPairs) || nPairs <= 0 || nPairs > 10000) {
         this.error.start = 'Number of annotations must be between 1 and 10,000'
         return
+      }
+      const minHour = parseInt(this.minHour)
+      const maxHour = parseInt(this.maxHour)
+      if (!isNaN(minHour) && (minHour < 0 || minHour > 23)) {
+        this.error.start = 'Minimum hour must be an integer between 0 and 23'
+        return
+      }
+      if (!isNaN(maxHour) && (maxHour < 0 || maxHour > 23)) {
+        this.error.start = 'Maximum hour must be an integer between 0 and 23'
+        return
+      }
+      if (!isNaN(minHour) && !isNaN(maxHour) && minHour > maxHour) {
+        this.error.start = 'Minimum hour cannot be more than maximum hour'
+        return
+      }
+      if (this.minDate) {
+        const minDate = new Date(this.minDate)
+        if (isNaN(minDate.valueOf())) {
+          this.error.start = 'Minimum date is not valid, must be in YYYY-MM-DD format'
+          return
+        }
+      }
+      if (this.maxDate) {
+        const maxDate = new Date(this.maxDate)
+        if (isNaN(maxDate.valueOf())) {
+          this.error.start = 'Maximum date is not valid, must be in YYYY-MM-DD format'
+          return
+        }
+      }
+      if (this.minDate && this.maxDate) {
+        const minDate = new Date(this.minDate)
+        const maxDate = new Date(this.maxDate)
+        if (minDate.valueOf() > maxDate.valueOf()) {
+          this.error.start = 'Minimum date cannot be after maximum date'
+          return
+        }
       }
 
       this.startedAt = new Date()

@@ -162,10 +162,16 @@ const getStationValues = async (req, res, next) => {
 }
 
 const getStationRandomImagePairs = async (req, res, next) => {
-  const nPairs = Math.min(req.query.n_pairs || 100, 10000)
+  const nPairs = Math.min(parseInt(req.query.n_pairs) || 100, 10000)
+  const minHour = parseInt(req.query.min_hour) || 7
+  const maxHour = parseInt(req.query.max_hour) || 18
+  const minDate = req.query.min_date || '2000-01-01'
+  const maxDate = req.query.max_date || '2099-12-31'
+  const args = [res.locals.station.id, nPairs, minHour, maxHour, minDate, maxDate]
+  console.log(args)
   const result = await knex.raw(
-    'select * from f_station_random_image_pairs(?,?,?,?)',
-    [res.locals.station.id, nPairs, 7, 18]
+    'select * from f_station_random_image_pairs(?,?,?,?,?,?)',
+    args
   )
   const rows = result.rows
   return res.status(200).json(rows)

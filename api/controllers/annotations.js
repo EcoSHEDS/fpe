@@ -47,9 +47,13 @@ const putAnnotation = async (req, res, next) => {
 }
 
 const getAnnotationStations = async (req, res, next) => {
+  const userId = req.auth.id
+
   const rows = await Station.query()
     .modify('annotationSummary')
     .where('private', false)
+    .orWhere('user_id', '=', userId)
+
   rows.forEach(d => {
     d.n_annotations = Number(d.n_annotations) || 0
     d.n_annotations_daytime = Number(d.n_annotations_daytime) || 0
