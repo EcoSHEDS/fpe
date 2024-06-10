@@ -75,7 +75,7 @@
                     <td class="font-weight-bold">
                       <v-tooltip bottom>
                         <template v-slot:activator="{ on }">
-                          <a download :href="dataset.url" v-on="on">{{ dataset.filename | truncate(32) }}</a>
+                          <a download :href="datasetUrl" v-on="on">{{ dataset.filename | truncate(32) }}</a>
                         </template>
                         <span>{{ dataset.filename }}</span>
                       </v-tooltip>
@@ -261,6 +261,8 @@ import ConfirmDialog from '@/components/ConfirmDialog'
 import StatusChip from '@/components/StatusChip'
 import DatasetTimeseriesChart from '@/components/charts/DatasetTimeseriesChart'
 
+import { fixDataUrl } from '@/lib/utils'
+
 export default {
   name: 'ManageDataset',
   mixins: [RefresherMixin],
@@ -281,6 +283,10 @@ export default {
     }
   },
   computed: {
+    datasetUrl () {
+      if (!this.dataset || !this.dataset.url) return null
+      return fixDataUrl(this.dataset.url)
+    },
     station () {
       return this.$parent.station
     }

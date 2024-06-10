@@ -348,6 +348,7 @@ import { rank, rollup, mean, max, deviation } from 'd3-array'
 import { csv } from 'd3-fetch'
 import { scaleUtc } from 'd3-scale'
 import nwis from '@/lib/nwis'
+import { fixDataUrl } from '@/lib/utils'
 import PhotoTimeseriesChart from '@/components/charts/PhotoTimeseriesChart'
 import DistributionChart from '@/components/charts/DistributionChart'
 import ScatterplotChart from '@/components/charts/ScatterplotChart'
@@ -905,7 +906,7 @@ export default {
         imageElement.onerror = () => {
           this.imageError = true
         }
-        imageElement.src = image.thumb_url
+        imageElement.src = fixDataUrl(image.thumb_url)
       }
     },
     nextImage () {

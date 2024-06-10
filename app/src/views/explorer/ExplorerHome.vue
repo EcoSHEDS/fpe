@@ -103,6 +103,7 @@ export default {
           d.has_model = (d.models && d.models.length > 0)
         })
         this.stations.all = stations.sort((a, b) => ascending(a.id, b.id))
+          .filter(d => d.images && d.images.count > 0)
         this.stations.filtered = this.stations.all
       } catch (err) {
         console.error(err)

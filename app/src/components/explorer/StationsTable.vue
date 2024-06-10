@@ -5,8 +5,8 @@
     :loading="loading"
     :value="selectedArray"
     :options="{ itemsPerPage: 5 }"
-    :sort-by="['has_model', 'images.count']"
-    :sort-desc="[true, true]"
+    :sort-by.sync="sortBy"
+    :sort-desc.sync="sortDesc"
     @click:row="select"
     single-select
     dense
@@ -133,6 +133,8 @@ export default {
     return {
       filterMenu: false,
       search: '',
+      sortBy: ['has_model', 'images.count'],
+      sortDesc: [true, true],
       filters: {
         affiliation: null,
         hasValues: false,
@@ -204,14 +206,14 @@ export default {
     }
   },
   mounted () {
-    // if (this.user) {
-    //   this.headers.push({
-    //     text: 'Private',
-    //     value: 'private',
-    //     align: 'center',
-    //     width: 120
-    //   })
-    // }
+    if (this.user && this.user.isAdmin) {
+      this.headers.push({
+        text: 'Private',
+        value: 'private',
+        align: 'center',
+        width: 120
+      })
+    }
   },
   methods: {
     filter () {

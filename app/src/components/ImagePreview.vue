@@ -3,7 +3,7 @@
     <div style="width:100%">
       <v-img
         lazy-src="img/placeholder.png"
-        :src="image.thumb_url"
+        :src="fixDataUrl(image.thumb_url)"
         :alt="image.filename"
         v-if="image.status === 'DONE'"
         @click="$emit('click', image)"
@@ -66,8 +66,7 @@
 </template>
 
 <script>
-import { imagePiiFlag } from '@/lib/utils'
-
+import { imagePiiFlag, fixDataUrl } from '@/lib/utils'
 export default {
   name: 'ImagePreview',
   props: {
@@ -81,7 +80,8 @@ export default {
     }
   },
   methods: {
-    imagePiiFlag
+    imagePiiFlag,
+    fixDataUrl
   }
 }
 </script>

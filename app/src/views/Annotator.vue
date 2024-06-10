@@ -214,12 +214,12 @@
             <v-row v-if="currentPair">
               <v-col cols="6">
                 <v-sheet elevation="2" class="pa-4">
-                  <div class="fpe-image-url text-center"><a :href="currentPair.left.image.thumb_url">{{ currentPair.left.image.filename }}</a></div>
+                  <div class="fpe-image-url text-center"><a :href="fixDataUrl(currentPair.left.image.thumb_url)">{{ currentPair.left.image.filename }}</a></div>
                   <div class="text-center">{{ currentPair.left.image.timestamp | formatTimestamp(station.timezone) }}</div>
                   <v-img
                     lazy-src="img/placeholder.png"
                     max-height="400"
-                    :src="currentPair.left.image.thumb_url"
+                    :src="fixDataUrl(urrentPair.left.image.thumb_url)"
                     :alt="currentPair.left.image.filename"
                     :transition="false"
                     contain
@@ -253,12 +253,12 @@
               </v-col>
               <v-col cols="6">
                 <v-sheet elevation="2" class="pa-4">
-                  <div class="fpe-image-url text-center"><a :href="currentPair.right.image.thumb_url">{{ currentPair.right.image.filename }}</a></div>
+                  <div class="fpe-image-url text-center"><a :href="fixDataUrl(currentPair.right.image.thumb_url)">{{ currentPair.right.image.filename }}</a></div>
                   <div class="text-center">{{ currentPair.right.image.timestamp | formatTimestamp(station.timezone) }}</div>
                   <v-img
                     lazy-src="img/placeholder.png"
                     max-height="400"
-                    :src="currentPair.right.image.thumb_url"
+                    :src="fixDataUrl(currentPair.right.image.thumb_url)"
                     :alt="currentPair.right.image.filename"
                     :transition="false"
                     contain
@@ -399,6 +399,7 @@
 <script>
 import { ascending } from 'd3-array'
 import { mapGetters } from 'vuex'
+import { fixDataUrl } from '@/lib/utils'
 import evt from '@/events'
 export default {
   name: 'Annotate',
@@ -492,6 +493,7 @@ export default {
     }
   },
   methods: {
+    fixDataUrl,
     async fetchStations () {
       this.loading.stations = true
       try {

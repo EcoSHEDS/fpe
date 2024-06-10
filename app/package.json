@@ -6,8 +6,8 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "deploy:stage": "npm run stage && aws s3 sync dist/ s3://usgs-chs-conte-dev-fpe-website/apps/ecosheds/fpe/ --delete --exclude *.mp4",
-    "deploy": "npm run build && aws s3 sync dist/ s3://usgs-chs-conte-prod-fpe-website/apps/ecosheds/fpe/ --delete --exclude *.mp4",
+    "deploy:stage": "npm run stage && aws s3 sync dist/ s3://usgs-chs-conte-dev-fpe-website/fpe/ --delete --exclude *.mp4",
+    "deploy": "npm run build && aws s3 sync dist/ s3://usgs-chs-conte-prod-fpe-website/fpe/ --delete --exclude *.mp4",
     "stage": "vue-cli-service build --mode staging"
   },
   "dependencies": {
