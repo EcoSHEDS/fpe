@@ -124,7 +124,7 @@
           "Ref": "DBSubnetGroup"
         },
         "Engine": "postgres",
-        "EngineVersion": 15.5,
+        "EngineVersion": 12.7,
         "MasterUsername": {
           "Fn::Join": [
             "",
@@ -152,6 +152,7 @@
         "VPCSecurityGroups": {
           "Ref": "vpcSecurityGroupIds"
         },
+        "CACertificateIdentifier": "rds-ca-rsa2048-g1",
         "Tags": [
           {
             "Key": "project",

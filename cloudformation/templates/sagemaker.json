@@ -70,7 +70,9 @@
               "Effect": "Allow",
               "Principal": {
                 "AWS": [
-                  "arn:aws:iam::694155575325:role/adfs-developers"
+                  {
+                    "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:role/adfs-developers"
+                  }
                 ]
               },
               "Action": [
