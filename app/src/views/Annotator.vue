@@ -219,7 +219,7 @@
                   <v-img
                     lazy-src="img/placeholder.png"
                     max-height="400"
-                    :src="fixDataUrl(urrentPair.left.image.thumb_url)"
+                    :src="fixDataUrl(currentPair.left.image.thumb_url)"
                     :alt="currentPair.left.image.filename"
                     :transition="false"
                     contain
