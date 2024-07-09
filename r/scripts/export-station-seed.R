@@ -44,6 +44,7 @@ stopifnot(
 
 station_dir <- file.path(output_dir, folder_name)
 data_dir <- file.path(station_dir, "db")
+storage_dir <- file.path(station_dir, "storage")
 
 mkdirp <- function (x) {
   if (!dir.exists(x)) {
@@ -64,6 +65,7 @@ if (dir.exists(data_dir)) {
 }
 
 mkdirp(data_dir)
+mkdirp(storage_dir)
 
 # connect -----------------------------------------------------------------
 
@@ -233,7 +235,34 @@ if (nrow(db_imagesets) > 0) {
 }
 
 
-# models ------------------------------------------------------------------
+# annotations ------------------------------------------------------------------
 
-# TODO: add model output files
 
+db_annotations <- DBI::dbGetQuery(
+  con,
+  "select * from annotations where station_id = $1 and not flag order by created_at",
+  list(station_id)
+) %>%
+  as_tibble() %>%
+  mutate(
+    across(c(status, s3), as.character)
+  )
+
+if (nrow(db_annotations) > 0) {
+  annotations_dir <- file.path(storage_dir, "annotations")
+  mkdirp(annotations_dir)
+  for (i in 1:nrow(db_annotations)) {
+    url <- db_annotations$url[[i]]
+    target <- file.path(annotations_dir, basename(url))
+    log_info("downloading: {target}")
+
+    download.file(url, target)
+  }
+}
+
+log_info("saving: annotations.json")
+db_annotations %>%
+  mutate(
+    across(c(url, s3), ~ str_replace(., bucket_name, "{STORAGE_BUCKET}"))
+  ) %>%
+  write_json(file.path(data_dir, "annotations.json"), auto_unbox = TRUE, pretty = TRUE)
