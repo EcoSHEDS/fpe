@@ -66,6 +66,17 @@ exports.seed = async (knex) => {
         station.models = []
       }
 
+      const annotationsFile = `${__dirname}/data/users/${userId}/stations/${stationId}/db/annotations.json`
+      if (fs.existsSync(annotationsFile)) {
+        console.log(`loading annotations: ${annotationsFile}`)
+        station.annotations = require(annotationsFile)
+        station.annotations.forEach((annotation) => {
+          annotation.user_id = user.id
+        })
+      } else {
+        station.annotations = []
+      }
+
       return station
     })
     return user
