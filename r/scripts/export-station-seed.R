@@ -30,10 +30,12 @@ output_dir <- argv$output_dir
 bucket_name <- argv$bucket_name
 from <- argv$from
 to <- argv$to
+replace <- argv$replace
 
 log_info("station_id: {station_id}")
 log_info("folder_name: {folder_name}")
 log_info("output_dir: {output_dir}")
+log_info("replace: {replace}")
 log_info("bucket_name: {bucket_name}")
 log_info("from: {from}")
 log_info("to: {to}")
@@ -54,7 +56,7 @@ mkdirp <- function (x) {
 }
 
 if (dir.exists(data_dir)) {
-  if (argv$replace) {
+  if (replace) {
     log_info("replacing: {data_dir}")
     ok <- unlink(data_dir, recursive = TRUE)
     stopifnot("failed to delete directory" = ok == 0)
@@ -192,6 +194,8 @@ if (!is.na(to)) {
     )
 }
 
+db_images_all <- NULL
+
 if (nrow(db_imagesets) > 0) {
   for (i in 1:nrow(db_imagesets)) {
     imageset <- db_imagesets[i,]
@@ -212,7 +216,14 @@ if (nrow(db_imagesets) > 0) {
     ) %>%
       as_tibble()
 
+
     if (nrow(db_images) > 0) {
+      if (is.null(db_images_all)) {
+        db_images_all <- db_images
+      } else {
+        db_images_all <- bind_rows(db_images_all, db_images)
+      }
+
       images_file <- file.path(imageset_dir, "images.json")
       log_info("saving: {file.path(images_file)}")
 
@@ -245,7 +256,8 @@ db_annotations <- DBI::dbGetQuery(
 ) %>%
   as_tibble() %>%
   mutate(
-    across(c(status, s3), as.character)
+    across(c(status, s3), as.character),
+    skip = FALSE
   )
 
 if (nrow(db_annotations) > 0) {
@@ -253,15 +265,61 @@ if (nrow(db_annotations) > 0) {
   mkdirp(annotations_dir)
   for (i in 1:nrow(db_annotations)) {
     url <- db_annotations$url[[i]]
-    target <- file.path(annotations_dir, basename(url))
-    log_info("downloading: {target}")
 
-    download.file(url, target)
+    annotations_data <- read_json(url, simplifyVector = TRUE) %>%
+      as_tibble() %>%
+      unnest(left, names_sep = ".") %>%
+      unnest(right, names_sep = ".") %>%
+      filter(
+        left.imageId %in% db_images_all$id,
+        right.imageId %in% db_images_all$id
+      ) %>%
+      left_join(
+        db_images_all %>%
+          select(left.imageId = id, left.timestamp = timestamp),
+        by = "left.imageId"
+      ) %>%
+      left_join(
+        db_images_all %>%
+          select(right.imageId = id, right.timestamp = timestamp),
+        by = "right.imageId"
+      ) %>%
+      mutate(
+        across(ends_with(".timestamp"), ~ with_tz(., tzone = station$timezone)),
+        is_daytime = hour(left.timestamp) %in% 7:18 & hour(right.timestamp) %in% 7:18
+      )
+
+    if (nrow(annotations_data) > 0) {
+      target <- file.path(annotations_dir, basename(url))
+
+      db_annotations$n[[i]] <- nrow(annotations_data)
+      db_annotations$n_daytime[[i]] <- sum(annotations_data$is_daytime)
+
+      log_info("saving: {target}")
+      annotations_data %>%
+        select(-is_daytime, -ends_with(".timestamp")) %>%
+        rowwise() %>%
+        mutate(
+          left = list(
+            list(imageId = left.imageId, attributes = left.attributes)
+          ),
+          right = list(
+            list(imageId = right.imageId, attributes = right.attributes)
+          )
+        ) %>%
+        select(-left.imageId, -left.attributes, -right.imageId, -right.attributes) %>%
+        write_json(target, auto_unbox = TRUE)
+    } else {
+      log_info("skipping annotations: uuid={db_annotations$uuid[[i]]}")
+      db_annotations$skip[[i]] <- TRUE
+    }
   }
 }
 
 log_info("saving: annotations.json")
 db_annotations %>%
+  filter(!skip) %>%
+  select(-skip) %>%
   mutate(
     across(c(url, s3), ~ str_replace(., bucket_name, "{STORAGE_BUCKET}"))
   ) %>%
