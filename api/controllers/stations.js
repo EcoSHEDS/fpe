@@ -41,6 +41,17 @@ const getPublicStations = async (req, res, next) => {
   return res.status(200).json(rows)
 }
 
+const getRestrictedStations = async (req, res, next) => {
+  const public = await stationsQuery()
+    .where(req.query)
+    .andWhere('private', false)
+  const private = await stationsQuery()
+    .where(req.query)
+    .where('user_id', req.auth.id)
+    .andWhere('private', false)
+  return res.status(200).json([...public, ...private])
+}
+
 const getAllStations = async (req, res, next) => {
   const rows = await stationsQuery()
     .where(req.query)
@@ -186,6 +197,7 @@ const getStationModels = async (req, res, next) => {
 
 module.exports = {
   getPublicStations,
+  getRestrictedStations,
   getAllStations,
   postStations,
 
@@ -203,5 +215,7 @@ module.exports = {
 
   getStationModels,
 
-  getStationRandomImagePairs
+  getStationRandomImagePairs,
+
+  stationsQuery
 }

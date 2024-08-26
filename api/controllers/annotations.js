@@ -61,10 +61,22 @@ const getAnnotationStations = async (req, res, next) => {
   return res.status(200).json(rows)
 }
 
+const getAdminAnnotationStations = async (req, res, next) => {
+  const rows = await Station.query()
+    .modify('annotationSummary')
+
+  rows.forEach(d => {
+    d.n_annotations = Number(d.n_annotations) || 0
+    d.n_annotations_daytime = Number(d.n_annotations_daytime) || 0
+  })
+  return res.status(200).json(rows)
+}
+
 module.exports = {
   attachAnnotation,
   postAnnotations,
   getAnnotation,
   putAnnotation,
-  getAnnotationStations
+  getAnnotationStations,
+  getAdminAnnotationStations
 }

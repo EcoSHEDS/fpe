@@ -49,7 +49,6 @@ export async function getUser (refresh) {
         user.UserGroups = []
       }
       user.isAdmin = user.UserGroups.includes('admins')
-      user.isAnnotator = user.isAdmin || dbUser.annotator
 
       if (!refresh) {
         evt.$emit('notify', 'success', `Logged in as ${user.attributes.email}`)

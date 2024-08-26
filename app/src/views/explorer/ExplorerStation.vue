@@ -47,6 +47,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import StationInfo from '@/components/explorer/StationInfo'
 import StationPhotos from '@/components/explorer/StationPhotos'
 
@@ -62,6 +63,9 @@ export default {
       error: null,
       station: null
     }
+  },
+  computed: {
+    ...mapGetters(['user'])
   },
   mounted () {
     this.fetch()
@@ -79,7 +83,13 @@ export default {
       const provisionalAffiliations = process.env.VUE_APP_PROVISIONAL_AFFILIATIONS.split(',')
       try {
         const response = await this.$http.public.get(`/stations/${this.$route.params.id}`)
-        this.station = response.data
+        const station = response.data
+        if (station.private) {
+          if (!this.user || (!this.user.isAdmin && station.user_id !== this.user.username)) {
+            throw new Error('Station not found')
+          }
+        }
+        this.station = station
         this.station.provisional = provisionalAffiliations.includes(this.station.affiliation_code)
       } catch (error) {
         this.error = error

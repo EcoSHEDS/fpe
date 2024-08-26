@@ -39,7 +39,7 @@ const routes = [
     name: 'annotator',
     component: Annotator,
     meta: {
-      requiresAnnotator: true
+      requiresAuth: true
     }
   },
   ...ExplorerRoutes,
@@ -69,19 +69,6 @@ router.beforeEach(async (to, from, next) => {
       user = await getUser()
     }
     if (!user) {
-      next({
-        name: 'login',
-        query: { redirect: to.fullPath }
-      })
-    } else {
-      next()
-    }
-  } else if (to.matched.some(record => record.meta.requiresAnnotator)) {
-    let user = store.getters.user
-    if (!user) {
-      user = await getUser()
-    }
-    if (!user || !user.isAnnotator) {
       next({
         name: 'login',
         query: { redirect: to.fullPath }

@@ -30,16 +30,16 @@
       <template v-slot:item.status="{ item }">
         {{ item.status | stationStatus }}
       </template>
-      <template v-slot:item.summary.images.n_images="{ item }">
-        <span v-if="item.summary && item.summary.images && item.summary.images.n_images > 0">
-          {{ item.summary.images.n_images.toLocaleString() }}
+      <template v-slot:item.images.count="{ item }">
+        <span v-if="item.images && item.images.count > 0">
+          {{ item.images.count.toLocaleString() }}
         </span>
         <span v-else>0</span>
       </template>
-      <template v-slot:item.summary.images.period="{ item }">
-        <span v-if="item.summary && item.summary.images && item.summary.images.n_images > 0">
-          {{ item.summary.images.start_date | formatDate }} &#8211;
-          {{ item.summary.images.end_date | formatDate }}
+      <template v-slot:item.images.period="{ item }">
+        <span v-if="item.images && item.images.count > 0">
+          {{ item.images.start_date | formatDate }} &#8211;
+          {{ item.images.end_date | formatDate }}
         </span>
         <span v-else>No Photos</span>
       </template>
@@ -87,13 +87,13 @@ export default {
         },
         {
           text: '# Photos',
-          value: 'summary.images.n_images',
+          value: 'images.count',
           align: 'center',
           width: 120
         },
         {
           text: 'Photo Period',
-          value: 'summary.images.period',
+          value: 'images.period',
           align: 'center',
           sortable: false,
           width: 250
@@ -134,10 +134,11 @@ export default {
       try {
         const response = await this.$http.restricted.get(`/users/${this.user.username}/stations`)
         this.stations = response.data
+        console.log(this.stations)
 
         this.stations.forEach(d => {
-          d.hasImages = d.summary && d.summary.images && d.summary.images.n_images > 0
-          d.hasValues = (d.summary && d.summary.values && d.summary.values.n_rows > 0) || !!d.nwis_id
+          d.hasImages = d.images && d.images.count > 0
+          d.hasValues = (d.variables && d.variables.length > 0) || !!d.nwis_id
         })
       } catch (err) {
         this.error = err.toString()

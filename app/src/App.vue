@@ -61,7 +61,7 @@
 
           <v-divider></v-divider>
 
-          <v-list-item v-if="user && user.isAnnotator" :to="{ name: 'annotator' }" class="pr-8">
+          <v-list-item v-if="user" :to="{ name: 'annotator' }" class="pr-8">
             <v-list-item-icon>
               <v-icon>mdi-pencil-box-outline</v-icon>
             </v-list-item-icon>
@@ -162,7 +162,7 @@
 
       <v-divider vertical class="mx-4"></v-divider>
 
-      <v-btn text v-if="user && user.isAnnotator" :to="{ name: 'annotator' }" class="mx-2">
+      <v-btn text v-if="user" :to="{ name: 'annotator' }" class="mx-2">
         <v-icon small left>mdi-pencil-box-outline</v-icon> Annotate
       </v-btn>
 

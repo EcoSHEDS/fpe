@@ -1,5 +1,6 @@
 const createError = require('http-errors')
 
+const { stationsQuery } = require('./stations')
 const knex = require('../db/knex')
 const { User, Station } = require('../db/models')
 
@@ -36,14 +37,7 @@ const deleteUser = async (req, res, next) => {
 }
 
 const getStationsForUser = async (req, res, next) => {
-  const rows = await Station.query()
-    .select('stations.*', 'user.affiliation_code', 'user.affiliation_name', 't.summary')
-    .leftJoinRelated('user')
-    .leftJoin(
-      knex.raw('(select t.station_id, json_build_object(\'values\', t.values, \'images\', t.images) as summary from f_stations_summary() t) as t'),
-      'stations.id',
-      't.station_id'
-    )
+  const rows = await stationsQuery()
     .where(req.query)
     .andWhere('user_id', res.locals.user.id)
   return res.status(200).json(rows)

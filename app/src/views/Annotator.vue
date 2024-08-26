@@ -497,7 +497,13 @@ export default {
     async fetchStations () {
       this.loading.stations = true
       try {
-        const response = await this.$http.restricted.get('/annotations/stations')
+        let api = this.$http.restricted
+        if (this.user.isAdmin) {
+          api = this.$http.admin
+        }
+
+        const response = await api.get('/annotations/stations')
+
         const stations = response.data.sort((a, b) => ascending(a.name, b.name))
         stations.forEach(d => {
           d.n_annotations = d.n_annotations || 0
