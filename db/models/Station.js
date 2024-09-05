@@ -11,8 +11,10 @@ class Station extends Base {
         builder.select(
           '*',
           Station.relatedQuery('annotations')
+            .where('flag', 'false')
             .sum('n').as('n_annotations'),
           Station.relatedQuery('annotations')
+            .where('flag', 'false')
             .sum('n_daytime').as('n_annotations_daytime')
         )
       }
