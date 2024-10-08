@@ -97,7 +97,7 @@
             ></v-select>
 
             <v-checkbox
-              :value="scaleValues"
+              :input-value="scaleValues"
               color="default"
               label="Show as Rank Percentile (0-100%)"
               hide-details
@@ -229,7 +229,6 @@ export default {
   },
   methods: {
     onClick () {
-      console.log('onClick')
       this.chart.series.forEach(s => {
         s.update({
           enableMouseTracking: false
