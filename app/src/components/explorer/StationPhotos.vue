@@ -447,7 +447,6 @@ export default {
         const endDate = images[images.length - 1].date
 
         const variableIds = this.station.summary.values.variables.map(d => d.variable_id)
-        console.log(variableIds)
 
         const models = await this.fetchModels()
         models.sort((a, b) => a.created_at < b.created_at ? 1 : -1)

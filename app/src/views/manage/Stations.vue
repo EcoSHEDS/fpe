@@ -134,7 +134,6 @@ export default {
       try {
         const response = await this.$http.restricted.get(`/users/${this.user.username}/stations`)
         this.stations = response.data
-        console.log(this.stations)
 
         this.stations.forEach(d => {
           d.hasImages = d.images && d.images.count > 0

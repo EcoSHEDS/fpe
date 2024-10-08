@@ -123,7 +123,6 @@ export default {
       }
     },
     async createUser (request) {
-      console.log(request)
       const user = await this.$refs.createUserForm.open(request)
       if (user) {
         await this.$http.admin.put(`/requests/${request.id}`, {

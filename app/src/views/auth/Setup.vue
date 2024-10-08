@@ -134,7 +134,6 @@ export default {
       try {
         const user = await this.$Amplify.Auth.completeNewPassword(this.user, this.password.value, attributes)
 
-        console.log('done', user)
         // evt.$emit('notify', 'success', `Welcome, ${user.attributes.name}!`)
         return evt.$emit('authState', {
           state: 'signIn',
