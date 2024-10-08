@@ -5,7 +5,7 @@
         <v-card elevation="4">
           <v-toolbar dense flat color="grey lighten-3">
             <v-toolbar-title class="text-h5">
-              Upload Photos and Data
+              Manage Stations
             </v-toolbar-title>
           </v-toolbar>
 

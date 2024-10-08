@@ -13,7 +13,7 @@
             </v-toolbar-title>
             <v-spacer></v-spacer>
             <v-btn text @click="$router.push({ name: 'manage' })">
-              <v-icon left>mdi-chevron-left</v-icon> <span v-if="!$vuetify.breakpoint.mobile">Back to My Stations</span><span v-else>Back</span>
+              <v-icon left>mdi-chevron-left</v-icon> <span v-if="!$vuetify.breakpoint.mobile">Back to All Stations</span><span v-else>Back</span>
             </v-btn>
           </v-toolbar>
           <v-tabs class="elevation-2 mb-4" grow :vertical="$vuetify.breakpoint.mobile">
@@ -26,6 +26,9 @@
             <v-tab :to="{ name: 'manageDatasets' }" exact>
               <v-icon left>mdi-chart-line</v-icon> Data
             </v-tab>
+            <v-tab :to="{ name: 'managePermissions' }" exact v-if="station && user.username === station.user_id">
+              <v-icon left>mdi-account-multiple</v-icon> Permissions
+            </v-tab>
           </v-tabs>
           <router-view></router-view>
         </v-card>
@@ -35,12 +38,17 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
+
 export default {
   name: 'ManageStation',
   data () {
     return {
       station: null
     }
+  },
+  computed: {
+    ...mapGetters(['user'])
   },
   mounted () {
     this.fetch()

@@ -554,7 +554,7 @@ export default {
           query += `&max_date=${this.maxDate}`
         }
         const url = `/stations/${this.station.id}/image-pairs?${query}`
-        const response = await this.$http.public.get(url)
+        const response = await this.$http.restricted.get(url)
 
         if (response.data.length === 0) {
           throw new Error('No image pairs found for given inputs')

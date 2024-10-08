@@ -54,10 +54,6 @@ router.route('/:stationId/images')
   .all(asyncHandler(attachStation))
   .get(asyncHandler(getStationImages))
 
-router.route('/:stationId/image-pairs')
-  .all(asyncHandler(attachStation))
-  .get(asyncHandler(getStationRandomImagePairs))
-
 router.route('/:stationId/values')
   .all(asyncHandler(attachStation))
   .get(asyncHandler(getStationValues))

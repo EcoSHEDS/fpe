@@ -49,16 +49,27 @@ const putAnnotation = async (req, res, next) => {
 const getAnnotationStations = async (req, res, next) => {
   const userId = req.auth.id
 
-  const rows = await Station.query()
+  const ownerStations = await Station.query()
     .modify('annotationSummary')
     .where('private', false)
     .orWhere('user_id', '=', userId)
 
-  rows.forEach(d => {
+  const collaboratorStations = await Station.query()
+    .modify('annotationSummary')
+    .join('stations_permissions', 'stations.id', 'stations_permissions.station_id')
+    .select('stations.*')
+    .where('stations_permissions.user_id', userId)
+
+  const allStations = [...ownerStations, ...collaboratorStations]
+  const uniqueStations = allStations.filter((station, index, self) =>
+    index === self.findIndex((t) => t.id === station.id)
+  )
+
+  uniqueStations.forEach(d => {
     d.n_annotations = Number(d.n_annotations) || 0
     d.n_annotations_daytime = Number(d.n_annotations_daytime) || 0
   })
-  return res.status(200).json(rows)
+  return res.status(200).json(uniqueStations)
 }
 
 const getAdminAnnotationStations = async (req, res, next) => {

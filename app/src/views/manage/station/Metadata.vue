@@ -119,16 +119,24 @@
                   <v-simple-checkbox :value="station.private" disabled></v-simple-checkbox>
                 </td>
               </tr>
+              <tr>
+                <td
+                  class="text-right grey--text text--darken-2"
+                  style="width:140px">
+                  Access Level
+                </td>
+                <td class="font-weight-bold">{{ station.user_id === user.username ? 'Owner' : 'Collaborator' }}</td>
+              </tr>
             </tbody>
           </v-simple-table>
           <v-divider></v-divider>
           <div class="mx-4 mt-4 pb-4">
-            <div class="mb-4">
+            <div>
               <v-btn block outlined color="primary" @click="edit">
                 <v-icon left>mdi-pencil</v-icon> Edit Station
               </v-btn>
             </div>
-            <div>
+            <div v-if="user.username === station.user_id" class="mt-4">
               <v-btn block outlined color="error" @click="confirmDelete" :loading="deleter.loading">
                 <v-icon left>mdi-delete</v-icon> Delete Station
               </v-btn>
@@ -179,6 +187,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import StationForm from '@/components/forms/StationForm'
 import StationsMap from '@/components/explorer/StationsMap'
@@ -197,6 +206,9 @@ export default {
         error: null
       }
     }
+  },
+  computed: {
+    ...mapGetters(['user'])
   },
   mounted () {
     this.fetch()

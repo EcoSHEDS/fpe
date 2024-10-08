@@ -55,11 +55,6 @@
             label="Add to Admin Group"
             hide-details
           ></v-checkbox>
-          <v-checkbox
-            v-model="annotator.value"
-            label="Add to Annotators"
-            hide-details
-          ></v-checkbox>
 
           <Alert type="error" title="Server Error" v-if="error" class="mb-0 mt-4">{{ error }}</Alert>
         </v-card-text>
@@ -183,9 +178,6 @@ export default {
       admin: {
         value: false
       },
-      annotator: {
-        value: false
-      },
       request: null
     }
   },
@@ -220,8 +212,7 @@ export default {
           name: this.affiliation.name.value,
           code: this.affiliation.code.value
         },
-        admin: this.admin.value,
-        annotator: this.annotator.value
+        admin: this.admin.value
       }
 
       try {
@@ -249,7 +240,6 @@ export default {
       this.affiliation.name.value = ''
       this.affiliation.code.value = ''
       this.admin.value = false
-      this.annotator.value = false
       this.request = null
     },
     close () {

@@ -10,6 +10,8 @@
       :loading="loading"
       :sort-by="['pending']"
       :sort-desc="[true]"
+      :search="search"
+      :custom-filter="customFilter"
       loading-text="Loading... Please wait"
       @click:row="createUser"
       single-select
@@ -19,6 +21,17 @@
         <v-toolbar flat>
           <div class="text-h5">Account Requests</div>
           <RefreshButton :loading="loading" @click="fetch"></RefreshButton>
+          <v-text-field
+            v-model="search"
+            append-icon="mdi-magnify"
+            label="Search"
+            single-line
+            hide-details
+            class="mx-8"
+            clearable
+            style="max-width: 300px;"
+          ></v-text-field>
+          <v-spacer></v-spacer>
         </v-toolbar>
         <v-divider></v-divider>
       </template>
@@ -62,6 +75,7 @@ export default {
     loading: false,
     error: null,
     accounts: [],
+    search: '',
     headers: [
       {
         text: 'ID',
@@ -130,6 +144,15 @@ export default {
         })
       }
       this.fetch()
+    },
+    customFilter (value, search, item) {
+      if (search == null || search === '') return true
+
+      const searchLower = search.toString().toLowerCase()
+      const nameLower = item.name.toLowerCase()
+      const emailLower = item.email.toLowerCase()
+
+      return nameLower.includes(searchLower) || emailLower.includes(searchLower)
     }
   }
 }

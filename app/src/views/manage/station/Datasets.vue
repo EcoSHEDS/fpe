@@ -44,7 +44,7 @@
                       style="width:100px">
                       Source
                     </td>
-                    <td class="font-weight-medium">{{ station.metadata.dataset.useAffiliation ? dbUser.affiliation_name : station.metadata.dataset.source | truncate(80) }}</td>
+                    <td class="font-weight-medium">{{ station.metadata.dataset.useAffiliation ? station.affiliation_name : station.metadata.dataset.source | truncate(80) }}</td>
                   </tr>
                   <tr>
                     <td

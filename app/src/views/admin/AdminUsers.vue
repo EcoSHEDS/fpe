@@ -10,6 +10,8 @@
       :loading="loading"
       :sort-by="['updated_at']"
       :sort-desc="[true]"
+      :search="search"
+      :custom-filter="customFilter"
       loading-text="Loading... Please wait"
       @click:row="select"
       single-select
@@ -36,6 +38,16 @@
             ></v-progress-circular>
             Refresh
           </v-btn>
+          <v-text-field
+            v-model="search"
+            append-icon="mdi-magnify"
+            label="Search"
+            single-line
+            hide-details
+            clearable
+            class="mx-8"
+            style="max-width: 300px;"
+          ></v-text-field>
           <v-spacer></v-spacer>
           <v-btn color="success" @click="createUser">
             <v-icon left>mdi-plus</v-icon> New User
@@ -96,15 +108,11 @@ export default {
     loading: false,
     error: null,
     users: [],
+    search: '',
     headers: [
       {
         text: 'ID',
         value: 'id',
-        align: 'left'
-      },
-      {
-        text: 'Created',
-        value: 'created_at',
         align: 'left'
       },
       {
@@ -125,6 +133,11 @@ export default {
       {
         text: 'Enabled',
         value: 'enabled',
+        align: 'left'
+      },
+      {
+        text: 'Created',
+        value: 'created_at',
         align: 'left'
       },
       {
@@ -171,6 +184,15 @@ export default {
       if (userCreated) {
         await this.fetch()
       }
+    },
+    customFilter (value, search, item) {
+      if (search == null || search === '') return true
+
+      const searchLower = search.toString().toLowerCase()
+      const nameLower = item.attributes.name.toLowerCase()
+      const emailLower = item.attributes.email.toLowerCase()
+
+      return nameLower.includes(searchLower) || emailLower.includes(searchLower)
     }
   }
 }

@@ -28,7 +28,13 @@
         {{ item.waterbody_type | waterbodyType }}
       </template>
       <template v-slot:item.status="{ item }">
-        {{ item.status | stationStatus }}
+        <v-chip
+          color="grey-lighten-2"
+          small
+          label
+        >
+          {{ item.status }}
+        </v-chip>
       </template>
       <template v-slot:item.images.count="{ item }">
         <span v-if="item.images && item.images.count > 0">
@@ -48,6 +54,15 @@
       </template>
       <template v-slot:item.private="{ item }">
         <v-simple-checkbox :value="item.private" disabled></v-simple-checkbox>
+      </template>
+      <template v-slot:item.access_level="{ item }">
+        <v-chip
+          color="grey-lighten-2"
+          small
+          label
+        >
+          {{ item.user_id === user.username ? 'OWNER' : 'COLLABORATOR' }}
+        </v-chip>
       </template>
     </v-data-table>
     <StationForm ref="stationForm"></StationForm>
@@ -115,6 +130,11 @@ export default {
         {
           text: 'Status',
           value: 'status',
+          align: 'left'
+        },
+        {
+          text: 'Access Level',
+          value: 'access_level',
           align: 'left'
         }
       ]

@@ -22,7 +22,7 @@
 
         <v-form ref="form">
           <div class="mb-8">
-            <div class="text-h6 mb-4">Are the Photos Collected By Your Organization?</div>
+            <div class="text-h6 mb-4">Are the Photos Collected by <span v-if="station.user_id === dbUser.username">Your</span><span v-else>the Station Owner's</span> Organization?</div>
             <v-btn-toggle v-model="useAffiliation.value" mandatory>
               <v-btn width="80" :value="true">
                 YES
@@ -35,7 +35,7 @@
 
           <div class="text-h6">Photo Source</div>
           <p v-if="useAffiliation.value">
-            Your affiliation will be used for attribution.
+            <span v-if="station.user_id === dbUser.username">Your</span><span v-else>The station owner's</span> affiliation will be used for attribution.
           </p>
           <p v-else>
             Please provide the name of the organization that collected or owns the iamges.
@@ -53,11 +53,11 @@
 
           <div class="text-h6">Methodology</div>
           <p>
-            Please describe the methodology used to collect the photos<br>
+            Please describe the methodology used to collect the photos.<br>
             <span class="text--secondary">Example: "A game camera was installed on a fixed platform along the east bank of the river and pointed upstream..."</span>
           </p>
           <p>
-            If you obtained the photos from another organization, describe how you obtained these photos and if they were modified or processed in any way.<br>
+            Also, if the photos were obtained from another organization, describe how you obtained these photos and if they were modified or processed in any way.<br>
             <span class="text--secondary">Example: "Photos were downloaded from the NEON Land-water interface photos for Hop Brook (MA-D01-HOPB)..."</span>
           </p>
           <v-textarea
@@ -213,7 +213,7 @@ export default {
     },
     updateSourceValue () {
       this.source.value = this.useAffiliation.value
-        ? this.dbUser.affiliation_name
+        ? this.station.affiliation_name
         : this.stationHasMetadata
           ? this.stationMetadata.source
           : ''

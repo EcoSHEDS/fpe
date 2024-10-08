@@ -99,17 +99,6 @@
                   <td
                     class="text-right"
                     style="width:140px">
-                    Annotator
-                  </td>
-                  <td class="font-weight-bold">
-                    <v-icon v-if="user.affiliation && user.affiliation.annotator" color="primary">mdi-check-circle</v-icon>
-                    <v-icon v-else color="gray">mdi-close-circle</v-icon>
-                  </td>
-                </tr>
-                <tr>
-                  <td
-                    class="text-right"
-                    style="width:140px">
                     Status
                   </td>
                   <td class="font-weight-bold">
@@ -186,29 +175,6 @@
                 @click="setAdminGroup(false)"
               >
                 <v-icon left>mdi-close</v-icon> Remove from Admins
-              </v-btn>
-
-              <div class="my-4"></div>
-
-              <v-btn
-                v-if="!(user.affiliation && user.affiliation.annotator)"
-                color="success"
-                block
-                outlined
-                :loading="loading.annotator"
-                @click="setAnnotator(true)"
-              >
-                <v-icon left>mdi-pencil-box-outline</v-icon> Add to Annotators
-              </v-btn>
-              <v-btn
-                v-else
-                color="warning"
-                block
-                outlined
-                :loading="loading.annotator"
-                @click="setAnnotator(false)"
-              >
-                <v-icon left>mdi-close</v-icon> Remove from Annotators
               </v-btn>
 
               <div class="my-4"></div>
@@ -342,7 +308,6 @@ export default {
         // confirm: false,
         enabled: false,
         admin: false,
-        annotator: false,
         delete: false,
         affiliation: false,
         resetPassword: false,
@@ -431,22 +396,6 @@ export default {
         this.error = err
       } finally {
         this.loading.admin = false
-      }
-    },
-    async setAnnotator (value) {
-      this.loading.annotator = true
-      this.modified = true
-      const action = value ? 'addToAnnotator' : 'removeFromAnnotator'
-      try {
-        await this.$http.admin.put(`/users/${this.id}`, { action })
-        evt.$emit('notify', 'success', 'User has been updated')
-        this.refresh()
-      } catch (err) {
-        console.error(err)
-        evt.$emit('notify', 'error', 'Failed to update user')
-        this.error = err
-      } finally {
-        this.loading.annotator = false
       }
     },
     async setEnabled (value) {

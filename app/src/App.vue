@@ -102,7 +102,7 @@
               <v-icon>mdi-upload</v-icon>
             </v-list-item-icon>
             <v-list-item-content>
-              <v-list-item-title>Upload</v-list-item-title>
+              <v-list-item-title>Manage Stations</v-list-item-title>
             </v-list-item-content>
           </v-list-item>
 
@@ -167,7 +167,7 @@
       </v-btn>
 
       <v-btn text class="mx-2" v-if="user" :to="{ name: 'manage' }">
-        <v-icon small left>mdi-upload</v-icon> Upload
+        <v-icon small left>mdi-upload</v-icon> Manage Stations
       </v-btn>
       <v-menu
         left

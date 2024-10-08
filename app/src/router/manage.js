@@ -8,6 +8,7 @@ import ManageImageset from '@/views/manage/station/Imageset.vue'
 import ManageModels from '@/views/manage/station/Models.vue'
 import NewDataset from '@/views/manage/new/NewDataset.vue'
 import NewImageset from '@/views/manage/new/NewImageset.vue'
+import ManagePermissions from '@/views/manage/station/Permissions.vue'
 
 export default [
   {
@@ -63,6 +64,11 @@ export default [
             component: ManageImageset
           }
         ]
+      },
+      {
+        path: 'permissions',
+        name: 'managePermissions',
+        component: ManagePermissions
       },
       {
         path: 'models',

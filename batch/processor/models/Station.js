@@ -62,6 +62,26 @@ class Station extends Base {
           from: 'stations.id',
           to: 'models.station_id'
         }
+      },
+      permissions: {
+        relation: Base.HasManyRelation,
+        modelClass: require('./StationPermission'),
+        join: {
+          from: 'stations.id',
+          to: 'stations_permissions.station_id'
+        }
+      },
+      permittedUsers: {
+        relation: Base.ManyToManyRelation,
+        modelClass: require('./User'),
+        join: {
+          from: 'stations.id',
+          through: {
+            from: 'stations_permissions.station_id',
+            to: 'stations_permissions.user_id'
+          },
+          to: 'users.id'
+        }
       }
     }
   }

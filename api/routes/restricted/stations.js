@@ -8,7 +8,11 @@ const {
   postStations,
   putStation,
   deleteStation,
-  getStationDaily
+  getStationDaily,
+  addUserPermission,
+  removeUserPermission,
+  getStationPermissions,  // Add this line
+  getStationRandomImagePairs
 } = require('../../controllers/stations')
 const {
   attachDataset,
@@ -39,7 +43,7 @@ const {
   putImage,
   deleteImage
 } = require('../../controllers/images')
-const { requireStationOwnerOrAdmin } = require('../../middleware/auth')
+const { requireStationOwnerOrAdmin, requireStationOwnerCollaboratorOrAdmin } = require('../../middleware/auth')
 
 var router = express.Router()
 
@@ -50,7 +54,7 @@ router.route('/')
 router.route('/:stationId')
   .all(asyncHandler(attachStation))
   .get(asyncHandler(getStation))
-  .put(requireStationOwnerOrAdmin, asyncHandler(putStation))
+  .put(requireStationOwnerCollaboratorOrAdmin, asyncHandler(putStation))
   .delete(requireStationOwnerOrAdmin, asyncHandler(deleteStation))
 
 router.route('/:stationId/daily')
@@ -60,17 +64,17 @@ router.route('/:stationId/daily')
 router.route('/:stationId/datasets')
   .all(asyncHandler(attachStation))
   .get(asyncHandler(getDatasets))
-  .post(requireStationOwnerOrAdmin, asyncHandler(postDatasets))
+  .post(requireStationOwnerCollaboratorOrAdmin, asyncHandler(postDatasets))
 
 router.route('/:stationId/datasets/:datasetId')
   .all(asyncHandler(attachStation), asyncHandler(attachDataset))
   .get(asyncHandler(getDataset))
-  .put(requireStationOwnerOrAdmin, asyncHandler(putDataset))
-  .delete(requireStationOwnerOrAdmin, asyncHandler(deleteDataset))
+  .put(requireStationOwnerCollaboratorOrAdmin, asyncHandler(putDataset))
+  .delete(requireStationOwnerCollaboratorOrAdmin, asyncHandler(deleteDataset))
 
 router.route('/:stationId/datasets/:datasetId/process')
   .all(asyncHandler(attachStation), asyncHandler(attachDataset))
-  .post(requireStationOwnerOrAdmin, asyncHandler(processDataset))
+  .post(requireStationOwnerCollaboratorOrAdmin, asyncHandler(processDataset))
 
 router.route('/:stationId/datasets/:datasetId/list')
   .all(asyncHandler(attachStation), asyncHandler(attachDataset))
@@ -79,38 +83,51 @@ router.route('/:stationId/datasets/:datasetId/list')
 router.route('/:stationId/imagesets')
   .all(asyncHandler(attachStation))
   .get(asyncHandler(getImagesets))
-  .post(requireStationOwnerOrAdmin, asyncHandler(postImagesets))
+  .post(requireStationOwnerCollaboratorOrAdmin, asyncHandler(postImagesets))
 
 router.route('/:stationId/imagesets/:imagesetId')
   .all(asyncHandler(attachStation), asyncHandler(attachRestrictedImageset))
   .get(asyncHandler(getImageset))
-  .put(requireStationOwnerOrAdmin, asyncHandler(putImageset))
-  .delete(requireStationOwnerOrAdmin, asyncHandler(deleteImageset))
+  .put(requireStationOwnerCollaboratorOrAdmin, asyncHandler(putImageset))
+  .delete(requireStationOwnerCollaboratorOrAdmin, asyncHandler(deleteImageset))
 
 router.route('/:stationId/imagesets/:imagesetId/presigned')
   .all(asyncHandler(attachStation), asyncHandler(attachRestrictedImageset))
-  .get(requireStationOwnerOrAdmin, asyncHandler(presignImageset))
+  .get(requireStationOwnerCollaboratorOrAdmin, asyncHandler(presignImageset))
 
 router.route('/:stationId/imagesets/:imagesetId/process')
   .all(asyncHandler(attachStation), asyncHandler(attachRestrictedImageset))
-  .post(requireStationOwnerOrAdmin, asyncHandler(processImageset))
+  .post(requireStationOwnerCollaboratorOrAdmin, asyncHandler(processImageset))
 
 router.route('/:stationId/imagesets/:imagesetId/pii')
   .all(asyncHandler(attachStation), asyncHandler(attachRestrictedImageset))
-  .post(requireStationOwnerOrAdmin, asyncHandler(piiImageset))
+  .post(requireStationOwnerCollaboratorOrAdmin, asyncHandler(piiImageset))
 
 router.route('/:stationId/imagesets/:imagesetId/images')
   .all(asyncHandler(attachStation), asyncHandler(attachRestrictedImageset))
   .get(asyncHandler(getImages))
-  .post(requireStationOwnerOrAdmin, asyncHandler(postImage))
+  .post(requireStationOwnerCollaboratorOrAdmin, asyncHandler(postImage))
 
 router.route('/:stationId/imagesets/:imagesetId/images/:imageId')
   .all(asyncHandler(attachStation), asyncHandler(attachRestrictedImageset), asyncHandler(attachImage))
-  .put(requireStationOwnerOrAdmin, asyncHandler(putImage))
-  .delete(requireStationOwnerOrAdmin, asyncHandler(deleteImage))
+  .put(requireStationOwnerCollaboratorOrAdmin, asyncHandler(putImage))
+  .delete(requireStationOwnerCollaboratorOrAdmin, asyncHandler(deleteImage))
 
 router.route('/:stationId/imagesets/:imagesetId/list')
   .all(asyncHandler(attachStation), asyncHandler(attachRestrictedImageset))
   .get(asyncHandler(listImagesetFiles))
+
+router.route('/:stationId/image-pairs')
+  .all(asyncHandler(attachStation))
+  .get(requireStationOwnerCollaboratorOrAdmin, asyncHandler(getStationRandomImagePairs))
+
+router.route('/:stationId/permissions')
+  .all(asyncHandler(attachStation))
+  .get(requireStationOwnerOrAdmin, asyncHandler(getStationPermissions))
+  .post(requireStationOwnerOrAdmin, asyncHandler(addUserPermission))
+
+router.route('/:stationId/permissions/:userId')
+  .all(asyncHandler(attachStation))
+  .delete(requireStationOwnerOrAdmin, asyncHandler(removeUserPermission))
 
 module.exports = router

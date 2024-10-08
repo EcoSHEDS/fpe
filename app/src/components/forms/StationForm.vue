@@ -267,7 +267,6 @@ export default {
       this.loading = true
       try {
         const payload = {
-          user_id: this.user.username,
           name: this.name.value,
           description: this.description.value,
           latitude: this.latitude.value,

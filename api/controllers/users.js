@@ -2,7 +2,7 @@ const createError = require('http-errors')
 
 const { stationsQuery } = require('./stations')
 const knex = require('../db/knex')
-const { User, Station } = require('../db/models')
+const { User, Station, StationPermission } = require('../db/models')
 
 const attachUser = async (req, res, next) => {
   const row = await User.query()
@@ -37,10 +37,25 @@ const deleteUser = async (req, res, next) => {
 }
 
 const getStationsForUser = async (req, res, next) => {
-  const rows = await stationsQuery()
+  const userId = res.locals.user.id
+
+  // Get stations owned by the user
+  const ownedStations = await stationsQuery()
     .where(req.query)
-    .andWhere('user_id', res.locals.user.id)
-  return res.status(200).json(rows)
+    .andWhere('user_id', userId)
+
+  // Get stations the user has permission for
+  const permissionStations = await stationsQuery()
+    .join('stations_permissions', 'stations.id', 'stations_permissions.station_id')
+    .where('stations_permissions.user_id', userId)
+
+  // Combine and deduplicate the results
+  const allStations = [...ownedStations, ...permissionStations]
+  const uniqueStations = allStations.filter((station, index, self) =>
+    index === self.findIndex((t) => t.id === station.id)
+  )
+
+  return res.status(200).json(uniqueStations)
 }
 
 module.exports = {

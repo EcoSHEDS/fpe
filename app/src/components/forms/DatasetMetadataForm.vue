@@ -22,7 +22,7 @@
 
         <v-form ref="form">
           <div class="mb-8">
-            <div class="text-h6 mb-4">Are The Data Collected By Your Organization?</div>
+            <div class="text-h6 mb-4">Are the Data Collected by <span v-if="station.user_id === dbUser.username">Your</span><span v-else>the Station Owner's</span> Organization?</div>
             <v-btn-toggle v-model="useAffiliation.value" mandatory>
               <v-btn width="80" :value="true">
                 YES
@@ -35,7 +35,7 @@
 
           <div class="text-h6">Data Source</div>
           <p v-if="useAffiliation.value">
-            Your affiliation will be used for attribution.
+            <span v-if="station.user_id === dbUser.username">Your</span><span v-else>The station owner's</span> affiliation will be used for attribution.
           </p>
           <p v-else>
             Please provide the name of the organization that collected or owns the data.
@@ -57,7 +57,7 @@
             <span class="text--secondary">Example: "Continuous water level measurements were collected using a Hobo U20 and converted to flow rates using a 12-point rating curve ranging from 20 to 1,200 cfs..."</span>
           </p>
           <p>
-            If you obtained the data from another organization, describe how you obtained it and if the values were modified.<br>
+            Also, if the data were obtained from another organization, describe how you obtained it and if the values were modified.<br>
             <span class="text--secondary">Example: "Flow rates were downloaded from USGS NWIS for Station 01059000 and adjusted using a drainage area ratio of 1.232..."</span>
           </p>
           <v-textarea
@@ -233,7 +233,7 @@ export default {
     },
     updateSourceValue () {
       this.source.value = this.useAffiliation.value
-        ? this.dbUser.affiliation_name
+        ? this.station.affiliation_name
         : this.stationHasMetadata
           ? this.stationMetadata.source
           : ''

@@ -46,6 +46,36 @@ const requireStationOwnerOrAdmin = (req, res, next) => {
   next()
 }
 
+const requireStationOwnerCollaboratorOrAdmin = (req, res, next) => {
+  // no station
+  if (!res.locals.station) {
+    return next(createError(404, 'Station not found'))
+  }
+
+  // no user
+  if (!req.auth) {
+    return next(createError(401, 'Unauthorized'))
+  }
+
+  // local override
+  if (req.auth.isLocal) {
+    return next()
+  }
+
+  const station = res.locals.station
+  const permissions = res.locals.permissions
+
+  const isOwner = station.user_id === req.auth.id
+  const isCollaborator = permissions.some(p => p.user_id === req.auth.id)
+  const isAdmin = req.auth.isAdmin
+
+  if (isOwner || isCollaborator || isAdmin) {
+    return next()
+  }
+
+  return next(createError(401, 'Unauthorized'))
+}
+
 const requireUserOwnerOrAdmin = (req, res, next) => {
   // no station
   if (!res.locals.user) {
@@ -98,6 +128,7 @@ module.exports = {
   attachUser,
   requireAdmin,
   requireStationOwnerOrAdmin,
+  requireStationOwnerCollaboratorOrAdmin,
   requireAnnotationOwnerOrAdmin,
   requireUserOwnerOrAdmin
 }
