@@ -172,6 +172,38 @@ export const variables = [
     axis: {
       type: 'linear'
     }
+  },
+  {
+    id: 'SNOW_FT',
+    label: 'Snow Depth',
+    units: 'ft',
+    unitOptions: [
+      {
+        id: 'FT',
+        label: 'ft',
+        scale: 1,
+        offset: 0
+      }
+    ],
+    axis: {
+      type: 'linear'
+    }
+  },
+  {
+    id: 'CHLA_PPB',
+    label: 'Chlorophyll a',
+    units: 'ppb',
+    unitOptions: [
+      {
+        id: 'PPB',
+        label: 'ppb',
+        scale: 1,
+        offset: 0
+      }
+    ],
+    axis: {
+      type: 'linear'
+    }
   }
 ]
 
