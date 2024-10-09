@@ -6,7 +6,8 @@ const {
   postAnnotations,
   getAnnotation,
   putAnnotation,
-  getAnnotationStations
+  getAnnotationStations,
+  getAnnotationTraining
 } = require('../../controllers/annotations')
 
 const { requireAnnotationOwnerOrAdmin } = require('../../middleware/auth')
@@ -18,6 +19,9 @@ router.route('/')
 
 router.route('/stations')
   .get(asyncHandler(getAnnotationStations))
+
+router.route('/training')
+  .get(asyncHandler(getAnnotationTraining))
 
 router.route('/:annotationId')
   .all(asyncHandler(attachAnnotation))

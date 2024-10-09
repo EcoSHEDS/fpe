@@ -1,7 +1,8 @@
 const { v4: uuidv4 } = require('uuid')
 
-const { createPresignedPostPromise } = require('../aws')
-const { Annotation, Station } = require('../db/models')
+const { createPresignedPostPromise, notify } = require('../aws')
+const { Annotation, Station, User } = require('../db/models')
+const { fetchUser, transformUserAttributes } = require('./admin/users')
 
 const attachAnnotation = async (req, res, next) => {
   const row = await Annotation.query().findById(req.params.annotationId)
@@ -40,9 +41,39 @@ const postAnnotations = async (req, res, next) => {
   return res.status(201).json(row)
 }
 
+function newTrainingMessage (annotation, user) {
+  const d = annotation.created_at
+  return `New annotation training completed
+
+Submitted: ${d.toLocaleString('en-US', { timeZone: 'America/New_York' })}
+
+User ID: ${user.id}
+Name: ${user.name}
+Email: ${user.email}
+Affiliation: ${user.affiliation_name} (${user.affiliation_code})
+
+Annotation ID: ${annotation.id}
+Station ID: ${annotation.station_id}
+URL: ${annotation.url}
+`
+}
+
 const putAnnotation = async (req, res, next) => {
   const row = await Annotation.query()
     .patchAndFetchById(res.locals.annotation.id, req.body)
+
+  if (row.training) {
+    const userId = row.user_id
+    const cognitoUser = await fetchUser(userId)
+    const attributes = transformUserAttributes(cognitoUser.UserAttributes)
+    const dbUser = await User.query().findById(userId)
+    const user = {
+      ...dbUser,
+      ...attributes
+    }
+    const message = newTrainingMessage(row, user)
+    await notify('Annotation Training Completed', message)
+  }
   return res.status(200).json(row)
 }
 
@@ -83,11 +114,17 @@ const getAdminAnnotationStations = async (req, res, next) => {
   return res.status(200).json(rows)
 }
 
+const getAnnotationTraining = async (req, res, next) => {
+  const url = `https://${process.env.BUCKET}.s3.amazonaws.com/training/training.json`
+  return res.status(200).json({ url })
+}
+
 module.exports = {
   attachAnnotation,
   postAnnotations,
   getAnnotation,
   putAnnotation,
   getAnnotationStations,
-  getAdminAnnotationStations
+  getAdminAnnotationStations,
+  getAnnotationTraining
 }

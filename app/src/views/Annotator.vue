@@ -3,18 +3,34 @@
     <v-row justify="space-around">
       <v-col cols="12" lg="10" xl="10">
         <v-card elevation="4">
-
           <v-toolbar flat dense color="grey lighten-3">
             <v-toolbar-title class="text-h5">
-              Flow Photo Annotator
+              Photo Annotator
             </v-toolbar-title>
           </v-toolbar>
 
           <!-- SELECT STATION / INSTRUCTIONS -->
           <v-card-text class="body-1 black--text mb-0">
             <v-row class="justify-space-around">
+              <!-- TRAINING REQUIRED -->
+              <v-col cols="6" v-if="showTraining">
+                <Alert type="warning" class="body-1">
+                  <div class="text-h6">Welcome to the FPE Photo Annotator Training</div>
+                  <p>You need to complete the required training before you can start annotating photos. This training will take between 30 and 60 minutes to complete.</p>
+                  <p>Start by reading the instructions to the right, then click the button below to begin the training.</p>
+                  <p>If you have any questions, please contact us at <a href="mailto:ecosheds@usgs.gov">ecosheds@usgs.gov</a>.</p>
+                  <v-btn color="primary" @click="startTraining" :loading="loading.training" :disabled="pairs.length > 0 || trainingComplete">Begin Training</v-btn>
+                  <div class="caption mt-4" v-if="pairs.length > 0 && !trainingComplete">Training in progress...</div>
+                </Alert>
+                <Alert type="error" class="mt-8 mb-0" title="Error Fetching Training Dataset" v-if="error.training">{{ error.training }}</Alert>
+                <Alert type="success" class="mt-8 mb-0 body-1" v-if="trainingComplete">
+                  <div class="text-h6">Training Complete!</div>
+                  <p>Your results have been sent to the FPE team for review. You will receive an email within 1-2 business days containing further instructions on how to begin annotating photos.</p>
+                  <p class="mb-0">Thank you for your time and for being a part of this project!</p>
+                </Alert>
+              </v-col>
               <!-- SELECT STATION -->
-              <v-col cols="6">
+              <v-col cols="6" v-else>
                 <v-row class="justify-space-around">
                   <v-col cols="12">
                     <v-card>
@@ -147,56 +163,66 @@
 
               <!-- INSTRUCTIONS -->
               <v-col cols="6">
-                <v-sheet max-height="800" elevation="2" class="pa-4" style="overflow-y:scroll;">
-                  <div class="text-h6">Instructions</div>
-                  <v-divider class="mb-2"></v-divider>
-                  <ol>
-                    <li>Select a station, enter the number of photo pairs you would like to annotate, and specify the minimum/maximum hours and dates (optional). Then click <code>Start Annotating</code>.</li>
-                    <li>For each photo pair:
-                      <ol>
-                        <li>
-                          Click the appropriate button below each photo to indicate the following:
-                          <ul>
-                            <li>
-                              <code>Dry</code>: stream is completely dry (no water visible)
-                            </li>
-                            <li>
-                              <code>Disconnected</code>: stream is partially dry with disconnected pools of water
-                            </li>
-                            <li>
-                              <code>Partial Ice/Snow</code>: stream is partially covered by ice/snow (can see some water)
-                            </li>
-                            <li>
-                              <code>Full Ice/Snow</code>: stream is fully covered by ice/snow (cannot see any water)
-                            </li>
-                            <li>
-                              <code>Bad Photo</code>: cannot see water because the photo is not clear (e.g., blurry, too dark, glare)
-                            </li>
-                          </ul>
-                        </li>
-                        <li>
-                          Indicate which of the two photos has more water (<code>Left</code> or <code>Right</code>). Choose <code>About the Same</code> if the photos show similar amounts of water. Choose <code>Don't Know</code> if you cannot make a valid comparison (e.g., one or both is a bad photo or the camera angle is too different). Keyboard shortcuts: <code>j</code> = Left, <code>k</code> = About the Same, <code>l</code> = Right, <code>m</code> = Don't Know.
-                        </li>
-                        <li>
-                          If you were unsure about which option(s) to select or had any other questions about this pair of photos, let us know in the <code>Comments</code> field.
-                        </li>
-                        <li>
-                          When finished with this pair, click <code>Next</code> (or press your Enter key) to load the next pair and repeat these steps.
-                        </li>
-                      </ol>
-                    </li>
-                    <li>
-                      When you are finished, click the <code>Submit</code> button to save your annotations to the server.
-                    </li>
-                    <li>
-                      If you need to stop early, go ahead and submit the annotations you have already completed.
-                    </li>
-                    <li>
-                      Once you have completed a batch of annotations, you can do another batch by repeating step 1 above.
-                    </li>
-                  </ol>
-                </v-sheet>
-                <!-- <div class="text-right text-caption mb-0">Scroll down to see all instructions</div> -->
+                <v-expansion-panels :value="0">
+                  <v-expansion-panel>
+                    <v-expansion-panel-header>
+                      <div class="text-h6">Instructions</div>
+                    </v-expansion-panel-header>
+                    <v-expansion-panel-content>
+                      <v-sheet>
+                        <ol>
+                          <li v-if="!showTraining">Select a station, enter the number of photo pairs you would like to annotate, and specify the minimum/maximum hours and dates (optional). Then click <code>Start Annotating</code>.</li>
+                          <li v-else>During this training you will be shown a series of photo pairs. Your goal is to determine which photo shows higher flows (or more water) in the stream. You will also be indicating if one or both of the photos show certain types of conditions, as explained below.</li>
+                          <li>For each pair of photos:
+                            <ol>
+                              <li>
+                                First, review each photo individually and indicate if that photo shows one of the following conditions by clicking the appropriate button below the photo.
+                                <ul>
+                                  <li>
+                                    <code>Dry</code>: stream is completely dry (no water visible)
+                                  </li>
+                                  <li>
+                                    <code>Disconnected</code>: stream is partially dry with disconnected pools of water
+                                  </li>
+                                  <li>
+                                    <code>Partial Ice/Snow</code>: stream is partially covered by ice/snow (can see some water)
+                                  </li>
+                                  <li>
+                                    <code>Full Ice/Snow</code>: stream is fully covered by ice/snow (cannot see any water)
+                                  </li>
+                                  <li>
+                                    <code>Bad Photo</code>: cannot see water because the photo is not clear (e.g., blurry, too dark, glare)
+                                  </li>
+                                </ul>
+                              </li>
+                              <li>
+                                Next, determine which of the two shows more water, and click the appropriate button below the photo pair (<code>Left</code> or <code>Right</code>). Select <code>About the Same</code> if the photos show similar amounts of water, or <code>Don't Know</code> if you cannot make a valid comparison (e.g., one or both is a bad photo or the camera angle is too inconsistent). You can also use the following keyboard shortcuts to make your selection: <code>j</code> = Left, <code>k</code> = About the Same, <code>l</code> = Right, <code>m</code> = Don't Know.
+                              </li>
+                              <li>
+                                If you were unsure about your selection or had any other questions or observations about this pair of photos, let us know in the <code>Comments</code> field.
+                              </li>
+                              <li>
+                                When finished with this pair, click <code>Next</code> (or press your Enter key) to load the next pair of photos and repeat these steps.
+                              </li>
+                            </ol>
+                          </li>
+                          <li v-if="showTraining">
+                            When you are finished, click the <code>Submit</code> button to send your results to the FPE team for review. You will receive an email within 1-2 business days with instructions on how to begin annotating photos.
+                          </li>
+                          <li v-if="!showTraining">
+                            When you are finished, click the <code>Submit</code> button to save your annotations to the server.
+                          </li>
+                          <li v-if="!showTraining">
+                            If you need to stop early, go ahead and submit the annotations you have already completed.
+                          </li>
+                          <li v-if="!showTraining">
+                            Once you have completed a batch of annotations, you can do another batch by repeating step 1 above.
+                          </li>
+                        </ol>
+                      </v-sheet>
+                    </v-expansion-panel-content>
+                  </v-expansion-panel>
+                </v-expansion-panels>
               </v-col>
             </v-row>
           </v-card-text>
@@ -340,12 +366,12 @@
                   <v-btn @click="prevPair()" :disabled="currentIndex === 0"><v-icon left>mdi-chevron-left</v-icon>Prev</v-btn>
                 </v-col>
                 <v-col cols="4" class="text-center">
-                  <div class="text-center mx-auto" style="width:200px">
-                    Photo Pair: {{ currentIndex + 1 }} of {{ pairs.length }}
+                  <div class="text-center mx-auto" style="width:250px">
+                    Pair {{ currentIndex + 1 }} of {{ pairs.length }}<br>({{ (completedPairs.length / pairs.length * 100).toFixed(1) }}% complete)
                     <v-progress-linear
                       color="primary"
                       height="10"
-                      :value="currentIndex / (pairs.length - 1) * 100"
+                      :value="completedPairs.length / pairs.length * 100"
                       striped
                     ></v-progress-linear>
                   </div>
@@ -361,11 +387,6 @@
 
           <!-- SUBMIT -->
           <v-card-actions class="pa-4 d-block" v-if="pairs.length > 0">
-            <div v-if="error.submit" class="mb-8">
-              <Alert type="error" title="Submission Error" class="mx-auto" style="max-width:600px">
-                {{ error.submit }}
-              </Alert>
-            </div>
             <div v-if="submitEarly && completedPairs.length < pairs.length" class="mb-4">
               <Alert type="warning" title="Need to Finish Early?" class="mx-auto" style="max-width:600px">
                 <p>
@@ -384,8 +405,13 @@
                 Click submit to save your data to the server
               </Alert>
             </div>
+            <div v-if="error.submit">
+              <Alert type="error" title="Failed to Submit Annotations" class="mx-auto" style="max-width:600px">
+                {{ error.submit }}
+              </Alert>
+            </div>
             <div class="text-center">
-              <v-btn @click="submit" color="primary" :loading="loading.submit" large>
+              <v-btn @click="submit" color="primary" :loading="loading.submit" large :disabled="showTraining && completedPairs.length !== pairs.length">
                 <v-icon left>mdi-upload</v-icon>Submit
               </v-btn>
             </div>
@@ -408,14 +434,17 @@ export default {
       loading: {
         stations: false,
         station: false,
+        training: false,
         submit: false
       },
       error: {
         start: null,
         station: null,
+        training: null,
         annotation: null,
         submit: null
       },
+      trainingComplete: false,
       stations: [],
       stationArray: [],
       search: '',
@@ -456,7 +485,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['user']),
+    ...mapGetters(['user', 'dbUser']),
     station () {
       return this.stationArray.length > 0 ? this.stationArray[0] : null
     },
@@ -466,6 +495,9 @@ export default {
     },
     completedPairs () {
       return this.pairs.filter(d => !!d.rank)
+    },
+    showTraining () {
+      return this.dbUser && this.dbUser.training_required
     }
   },
   async mounted () {
@@ -589,6 +621,64 @@ export default {
         this.loading.station = false
       }
     },
+    async fetchTrainingPairs () {
+      this.loading.training = true
+      this.error.training = null
+      this.pairs = []
+      this.pairsStationId = null
+      try {
+        const url = '/annotations/training'
+        let response = await this.$http.restricted.get(url)
+
+        if (!response.status === 200 || !response.data.url) {
+          throw new Error('Failed to get training dataset')
+        }
+
+        response = await this.$http.external.get(response.data.url)
+
+        if (!response.status === 200 || !response.data.pairs) {
+          throw new Error('Failed to get training dataset')
+        }
+
+        const { station_id: stationId, pairs } = response.data
+
+        response = await this.$http.restricted.get(`/stations/${stationId}`)
+        const station = response.data
+
+        if (!station) {
+          throw new Error('Failed to get station')
+        }
+        this.selectStation(station)
+
+        this.pairs = pairs.map(d => {
+          d.left.timestamp = new Date(d.left.timestamp)
+          d.left.hour = this.$luxon.DateTime.fromJSDate(d.left.timestamp).setZone(this.station.timezone).hour
+          d.right.timestamp = new Date(d.right.timestamp)
+          d.right.hour = this.$luxon.DateTime.fromJSDate(d.right.timestamp).setZone(this.station.timezone).hour
+          return {
+            left: {
+              image: d.left,
+              attributes: []
+            },
+            right: {
+              image: d.right,
+              attributes: []
+            },
+            rank: null,
+            comment: null
+          }
+        })
+        this.pairsStationId = station.id
+        if (this.pairs.length > 0) {
+          this.currentIndex = 0
+        }
+      } catch (err) {
+        console.error(err)
+        this.error.training = err.message || err.toString()
+      } finally {
+        this.loading.training = false
+      }
+    },
     prevPair () {
       this.error.annotation = null
       this.currentIndex -= 1
@@ -636,6 +726,8 @@ export default {
         const durationSeconds = (finishedAt.valueOf() - this.startedAt.valueOf()) / 1000
         const payload = {
           user_id: this.user.username,
+          training: this.showTraining,
+          flag: this.showTraining,
           station_id: this.pairsStationId,
           duration_sec: durationSeconds,
           n: this.completedPairs.length,
@@ -657,11 +749,15 @@ export default {
         }
         await this.$http.restricted.put(`/annotations/${annotation.id}`, updatePayload)
 
-        this.station.n_annotations += payload.n
-        this.station.n_annotations_daytime += payload.n_daytime
-
+        if (this.showTraining) {
+          evt.$emit('notify', 'success', 'Annotations have been submitted')
+          this.trainingComplete = true
+        } else {
+          this.station.n_annotations += payload.n
+          this.station.n_annotations_daytime += payload.n_daytime
+          evt.$emit('notify', 'success', 'Annotations have been saved')
+        }
         this.reset()
-        evt.$emit('notify', 'success', 'Annotations have been saved')
       } catch (err) {
         console.log(err)
         this.error.submit = err.message || err.toString()
@@ -771,6 +867,10 @@ export default {
       } else {
         this.stationArray = [station]
       }
+    },
+    startTraining () {
+      console.log('startTraining')
+      this.fetchTrainingPairs()
     }
   }
 }

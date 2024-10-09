@@ -331,6 +331,8 @@ module.exports = {
   attachAdminUser,
   getUsers,
   postUsers,
+  fetchUser,
+  transformUserAttributes,
   getUser,
   putUser,
   deleteUser
