@@ -97,7 +97,7 @@
             </v-list-item-content>
           </v-list-item>
 
-          <v-list-item v-if="user" :to="{ name: 'manage' }" class="pr-8">
+          <v-list-item v-if="user && !dbUser.annotator_only" :to="{ name: 'manage' }" class="pr-8">
             <v-list-item-icon>
               <v-icon>mdi-upload</v-icon>
             </v-list-item-icon>
@@ -166,7 +166,7 @@
         <v-icon small left>mdi-pencil-box-outline</v-icon> Annotate
       </v-btn>
 
-      <v-btn text class="mx-2" v-if="user" :to="{ name: 'manage' }">
+      <v-btn text class="mx-2" v-if="user && !dbUser.annotator_only" :to="{ name: 'manage' }">
         <v-icon small left>mdi-upload</v-icon> Manage Stations
       </v-btn>
       <v-menu
@@ -303,7 +303,7 @@ export default {
     }
   }),
   computed: {
-    ...mapGetters(['user'])
+    ...mapGetters(['user', 'dbUser'])
   },
   mounted () {
     evt.$on('notify', this.notify)

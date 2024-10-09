@@ -34,7 +34,7 @@
                 <tr>
                   <td
                     class="text-right"
-                    style="width:140px">
+                    style="width:180px">
                     ID
                   </td>
                   <td class="font-weight-bold">{{ user.id }}</td>
@@ -42,7 +42,7 @@
                 <tr>
                   <td
                     class="text-right"
-                    style="width:140px">
+                    style="width:180px">
                     Created
                   </td>
                   <td class="font-weight-bold">{{ user.created_at | formatTimestamp('local', 'DD ttt') }}</td>
@@ -50,7 +50,7 @@
                 <tr>
                   <td
                     class="text-right"
-                    style="width:140px">
+                    style="width:180px">
                     Updated
                   </td>
                   <td class="font-weight-bold">{{ user.updated_at | formatTimestamp('local', 'DD ttt') }}</td>
@@ -58,7 +58,7 @@
                 <tr>
                   <td
                     class="text-right"
-                    style="width:140px">
+                    style="width:180px">
                     Name
                   </td>
                   <td class="font-weight-bold">{{ user.attributes.name }}</td>
@@ -66,7 +66,7 @@
                 <tr>
                   <td
                     class="text-right"
-                    style="width:140px">
+                    style="width:180px">
                     Email
                   </td>
                   <td class="font-weight-bold">
@@ -76,29 +76,75 @@
                 <tr>
                   <td
                     class="text-right"
-                    style="width:140px">
+                    style="width:180px">
                     Enabled
                   </td>
                   <td class="font-weight-bold">
-                    <v-icon v-if="user.enabled" color="primary">mdi-check-circle</v-icon>
-                    <v-icon v-else color="gray">mdi-close-circle</v-icon>
+                    <div class="d-flex align-center justify-space-between">
+                      <v-icon v-if="user.enabled" color="primary">mdi-check-circle</v-icon>
+                      <v-icon v-else color="gray">mdi-close-circle</v-icon>
+
+                      <v-btn
+                        v-if="!user.enabled"
+                        color="success"
+                        outlined
+                        small
+                        :loading="loading.enabled"
+                        @click="setEnabled(true)"
+                      >
+                        <v-icon left>mdi-check</v-icon> Enable User
+                      </v-btn>
+                      <v-btn
+                        v-else
+                        color="error"
+                        outlined
+                        small
+                        :loading="loading.enabled"
+                        @click="setEnabled(false)"
+                      >
+                        <v-icon left>mdi-close</v-icon> Disable User
+                      </v-btn>
+                    </div>
                   </td>
                 </tr>
                 <tr>
                   <td
                     class="text-right"
-                    style="width:140px">
+                    style="width:180px">
                     Admin
                   </td>
                   <td class="font-weight-bold">
-                    <v-icon v-if="user.is_admin" color="primary">mdi-check-circle</v-icon>
-                    <v-icon v-else color="gray">mdi-close-circle</v-icon>
+                    <div class="d-flex align-center justify-space-between">
+                      <v-icon v-if="user.is_admin" color="primary">mdi-check-circle</v-icon>
+                      <v-icon v-else color="gray">mdi-close-circle</v-icon>
+
+                      <v-btn
+                        v-if="!user.is_admin"
+                        color="primary"
+                        small
+                        outlined
+                        :loading="loading.admin"
+                        @click="setAdminGroup(true)"
+                      >
+                        <v-icon left>mdi-plus</v-icon> Add Admin
+                      </v-btn>
+                      <v-btn
+                        v-else
+                        color="default"
+                        small
+                        outlined
+                        :loading="loading.admin"
+                        @click="setAdminGroup(false)"
+                      >
+                        <v-icon left>mdi-close</v-icon> Remove Admin
+                      </v-btn>
+                    </div>
                   </td>
                 </tr>
                 <tr>
                   <td
                     class="text-right"
-                    style="width:140px">
+                    style="width:180px">
                     Status
                   </td>
                   <td class="font-weight-bold">
@@ -120,6 +166,77 @@
                         {{ user.status }}
                       </v-chip>
                       <v-spacer></v-spacer>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td
+                    class="text-right"
+                    style="width:180px"
+                  >
+                    Annotator Only
+                  </td>
+                  <td class="font-weight-bold">
+                    <div class="d-flex align-center justify-space-between">
+                      <v-icon v-if="user.annotator_only" color="primary">mdi-check-circle</v-icon>
+                      <v-icon v-else color="gray">mdi-close-circle</v-icon>
+
+                      <v-btn
+                        v-if="!user.annotator_only"
+                        color="primary"
+                        small
+                        outlined
+                        :loading="loading.annotatorOnly"
+                        @click="setAnnotatorOnly(true)"
+                      >
+                        <v-icon left>mdi-plus</v-icon> Add Annotator Only
+                      </v-btn>
+                      <v-btn
+                        v-else
+                        color="default"
+                        small
+                        outlined
+                        :loading="loading.annotatorOnly"
+                        @click="setAnnotatorOnly(false)"
+                      >
+                        <v-icon left>mdi-close</v-icon> Remove Annotator Only
+                      </v-btn>
+                    </div>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td
+                    class="text-right"
+                    style="width:180px"
+                  >
+                    Training Required
+                  </td>
+                  <td class="font-weight-bold">
+                    <div class="d-flex align-center justify-space-between">
+                      <v-icon v-if="user.training_required" color="primary">mdi-check-circle</v-icon>
+                      <v-icon v-else color="gray">mdi-close-circle</v-icon>
+
+                      <v-btn
+                        v-if="!user.training_required"
+                        color="primary"
+                        small
+                        outlined
+                        :loading="loading.trainingRequired"
+                        @click="setTrainingRequired(true)"
+                      >
+                        <v-icon left>mdi-plus</v-icon> Add Training Required
+                      </v-btn>
+                      <v-btn
+                        v-else
+                        color="default"
+                        small
+                        outlined
+                        :loading="loading.trainingRequired"
+                        @click="setTrainingRequired(false)"
+                      >
+                        <v-icon left>mdi-close</v-icon> Remove Training Required
+                      </v-btn>
                     </div>
                   </td>
                 </tr>
@@ -152,55 +269,7 @@
                 >
                   <v-icon left>mdi-refresh</v-icon>Reset Password
                 </v-btn>
-
-                <div class="my-4"></div>
               </div>
-
-              <v-btn
-                v-if="!user.is_admin"
-                color="success"
-                block
-                outlined
-                :loading="loading.admin"
-                @click="setAdminGroup(true)"
-              >
-                <v-icon left>mdi-badge-account</v-icon> Add to Admins
-              </v-btn>
-              <v-btn
-                v-else
-                color="warning"
-                block
-                outlined
-                :loading="loading.admin"
-                @click="setAdminGroup(false)"
-              >
-                <v-icon left>mdi-close</v-icon> Remove from Admins
-              </v-btn>
-
-              <div class="my-4"></div>
-
-              <v-btn
-                v-if="!user.enabled"
-                color="success"
-                block
-                outlined
-                :loading="loading.enabled"
-                @click="setEnabled(true)"
-              >
-                <v-icon left>mdi-check</v-icon> Enable User
-              </v-btn>
-              <v-btn
-                v-else
-                color="error"
-                block
-                outlined
-                :loading="loading.enabled"
-                @click="setEnabled(false)"
-              >
-                <v-icon left>mdi-close</v-icon> Disable User
-              </v-btn>
-
-              <div class="my-4"></div>
 
               <v-btn
                 color="error"
@@ -208,6 +277,7 @@
                 block
                 @click="confirmDelete"
                 :loading="loading.delete"
+                class="mt-4"
               >
                 <v-icon left>mdi-delete</v-icon>
                 Delete User
@@ -297,7 +367,7 @@ export default {
       reject: null,
       options: {
         color: 'grey lighten-2',
-        width: 600,
+        width: 800,
         zIndex: 5000
       },
       id: null,
@@ -311,7 +381,9 @@ export default {
         delete: false,
         affiliation: false,
         resetPassword: false,
-        resendPassword: false
+        resendPassword: false,
+        annotatorOnly: false,
+        trainingRequired: false
       },
       affiliation: {
         name: {
@@ -363,13 +435,8 @@ export default {
       }
 
       this.user = await this.getUser(this.id)
-      if (this.user.affiliation) {
-        this.affiliation.name.value = this.user.affiliation.affiliation_name
-        this.affiliation.code.value = this.user.affiliation.affiliation_code
-      } else {
-        this.affiliation.name.value = ''
-        this.affiliation.name.value = ''
-      }
+      this.affiliation.name.value = this.user.affiliation_name
+      this.affiliation.code.value = this.user.affiliation_code
 
       // this.loading.confirm = false
       this.loading.enabled = false
@@ -486,6 +553,37 @@ export default {
         this.error = err
       } finally {
         this.loading.delete = false
+      }
+    },
+    async setAnnotatorOnly (value) {
+      this.loading.annotatorOnly = true
+      this.modified = true
+      const action = 'setAnnotatorOnly'
+      try {
+        await this.$http.admin.put(`/users/${this.id}`, { action, value })
+        evt.$emit('notify', 'success', 'User has been updated')
+        this.refresh()
+      } catch (err) {
+        console.error(err)
+        this.error = err
+      } finally {
+        this.loading.annotatorOnly = false
+      }
+    },
+
+    async setTrainingRequired (value) {
+      this.loading.trainingRequired = true
+      this.modified = true
+      const action = 'setTrainingRequired'
+      try {
+        await this.$http.admin.put(`/users/${this.id}`, { action, value })
+        evt.$emit('notify', 'success', 'User has been updated')
+        this.refresh()
+      } catch (err) {
+        console.error(err)
+        this.error = err
+      } finally {
+        this.loading.trainingRequired = false
       }
     }
   }

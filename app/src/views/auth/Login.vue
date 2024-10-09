@@ -128,7 +128,7 @@ export default {
 
         const redirect = this.$route.query.redirect
           ? { path: this.$route.query.redirect }
-          : { name: 'manage' }
+          : { name: 'home' }
 
         return evt.$emit('authState', {
           state: 'signIn',
