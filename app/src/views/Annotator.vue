@@ -16,7 +16,8 @@
               <v-col cols="6" v-if="showTraining">
                 <Alert type="warning" class="body-1">
                   <div class="text-h6">Welcome to the FPE Photo Annotator Training</div>
-                  <p>You need to complete the required training before you can start annotating photos. This training will take between 30 and 60 minutes to complete.</p>
+                  <p>You need to complete the required training before you can start annotating photos.</p>
+                  <p>During this training, you will annotate 250 pairs of photos from a stream in central Massachusetts. This should take around 30-45 minutes to complete.</p>
                   <p>Start by reading the instructions to the right, then click the button below to begin the training.</p>
                   <p>If you have any questions, please contact us at <a href="mailto:ecosheds@usgs.gov">ecosheds@usgs.gov</a>.</p>
                   <v-btn color="primary" @click="startTraining" :loading="loading.training" :disabled="pairs.length > 0 || trainingComplete">Begin Training</v-btn>
@@ -47,6 +48,11 @@
                           clearable
                         ></v-text-field>
                       </v-card-title>
+
+                      <div class="caption px-4 pb-2">
+                        <v-icon small left>mdi-information</v-icon>
+                        Priority stations are those we are actively seeking more annotations for. Please annotate those first unless there are others you are specifically interested in. Once a station has at least 2,000 <i>daytime</i> annotations, please move on to another.
+                      </div>
                       <v-data-table
                         v-model="stationArray"
                         :loading="loading.stations"
@@ -54,12 +60,16 @@
                         :items="stations"
                         :search="search"
                         :items-per-page="5"
-                        :sort-by="['n_annotations_daytime']"
-                        :sort-desc="[true]"
+                        :sort-by.sync="sortBy"
+                        :sort-desc.sync="sortDesc"
                         single-select
                         dense
                         @click:row="selectStation"
-                      ></v-data-table>
+                      >
+                        <template v-slot:item.annotation_priority="{ item }">
+                          <v-simple-checkbox v-model="item.annotation_priority" :disabled="true"></v-simple-checkbox>
+                        </template>
+                      </v-data-table>
                     </v-card>
                     <v-text-field
                       v-model.number="nPairs"
@@ -152,7 +162,7 @@
                   </v-col>
                 </v-row>
 
-                <div class="text-center">
+                <div class="text-center mt-4">
                   <v-btn large color="primary" @click="start" :loading="loading.station">Start Annotating<v-icon right>mdi-chevron-right</v-icon></v-btn>
                 </div>
 
@@ -171,7 +181,7 @@
                     <v-expansion-panel-content>
                       <v-sheet>
                         <ol>
-                          <li v-if="!showTraining">Select a station, enter the number of photo pairs you would like to annotate, and specify the minimum/maximum hours and dates (optional). Then click <code>Start Annotating</code>.</li>
+                          <li v-if="!showTraining">Select a station on the table (priority stations first, if possible), then enter the number of photo pairs you would like to annotate and specify the minimum/maximum hours and dates (optional). Then click <code>Start Annotating</code>.</li>
                           <li v-else>During this training you will be shown a series of photo pairs. Your goal is to determine which photo shows higher flows (or more water) in the stream. You will also be indicating if one or both of the photos show certain types of conditions, as explained below.</li>
                           <li>For each pair of photos:
                             <ol>
@@ -480,8 +490,16 @@ export default {
           value: 'n_annotations_daytime',
           align: 'end',
           sortable: true
+        },
+        {
+          text: 'Priority',
+          value: 'annotation_priority',
+          align: 'end',
+          sortable: true
         }
-      ]
+      ],
+      sortBy: ['annotation_priority'],
+      sortDesc: [true]
     }
   },
   computed: {
@@ -536,10 +554,17 @@ export default {
 
         const response = await api.get('/annotations/stations')
 
-        const stations = response.data.sort((a, b) => ascending(a.name, b.name))
+        const stations = response.data.sort((a, b) => {
+          // Sort by annotation_priority (descending) first, then by name (ascending)
+          if (b.annotation_priority !== a.annotation_priority) {
+            return b.annotation_priority - a.annotation_priority
+          }
+          return ascending(a.name, b.name)
+        })
         stations.forEach(d => {
           d.n_annotations = d.n_annotations || 0
           d.n_annotations_daytime = d.n_annotations_daytime || 0
+          d.annotation_priority = d.annotation_priority || 0
         })
         this.stations = stations
       } catch (err) {
@@ -567,6 +592,7 @@ export default {
     async fetchStationPairs () {
       if (!this.station) return
       this.loading.station = true
+      this.error.station = null
       this.pairs = []
       this.pairsStationId = null
       try {
@@ -904,4 +930,8 @@ export default {
   font-size: 0.5rem !important;
 }
 
+/* Add this new style for the table rows */
+.v-data-table__wrapper tbody tr {
+  cursor: pointer;
+}
 </style>
