@@ -37,7 +37,7 @@
           </div>
 
           <p>
-            <strong>Want to add your timelapse photos to FPE?</strong> <router-link :to="{ name: 'request' }">Request an account</router-link> to upload your photos.<br>
+            <strong>Want to add your photos or help annotate?</strong> <router-link :to="{ name: 'request' }">Request an account</router-link> to upload your photos or help annotate photos uploaded by other users.<br>
             <strong>Want to receive periodic updates about the project?</strong> <a href="https://public.govdelivery.com/accounts/USDOIGS/subscriber/new?topic_id=USDOIGS_120">Sign up</a> for our email newsletter.<br>
             <strong>Questions?</strong> You can reach us at <a href="mailto:ecosheds@usgs.gov">ecosheds@usgs.gov</a>.
           </p>
@@ -68,26 +68,43 @@
 
         <div class="mx-4">
           <div class="d-flex align-end">
-            <div class="font-weight-light black--text text-h6">Explorer Upgrade, Model Results, and Newsletter</div>
+            <div class="font-weight-light black--text text-h6">New Model Results, Annotation Interface, Station Permissions</div>
             <v-spacer></v-spacer>
-            <div class="text-subtitle-2 font-weight-light font-italic">April 10, 2024</div>
+            <div class="text-subtitle-2 font-weight-light font-italic">October 10, 2024</div>
           </div>
           <v-divider class="mb-2"></v-divider>
           <div class="body-1">
             <p>
-              Major upgrade to the <router-link :to="{ name: 'explorerHome' }">Photo Explorer</router-link> that incoporates initial model predictions. This update includes a complete overhaul of the data visualization charts for exploring both observed data and model predictions, including the original timeseries and distribution charts as well as a new scatterplot for comparing two variables (e.g., observed flow vs. model predictions).
+              Model predictions are now available on the <router-link :to="{ name: 'explorerHome' }">Photo Explorer</router-link> at 39 stations in the northeast, mid-atlantic, and midwest regions. While most of these stations focus on streamflow predictions, three of them located on the Fox River in Wisconsin and managed by the USGS Upper Midwest Water Science Center provide predictions of harmful algal blooms (HABs). These predictions were generated using the same annotation process and deep learning model as the streamflow stations and demonstrate how FPE can be used to estimate parameters other than streamflow. More variables (e.g., lake/wetland water levels, snow depths) are currently being developed and will be added soon.
             </p>
             <p>
-              Model predictions are currently available for a set of USGS stations located in the West Brook Study Area, in central MA. Over the coming months, we will be adding more model predictions for other stations as results become available.
+              All registered users can now access the <router-link :to="{ name: 'annotator' }">Photo Annotator</router-link> where they can annotate pairs of photos for training the deep learning model at any given station. The annotation interface also now indicates which stations are the highest priority for collecting more annotations. Lastly, all new users are now required to annotate a training dataset before they can begin performing real annotations. This training dataset will help us better understand how annotation accuracy varies among different users.
             </p>
             <p>
-              Lastly, we have created an official email list that will be used to announce updates. If you'd like to receive these, please <a href="https://public.govdelivery.com/accounts/USDOIGS/subscriber/new?topic_id=USDOIGS_120">Sign Up here</a>.
-            </p>
-            <p>
-              To read more about these changes, please see our <a href="https://content.govdelivery.com/accounts/USDOIGS/bulletins/397081f">latest newsletter</a>.
+              Station owners can now grant access to their stations to other users. This allows multiple users to upload images and datasets for the same stations. These permissions can be managed by going to <router-link :to="{ name: 'manage' }">Manage Stations</router-link>, selecting a station, then going to the <i>Permissions</i> tab.
             </p>
           </div>
           <div v-if="showMoreNews">
+            <div class="d-flex align-end">
+              <div class="font-weight-light black--text text-h6">Explorer Upgrade, Model Results, and Newsletter</div>
+              <v-spacer></v-spacer>
+              <div class="text-subtitle-2 font-weight-light font-italic">April 10, 2024</div>
+            </div>
+            <v-divider class="mb-2"></v-divider>
+            <div class="body-1">
+              <p>
+                Major upgrade to the <router-link :to="{ name: 'explorerHome' }">Photo Explorer</router-link> that incoporates initial model predictions. This update includes a complete overhaul of the data visualization charts for exploring both observed data and model predictions, including the original timeseries and distribution charts as well as a new scatterplot for comparing two variables (e.g., observed flow vs. model predictions).
+              </p>
+              <p>
+                Model predictions are currently available for a set of USGS stations located in the West Brook Study Area, in central MA. Over the coming months, we will be adding more model predictions for other stations as results become available.
+              </p>
+              <p>
+                Lastly, we have created an official email list that will be used to announce updates. If you'd like to receive these, please <a href="https://public.govdelivery.com/accounts/USDOIGS/subscriber/new?topic_id=USDOIGS_120">Sign Up here</a>.
+              </p>
+              <p>
+                To read more about these changes, please see our <a href="https://content.govdelivery.com/accounts/USDOIGS/bulletins/397081f">latest newsletter</a>.
+              </p>
+            </div>
             <div class="d-flex align-end">
               <div class="font-weight-light black--text text-h6">Preliminary Annotation Interface</div>
               <v-spacer></v-spacer>
@@ -167,7 +184,7 @@
           <p><span class="font-weight-bold"><u>Phase I (2020-2022)</u></span>: a database and cloud-based data pipeline was developed for storing, managing, and accessing timelapse imagery of streams and rivers along with associated flow and stage data. The system allows registered users to upload and manage their own photos and (optionally) flow data at multiple locations. The images and flow data are accessible through the <router-link :to="{ name: 'explorerHome' }">Photo Explorer</router-link>, which provides an interactive and exploratory interface for viewing the timelapse imagery coupled with observed flow data. The images and flow data in the FPE database will serve as the primary data source for developing and training the machine learning models in Phase II. All images are screened for the presence of <strong>Personal Identifying Information (PII)</strong> using the <a href="https://github.com/ecologize/CameraTraps/blob/main/megadetector.md">MegaDetector</a> object detection model.</p>
 
           <p>
-            <span class="font-weight-bold"><u>Phase II (ongoing)</u></span>: the photos and data uploaded to FPE are being used to develop <strong>deep learning models</strong> for estimating relative flowusing timelapse imagery. See the Deep Learning Model section on the left or <a href="https://doi.org/10.1145/3530190.3534805">Gupta et al., 2022</a> for more details.
+            <span class="font-weight-bold"><u>Phase II (ongoing)</u></span>: the photos and data uploaded to FPE are being used to develop <strong>deep learning models</strong> for estimating relative flow and other hydrologic parameters using timelapse imagery. See the Deep Learning Model section on the right or <a href="https://doi.org/10.1145/3530190.3534805">Gupta et al., 2022</a> for more details.
           </p>
           <p>
             During this phase, models will be trained and predictions made available in the following order:
