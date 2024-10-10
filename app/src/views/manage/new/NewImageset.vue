@@ -231,10 +231,19 @@
                             </v-col>
                             <v-col cols="12" sm="6">
                               <div class="font-weight-bold">Last Photo from Previous Upload:</div>
-                              <img v-if="confirmStation.lastImageUrl" :src="confirmStation.lastImageUrl" alt="Last photo from previous upload" class="mt-2" style="max-width: 100%; max-height: 300px;" />
-                              <div v-else class="mt-2">No photos have been uploaded for this station yet</div>
-                              <div v-if="confirmStation.lastImageTimestamp" class="mt-2">
-                                Timestamp: {{ confirmStation.lastImageTimestamp | formatTimestamp('local', 'DD t') }}
+                              <div v-if="confirmStation.lastLoading">
+                                <v-progress-circular indeterminate size="32"></v-progress-circular>
+                                Loading...
+                              </div>
+                              <div v-else-if="confirmStation.error">
+                                <Alert type="error" title="Failed to Fetch Last Photo">{{ confirmStation.error }}</Alert>
+                              </div>
+                              <div v-else>
+                                <img v-if="confirmStation.lastImageUrl" :src="confirmStation.lastImageUrl" alt="Last photo from previous upload" class="mt-2" style="max-width: 100%; max-height: 300px;" />
+                                <div v-else class="mt-2">No photos have been uploaded for this station yet</div>
+                                <div v-if="confirmStation.lastImageTimestamp" class="mt-2">
+                                  Timestamp: {{ confirmStation.lastImageTimestamp | formatTimestamp('local', 'DD t') }}
+                                </div>
                               </div>
                             </v-col>
                           </v-row>
@@ -248,7 +257,7 @@
                       <v-btn text class="mr-4 px-4" @click="step -= 1">
                         <v-icon left>mdi-chevron-left</v-icon> Previous
                       </v-btn>
-                      <v-btn color="primary" class="mr-4 px-4" @click="nextConfirmStation">
+                      <v-btn color="primary" class="mr-4 px-4" @click="nextConfirmStation" :disabled="confirmStation.lastLoading">
                         Continue <v-icon right>mdi-chevron-right</v-icon>
                       </v-btn>
 
@@ -635,6 +644,8 @@ export default {
       },
       confirmStation: {
         previewUrl: null,
+        lastLoading: false,
+        lastError: null,
         lastImageUrl: null,
         lastImageTimestamp: null
       },
@@ -787,7 +798,7 @@ export default {
       }
 
       // Fetch the last image from the most recent imageset
-      await this.fetchLastImage()
+      this.fetchLastImage()
 
       this.step += 1
     },
@@ -1104,6 +1115,8 @@ export default {
       }
     },
     async fetchLastImage () {
+      this.confirmStation.lastLoading = true
+      this.confirmStation.lastError = null
       try {
         // Fetch imagesets
         const imagesetResponse = await this.$http.restricted.get(`/stations/${this.stationId}/imagesets`)
@@ -1127,6 +1140,9 @@ export default {
         this.confirmStation.lastImageTimestamp = lastImage.timestamp
       } catch (error) {
         console.error('Error fetching last image:', error)
+        this.confirmStation.lastError = error.toString()
+      } finally {
+        this.confirmStation.lastLoading = false
       }
     },
     nextConfirmStation () {
