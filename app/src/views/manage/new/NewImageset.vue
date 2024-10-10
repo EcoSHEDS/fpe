@@ -824,8 +824,6 @@ export default {
       const timestamp = this.$luxon.DateTime.fromJSDate(rawTimestamp).setZone(utcOffset.id, { keepLocalTime: true })
       if (!timestamp.isValid) return 'Invalid Date'
 
-      console.log(timestamp)
-
       const exifTimestamp = timestamp.toFormat('DD tt')
       const localTimestamp = timestamp.setZone(this.station.timezone).toFormat('DD ttt')
       const utcTimestamp = timestamp.setZone('UTC').toFormat('DD ttt')
@@ -893,7 +891,7 @@ export default {
       }, 5000)
     },
     async startUpload () {
-      const startedAt = new Date()
+      // const startedAt = new Date()
 
       if (!this.validateUpload()) return
 
@@ -973,9 +971,8 @@ export default {
         this.upload.remainingMinutes = rate * (n - i - 1)
       }
 
-      const endedAt = new Date()
-      const duration = ((endedAt - startedAt) / 1000 / 60)
-      console.log(`elapsed time: ${duration.toFixed(1)} minutes`)
+      // const endedAt = new Date()
+      // const duration = ((endedAt - startedAt) / 1000 / 60)
 
       await this.finishUpload()
     },
@@ -1092,7 +1089,6 @@ export default {
           retry: 3,
           statusCodesToRetry: [[100, 199], [400, 429], [500, 599]],
           onRetryAttempt: err => {
-            console.log('retrying s3 upload (%s)', s3Key)
             console.log(err)
           }
         }
