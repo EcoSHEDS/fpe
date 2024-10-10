@@ -40,6 +40,19 @@ const getImageset = async (req, res, next) => {
   return res.status(200).json(res.locals.imageset)
 }
 
+const getImagesetLastImage = async (req, res, next) => {
+  const lastImage = await res.locals.imageset
+    .$relatedQuery('images')
+    .orderBy('timestamp', 'desc')
+    .first();
+
+  if (!lastImage) {
+    return res.status(404).json({ message: 'No images found in this imageset' });
+  }
+
+  return res.status(200).json(lastImage);
+}
+
 const postImagesets = async (req, res, next) => {
   const props = {
     ...req.body,
@@ -173,5 +186,6 @@ module.exports = {
   presignImageset,
   processImageset,
   piiImageset,
-  listImagesetFiles
+  listImagesetFiles,
+  getImagesetLastImage
 }

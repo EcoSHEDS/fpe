@@ -11,7 +11,7 @@ const {
   getStationDaily,
   addUserPermission,
   removeUserPermission,
-  getStationPermissions,  // Add this line
+  getStationPermissions,
   getStationRandomImagePairs
 } = require('../../controllers/stations')
 const {
@@ -34,7 +34,8 @@ const {
   deleteImageset,
   processImageset,
   piiImageset,
-  listImagesetFiles
+  listImagesetFiles,
+  getImagesetLastImage
 } = require('../../controllers/imagesets')
 const {
   attachImage,
@@ -107,6 +108,10 @@ router.route('/:stationId/imagesets/:imagesetId/images')
   .all(asyncHandler(attachStation), asyncHandler(attachRestrictedImageset))
   .get(asyncHandler(getImages))
   .post(requireStationOwnerCollaboratorOrAdmin, asyncHandler(postImage))
+
+router.route('/:stationId/imagesets/:imagesetId/last-image')
+  .all(asyncHandler(attachStation), asyncHandler(attachRestrictedImageset))
+  .get(asyncHandler(getImagesetLastImage))
 
 router.route('/:stationId/imagesets/:imagesetId/images/:imageId')
   .all(asyncHandler(attachStation), asyncHandler(attachRestrictedImageset), asyncHandler(attachImage))

@@ -26,26 +26,35 @@
 
               <v-divider></v-divider>
 
-              <!-- STEP 3: TIMESTAMPS -->
+              <!-- STEP 3: CONFIRM STATION -->
               <v-stepper-step
                 :complete="step > 3"
                 step="3">
+                Confirm Station
+              </v-stepper-step>
+
+              <v-divider></v-divider>
+
+              <!-- STEP 4: TIMESTAMPS -->
+              <v-stepper-step
+                :complete="step > 4"
+                step="4">
                 Timestamps
               </v-stepper-step>
 
               <v-divider></v-divider>
 
-              <!-- STEP 4: ADDITIONAL INFO -->
+              <!-- STEP 5: ADDITIONAL INFO -->
               <v-stepper-step
-                :complete="step > 4"
-                step="4">
+                :complete="step > 5"
+                step="5">
                 Additional Info
               </v-stepper-step>
 
               <v-divider></v-divider>
 
-              <!-- STEP 1: FINISH -->
-              <v-stepper-step step="5">
+              <!-- STEP 6: FINISH -->
+              <v-stepper-step step="6">
                 Finish
               </v-stepper-step>
             </v-stepper-header>
@@ -190,8 +199,71 @@
                 </v-row>
               </v-stepper-content>
 
-              <!-- STEP 3: TIMESTAMP -->
+              <!-- STEP 3: CONFIRM STATION -->
               <v-stepper-content step="3">
+                <v-row justify="space-around">
+                  <v-col cols="12" md="8">
+                    <div class="text-h6">Confirm Station</div>
+                    <p>Please confirm that these photos are for the correct station. If you previously uploaded photos for this station, then the last photo from the previous upload will be displayed for comparison. This will ensure that the new photos are for the same location.</p>
+
+                    <v-alert
+                      type="error"
+                      text
+                      colored-border
+                      border="left"
+                      class="body-2 mb-0 mt-4"
+                      v-if="!files.selected || files.selected.length === 0"
+                    >
+                      <div class="font-weight-bold body-1">Missing Photo Files</div>
+                      <div>
+                        Photos have not been selected. Please return to previous step and select the files.
+                      </div>
+                    </v-alert>
+                    <div v-else>
+                      <v-card outlined class="mt-4">
+                        <v-card-text class="black--text">
+                          <div class="font-weight-bold">Station Name:</div>
+                          <div>{{ station.name }}</div>
+                          <v-row class="mt-4">
+                            <v-col cols="12" sm="6">
+                              <div class="font-weight-bold">Preview of First New Photo:</div>
+                              <img :src="confirmStation.previewUrl" alt="Preview of first new photo" class="mt-2" style="max-width: 100%; max-height: 300px;" />
+                            </v-col>
+                            <v-col cols="12" sm="6">
+                              <div class="font-weight-bold">Last Photo from Previous Upload:</div>
+                              <img v-if="confirmStation.lastImageUrl" :src="confirmStation.lastImageUrl" alt="Last photo from previous upload" class="mt-2" style="max-width: 100%; max-height: 300px;" />
+                              <div v-else class="mt-2">No photos have been uploaded for this station yet</div>
+                              <div v-if="confirmStation.lastImageTimestamp" class="mt-2">
+                                Timestamp: {{ confirmStation.lastImageTimestamp | formatTimestamp('local', 'DD t') }}
+                              </div>
+                            </v-col>
+                          </v-row>
+                        </v-card-text>
+                      </v-card>
+
+                      <p class="mt-4">If this is the correct station, please click "Continue".</p>
+                    </div>
+
+                    <v-row class="mt-8 mb-4 px-3">
+                      <v-btn text class="mr-4 px-4" @click="step -= 1">
+                        <v-icon left>mdi-chevron-left</v-icon> Previous
+                      </v-btn>
+                      <v-btn color="primary" class="mr-4 px-4" @click="nextConfirmStation">
+                        Continue <v-icon right>mdi-chevron-right</v-icon>
+                      </v-btn>
+
+                      <v-spacer></v-spacer>
+
+                      <v-btn text @click="$router.push({ name: 'manageImagesets' })">
+                        Cancel
+                      </v-btn>
+                    </v-row>
+                  </v-col>
+                </v-row>
+              </v-stepper-content>
+
+              <!-- STEP 4: TIMESTAMP -->
+              <v-stepper-content step="4">
                 <v-row justify="space-around">
                   <v-col cols="12" md="8">
                     <v-form ref="timestampForm">
@@ -327,8 +399,8 @@
                 </v-row>
               </v-stepper-content>
 
-              <!-- STEP 4: ADDITIONAL INFO -->
-              <v-stepper-content step="4">
+              <!-- STEP 5: ADDITIONAL INFO -->
+              <v-stepper-content step="5">
                 <v-row justify="space-around">
                   <v-col cols="12" md="8">
                     <v-form ref="metadataForm">
@@ -385,8 +457,8 @@
                 </v-row>
               </v-stepper-content>
 
-              <!-- STEP 5: FINISH -->
-              <v-stepper-content step="5">
+              <!-- STEP 6: FINISH -->
+              <v-stepper-content step="6">
                 <v-row justify="space-around">
                   <v-col cols="12" md="8">
                     <div class="text-h6">Ready to Upload</div>
@@ -560,6 +632,11 @@ export default {
         valid: false,
         cancelled: false
       },
+      confirmStation: {
+        previewUrl: null,
+        lastImageUrl: null,
+        lastImageTimestamp: null
+      },
       timestamp: {
         error: null,
         utcOffset: {
@@ -702,7 +779,15 @@ export default {
 
       if (this.files.error) return
 
-      this.resetTimestamp()
+      // Generate preview for the first image
+      if (this.files.selected && this.files.selected.length > 0) {
+        const firstFile = this.files.selected[0]
+        this.confirmStation.previewUrl = URL.createObjectURL(firstFile)
+      }
+
+      // Fetch the last image from the most recent imageset
+      await this.fetchLastImage()
+
       this.step += 1
     },
     cancelFiles () {
@@ -1020,6 +1105,41 @@ export default {
         },
         response: response
       }
+    },
+    async fetchLastImage () {
+      try {
+        // Fetch imagesets
+        const imagesetResponse = await this.$http.restricted.get(`/stations/${this.stationId}/imagesets`)
+        const imagesets = imagesetResponse.data.filter(imageset => imageset.status === 'DONE')
+
+        if (imagesets.length === 0) {
+          console.log('No existing imagesets found')
+          return
+        }
+
+        // Find the most recent imageset
+        const mostRecentImageset = imagesets.reduce((latest, current) => {
+          return new Date(current.created_at) > new Date(latest.created_at) ? current : latest
+        })
+
+        // Fetch the last image of the most recent imageset
+        const lastImageResponse = await this.$http.restricted.get(`/stations/${this.stationId}/imagesets/${mostRecentImageset.id}/last-image`)
+        const lastImage = lastImageResponse.data
+
+        this.confirmStation.lastImageUrl = lastImage.full_url
+        this.confirmStation.lastImageTimestamp = lastImage.timestamp
+      } catch (error) {
+        console.error('Error fetching last image:', error)
+      }
+    },
+    nextConfirmStation () {
+      if (!this.files.selected || this.files.selected.length === 0) {
+        this.confirmStation.error = 'No files selected. Please return to previous step and select the photo files.'
+        return
+      }
+
+      this.resetTimestamp()
+      this.step += 1
     }
   }
 }
