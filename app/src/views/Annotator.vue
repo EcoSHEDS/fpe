@@ -653,15 +653,15 @@ export default {
       this.pairs = []
       this.pairsStationId = null
       try {
-        const url = '/annotations/training'
+        let url = '/annotations/training'
         let response = await this.$http.restricted.get(url)
 
         if (!response.status === 200 || !response.data.url) {
           throw new Error('Failed to get training dataset')
         }
 
-        response = await this.$http.external.get(response.data.url)
-
+        url = fixDataUrl(response.data.url)
+        response = await this.$http.external.get(url)
         if (!response.status === 200 || !response.data.pairs) {
           throw new Error('Failed to get training dataset')
         }

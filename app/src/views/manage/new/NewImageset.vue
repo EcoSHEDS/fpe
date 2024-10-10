@@ -612,6 +612,7 @@
 <script>
 import ExifParser from 'exif-parser'
 
+import { fixDataUrl } from '@/lib/utils'
 import { utcOffsets, MAX_IMAGES_PER_IMAGESET } from '@/lib/constants'
 
 export default {
@@ -1122,7 +1123,7 @@ export default {
         const lastImageResponse = await this.$http.restricted.get(`/stations/${this.stationId}/imagesets/${mostRecentImageset.id}/last-image`)
         const lastImage = lastImageResponse.data
 
-        this.confirmStation.lastImageUrl = lastImage.full_url
+        this.confirmStation.lastImageUrl = fixDataUrl(lastImage.full_url)
         this.confirmStation.lastImageTimestamp = lastImage.timestamp
       } catch (error) {
         console.error('Error fetching last image:', error)

@@ -12,7 +12,7 @@
           </v-card-text>
           <v-divider></v-divider>
           <v-card-text>
-            <h2 class="text-h6 black--text">Add Collaborator to Station "{{ station.name }}"</h2>
+            <div class="font-weight-bold text-h6 black--text">Add Collaborator to Station "{{ station.name }}"</div>
             <v-form ref="form" @submit.prevent="addPermission">
               <v-text-field
                 v-model="userEmail.value"
@@ -33,7 +33,7 @@
           </v-card-text>
           <v-divider></v-divider>
           <v-card-text>
-            <h2 class="text-h6 black--text">Existing Collaborators</h2>
+            <h2 class="font-weight-bold text-h6 black--text">Existing Collaborators</h2>
             <div v-if="loading" class="d-flex align-items-center justify-center my-8">
               <v-progress-circular
                 indeterminate

@@ -124,7 +124,7 @@ router.route('/:stationId/imagesets/:imagesetId/list')
 
 router.route('/:stationId/image-pairs')
   .all(asyncHandler(attachStation))
-  .get(requireStationOwnerCollaboratorOrAdmin, asyncHandler(getStationRandomImagePairs))
+  .get(asyncHandler(getStationRandomImagePairs))
 
 router.route('/:stationId/permissions')
   .all(asyncHandler(attachStation))
