@@ -44,7 +44,7 @@ const {
   putImage,
   deleteImage
 } = require('../../controllers/images')
-const { requireStationOwnerOrAdmin, requireStationOwnerCollaboratorOrAdmin } = require('../../middleware/auth')
+const { requireStationOwnerOrAdmin, requireStationOwnerCollaboratorOrAdmin, requireStationPublicOwnerCollaboratorOrAdmin } = require('../../middleware/auth')
 
 var router = express.Router()
 
@@ -54,7 +54,7 @@ router.route('/')
 
 router.route('/:stationId')
   .all(asyncHandler(attachStation))
-  .get(asyncHandler(getStation))
+  .get(requireStationPublicOwnerCollaboratorOrAdmin, asyncHandler(getStation))
   .put(requireStationOwnerCollaboratorOrAdmin, asyncHandler(putStation))
   .delete(requireStationOwnerOrAdmin, asyncHandler(deleteStation))
 

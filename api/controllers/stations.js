@@ -46,6 +46,25 @@ const attachStation = async (req, res, next) => {
   return next()
 }
 
+const attachPublicStation = async (req, res, next) => {
+  const row = await Station.query()
+    .findById(req.params.stationId)
+    .select('stations.*', 'user.affiliation_code', 'user.affiliation_name')
+    .where('private', false)
+    .leftJoinRelated('user')
+    .withGraphFetched('[models]')
+
+  if (!row) throw createError(404, `Station (id = ${req.params.stationId}) not found`)
+
+  const permissions = await StationPermission.query()
+    .where({ station_id: row.id })
+    .withGraphFetched('user')
+
+  res.locals.station = row
+  res.locals.permissions = permissions
+  return next()
+}
+
 const getPublicStations = async (req, res, next) => {
   const rows = await stationsQuery()
     .where(req.query)
@@ -319,6 +338,7 @@ module.exports = {
   postStations,
 
   attachStation,
+  attachPublicStation,
   getStation,
   putStation,
   deleteStation,

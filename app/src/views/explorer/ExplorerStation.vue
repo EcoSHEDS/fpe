@@ -80,17 +80,18 @@ export default {
       this.loading = true
       this.error = null
       this.station = null
-      const provisionalAffiliations = process.env.VUE_APP_PROVISIONAL_AFFILIATIONS.split(',')
       try {
-        const response = await this.$http.public.get(`/stations/${this.$route.params.id}`)
+        let response
+        if (this.user) {
+          response = await this.$http.restricted.get(`/stations/${this.$route.params.id}`)
+        } else {
+          response = await this.$http.public.get(`/stations/${this.$route.params.id}`)
+        }
         const station = response.data
-        if (station.private) {
-          if (!this.user || (!this.user.isAdmin && station.user_id !== this.user.username)) {
-            throw new Error('Station not found')
-          }
+        if (response.status !== 200 || !station) {
+          throw new Error('Station not found')
         }
         this.station = station
-        this.station.provisional = provisionalAffiliations.includes(this.station.affiliation_code)
       } catch (error) {
         this.error = error
       } finally {

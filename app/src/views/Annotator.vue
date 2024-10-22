@@ -67,7 +67,7 @@
                         @click:row="selectStation"
                       >
                         <template v-slot:item.annotation_priority="{ item }">
-                          <v-simple-checkbox v-model="item.annotation_priority" :disabled="true"></v-simple-checkbox>
+                          <v-simple-checkbox :value="!!item.annotation_priority" :disabled="true"></v-simple-checkbox>
                         </template>
                       </v-data-table>
                     </v-card>

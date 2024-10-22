@@ -218,7 +218,7 @@ export default {
       this.loading = true
       this.error = null
       try {
-        const response = await this.$http.public.get(`/stations/${this.$route.params.stationId}`)
+        const response = await this.$http.restricted.get(`/stations/${this.$route.params.stationId}`)
         this.station = response.data
         // this.loading = false
       } catch (err) {

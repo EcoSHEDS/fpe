@@ -55,7 +55,7 @@ export default {
   },
   methods: {
     fetch () {
-      this.$http.public.get(`/stations/${this.$route.params.stationId}`)
+      this.$http.restricted.get(`/stations/${this.$route.params.stationId}`)
         .then(response => response.data)
         .then(data => {
           this.station = data

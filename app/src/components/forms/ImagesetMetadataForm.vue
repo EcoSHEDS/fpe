@@ -13,7 +13,7 @@
         </v-toolbar-title>
       </v-toolbar>
 
-      <v-card-text class="black--text pt-4">
+      <v-card-text class="black--text pt-4" v-if="station">
         <p>
           Please describe the source, methodology, and other metadata associated with the photos that you will upload for this station. All photos uploaded for this station are assumed to have been collected using the same methodology and data source. Therefore, the metadata defined below will apply to any all photos that are uploaded for this station.
         </p>
@@ -83,6 +83,7 @@
           ></v-textarea>
         </v-form>
       </v-card-text>
+      <v-card-text v-else>Loading...</v-card-text>
 
       <v-divider></v-divider>
 
