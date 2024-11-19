@@ -498,8 +498,8 @@ export default {
           sortable: true
         }
       ],
-      sortBy: ['annotation_priority'],
-      sortDesc: [true]
+      sortBy: ['annotation_priority', 'n_annotations_daytime'],
+      sortDesc: [true, false]
     }
   },
   computed: {
