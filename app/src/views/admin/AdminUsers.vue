@@ -88,6 +88,19 @@
           {{ item.status }}
         </v-chip>
       </template>
+      <template v-slot:footer.prepend>
+        <div class="d-flex align-center">
+          <v-btn
+            color="primary"
+            @click="downloadCSV"
+            :disabled="!users.length"
+            outlined
+            small
+          >
+            <v-icon left>mdi-download</v-icon> Download CSV
+          </v-btn>
+        </div>
+      </template>
     </v-data-table>
 
     <AdminCreateUser ref="createUserForm"></AdminCreateUser>
@@ -193,6 +206,47 @@ export default {
       const emailLower = item.attributes.email.toLowerCase()
 
       return nameLower.includes(searchLower) || emailLower.includes(searchLower)
+    },
+    downloadCSV () {
+      // Create CSV header row
+      const headers = [
+        'ID',
+        'Name',
+        'Email',
+        'Admin',
+        'Enabled',
+        'Created',
+        'Status'
+      ]
+
+      // Convert users data to CSV rows
+      const rows = this.users.map(user => [
+        user.id,
+        user.attributes.name,
+        user.attributes.email,
+        user.is_admin ? 'Yes' : 'No',
+        user.enabled ? 'Yes' : 'No',
+        user.created_at.toLocaleString(),
+        user.status
+      ])
+
+      // Combine headers and rows
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.join(','))
+      ].join('\n')
+
+      // Create and trigger download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      const url = URL.createObjectURL(blob)
+      link.setAttribute('href', url)
+      const filename = 'fpe-users-' + new Date().toISOString().split('T')[0].replace(/-/g, '') + '.csv'
+      link.setAttribute('download', filename)
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
     }
   }
 }
