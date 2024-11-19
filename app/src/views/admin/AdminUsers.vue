@@ -96,6 +96,7 @@
             :disabled="!users.length"
             outlined
             small
+            class="mt-2 ml-4"
           >
             <v-icon left>mdi-download</v-icon> Download CSV
           </v-btn>
@@ -226,7 +227,7 @@ export default {
         user.attributes.email,
         user.is_admin ? 'Yes' : 'No',
         user.enabled ? 'Yes' : 'No',
-        user.created_at.toLocaleString(),
+        user.created_at.toISOString(),
         user.status
       ])
 
