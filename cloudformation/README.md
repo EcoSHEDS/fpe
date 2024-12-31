@@ -77,11 +77,6 @@ Get current role
 
 ```
 $ aws sts get-caller-identity
-{
-    "UserId": "AROA2DHXFQAOUGWJCLMNY:jdwalker@contractor.usgs.gov",
-    "Account": "694155575325",
-    "Arn": "arn:aws:sts::694155575325:assumed-role/adfs-developers/jdwalker@contractor.usgs.gov"
-}
 ```
 
 Assume `csr-cloudformation` role

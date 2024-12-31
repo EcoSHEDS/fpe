@@ -104,7 +104,7 @@
         "DeletionProtection": true,
         "AllocatedStorage": 20,
         "DBInstanceClass": { "Ref": "dbInstanceClass" },
-        "AllowMajorVersionUpgrade": false,
+        "AllowMajorVersionUpgrade": true,
         "AutoMinorVersionUpgrade": true,
         "BackupRetentionPeriod": { "Ref": "backupRetentionPeriod" },
         "DBInstanceIdentifier": {
@@ -124,7 +124,7 @@
           "Ref": "DBSubnetGroup"
         },
         "Engine": "postgres",
-        "EngineVersion": 12.7,
+        "EngineVersion": 16.3,
         "MasterUsername": {
           "Fn::Join": [
             "",

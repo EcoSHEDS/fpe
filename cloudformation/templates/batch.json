@@ -214,7 +214,11 @@
             {
               "Effect": "Allow",
               "Principal": {
-                "AWS": "arn:aws:iam::694155575325:role/adfs-developers"
+                "AWS": [
+                  {
+                    "Fn::Sub": "arn:aws:sts::694155575325:assumed-role/AWSReservedSSO_developers-iac-restricted_490f0667d8589f8f/jdwalker@contractor.usgs.gov"
+                  }
+                ]
               },
               "Action": [
                 "sts:AssumeRole"

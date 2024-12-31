@@ -18,6 +18,10 @@
     "modelBucketName": {
       "Description": "Name of model bucket",
       "Type": "String"
+    },
+    "developerRoleArn": {
+      "Description": "ARN of developer role",
+      "Type": "String"
     }
   },
   "Conditions": {
@@ -71,7 +75,7 @@
               "Principal": {
                 "AWS": [
                   {
-                    "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:role/adfs-developers"
+                    "Ref": "developerRoleArn"
                   }
                 ]
               },
