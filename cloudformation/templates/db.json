@@ -98,9 +98,20 @@
         "TargetType": "AWS::RDS::DBInstance"
       }
     },
+    "DBParameterGroup": {
+        "Type": "AWS::RDS::DBParameterGroup",
+        "Properties": {
+            "Description": "Postgres16",
+            "Family": "postgres16",
+            "Parameters": {
+                "rds.force_ssl": 0
+            }
+        }
+    },
     "DBInstance": {
       "Type": "AWS::RDS::DBInstance",
       "Properties": {
+        "DBParameterGroupName": { "Ref": "DBParameterGroup" },
         "DeletionProtection": true,
         "AllocatedStorage": 20,
         "DBInstanceClass": { "Ref": "dbInstanceClass" },

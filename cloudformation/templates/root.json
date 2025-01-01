@@ -52,6 +52,10 @@
     "emailPassword": {
       "Description": "Email Password",
       "Type": "String"
+    },
+    "developerRoleArn": {
+      "Description": "ARN of developer role",
+      "Type": "String"
     }
   },
   "Resources": {
@@ -63,7 +67,8 @@
           "appName": { "Ref": "appName" },
           "env": { "Ref": "env" },
           "permissionsBoundaryName": { "Ref": "permissionsBoundaryName" },
-          "modelBucketName": { "Ref": "modelBucketName" }
+          "modelBucketName": { "Ref": "modelBucketName" },
+          "developerRoleArn": { "Ref": "developerRoleArn" }
         }
       }
     },
