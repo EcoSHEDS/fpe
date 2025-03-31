@@ -1,6 +1,0 @@
-[submodule "batch/pii/lib/cameratraps"]
-	path = batch/pii/lib/cameratraps
-	url = https://github.com/Microsoft/cameratraps
-[submodule "batch/pii/lib/yolov5"]
-	path = batch/pii/lib/yolov5
-	url = https://github.com/ecologize/yolov5

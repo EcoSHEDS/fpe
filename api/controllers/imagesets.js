@@ -129,8 +129,9 @@ const piiImageset = async (req, res, next) => {
     jobQueue: process.env.JOB_QUEUE,
     containerOverrides: {
       command: [
-        'python',
-        'detect-imageset.py',
+        'detect-fpe-imageset',
+        '--workers', '7',
+        '--batch-size', '100',
         imageset.id.toString()
       ]
     }

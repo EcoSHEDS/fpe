@@ -29,6 +29,10 @@
       "Description": "Name of secret for database credentials",
       "Type": "String"
     },
+    "storageBucketName": {
+      "Description": "Name of S3 storage bucket",
+      "Type": "String"
+    },
     "notifyTopicArn": {
       "Description": "Arn of notification topic",
       "Type": "String"
@@ -542,31 +546,37 @@
           "ResourceRequirements": [
             {
               "Type": "MEMORY",
-              "Value": 3072
+              "Value": 16384
             },
             {
               "Type": "VCPU",
-              "Value": 1
+              "Value": 8.0
             }
           ],
           "Command": [
-            "python",
-            "detect-imageset.py"
+            "detect-fpe-imageset",
+            "--help"
           ],
           "NetworkConfiguration": {
             "AssignPublicIp": "ENABLED"
           },
           "Environment": [
             {
-              "Name": "REGION",
+              "Name": "AWS_REGION",
               "Value": {
                 "Ref": "AWS::Region"
               }
             },
             {
-              "Name": "DB_SECRET_NAME",
+              "Name": "FPE_DB_SECRET",
               "Value": {
                 "Ref": "dbSecretName"
+              }
+            },
+            {
+              "Name": "FPE_S3_BUCKET",
+              "Value": {
+                "Ref": "storageBucketName"
               }
             }
           ]

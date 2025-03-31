@@ -139,6 +139,7 @@
           "subnetIds": { "Ref": "publicSubnetIds" },
           "permissionsBoundaryName": { "Ref": "permissionsBoundaryName" },
           "dbSecretName": { "Ref": "dbSecretName" },
+          "storageBucketName": { "Ref": "storageBucketName" },
           "notifyTopicArn": {
             "Fn::GetAtt": [ "NotifyStack", "Outputs.TopicArn" ]
           }

@@ -206,8 +206,9 @@ async function processImageset (id, dryRun) {
     jobQueue: process.env.JOB_QUEUE,
     containerOverrides: {
       command: [
-        'python',
-        'detect-imageset.py',
+        'detect-fpe-imageset',
+        '--workers', '7',
+        '--batch-size', '100',
         imageset.id.toString()
       ]
     }
