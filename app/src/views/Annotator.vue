@@ -206,7 +206,7 @@
                                 </ul>
                               </li>
                               <li>
-                                Next, determine which of the two shows more water, and click the appropriate button below the photo pair (<code>Left</code> or <code>Right</code>). Select <code>About the Same</code> if the photos show similar amounts of water, or <code>Don't Know</code> if you cannot make a valid comparison (e.g., one or both is a bad photo or the camera angle is too inconsistent). You can also use the following keyboard shortcuts to make your selection: <code>j</code> = Left, <code>k</code> = About the Same, <code>l</code> = Right, <code>m</code> = Don't Know.
+                                Next, determine which of the two shows more water, and click the appropriate button below the photo pair (<code>Left</code> or <code>Right</code>). Select <code>About the Same</code> if the photos show similar amounts of water. Select <code>Skip</code> only if you cannot make a valid comparison (e.g., one or both is a bad photo or the camera angle is too inconsistent). Pairs labelled as <code>About the Same</code> will be used for model training while those labelled as <code>Skip</code> will not. You can also use the following keyboard shortcuts to make your selection: <code>j</code> = Left, <code>k</code> = About the Same, <code>l</code> = Right, <code>m</code> = Skip.
                               </li>
                               <li>
                                 If you were unsure about your selection or had any other questions or observations about this pair of photos, let us know in the <code>Comments</code> field.
@@ -344,7 +344,7 @@
                   </div>
                   <div>
                     <v-item v-slot="{ active, toggle }" value="UNKNOWN" class="mt-4">
-                      <v-btn :color="active ? 'primary' : 'default'" :depressed="active" @click="toggle" large>Don't Know (m)</v-btn>
+                      <v-btn :color="active ? 'primary' : 'default'" :depressed="active" @click="toggle" large>Skip (m)</v-btn>
                     </v-item>
                   </div>
                 </v-col>
