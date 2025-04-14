@@ -1,5 +1,5 @@
-SHEDS Flow Photo Explorer API
-=============================
+USGS Flow Photo Explorer
+=========================
 
 ## Configuration
 
@@ -162,3 +162,7 @@ aws s3 rm s3://${BUCKET}/ --recursive --exclude "*" --include "datasets/<uuid>/*
 - [robmclarty/knex-express-project-sample](https://github.com/robmclarty/knex-express-project-sample): Express + Knex template
 - [Fodark/express-knex-objection](https://github.com/Fodark/express-knex-objection/blob/master/api/users.js): Express + Knex + Objection template
 - [Lambda payload size workaround](https://seancoates.com/blogs/lambda-payload-size-workaround): how to deal with lambda payload limits (6 MB)
+
+## License
+
+The code in this repository is released to the public domain under the [CC0 1.0 Universal license](https://creativecommons.org/publicdomain/zero/1.0/). See [LICENSE](LICENSE) for details.
