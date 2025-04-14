@@ -93,6 +93,7 @@
         },
         "Runtime": "python3.9",
         "Timeout": "900",
+        "MemorySize": 256,
         "Code": "../../lambda/models/",
         "VpcConfig": {
           "SecurityGroupIds": [
