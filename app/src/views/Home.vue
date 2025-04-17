@@ -30,16 +30,15 @@
             The goal of this project is to develop new approaches for collecting hydrologic data in streams, lakes, and other waterbodies, especially in places where traditional monitoring methods and technologies are not feasible or cost-prohibitive.
           </p>
 
-          <v-img src="img/fpe-diagram.png" alt="FPE diagram of images to machine learning models to estimated streamflow" class="mx-4 my-8"></v-img>
+          <img src="img/fpe-diagram.png" alt="FPE diagram of images to machine learning model to estimated relative streamflow" class="mx-4 my-4" style="width:100%"/>
 
-          <div class="text-center my-10">
+          <div class="text-center mb-8">
             <v-btn color="success" x-large :to="{ name: 'explorerHome' }">Start Exploring <v-icon>mdi-chevron-right</v-icon></v-btn>
           </div>
 
           <p>
             <strong>Want to add your photos or help annotate?</strong> <router-link :to="{ name: 'request' }">Request an account</router-link> to upload your photos or help annotate photos uploaded by other users.<br>
-            <strong>Want to receive periodic updates about the project?</strong> <a href="https://public.govdelivery.com/accounts/USDOIGS/subscriber/new?topic_id=USDOIGS_120">Sign up</a> for our email newsletter.<br>
-            <strong>Questions?</strong> You can reach us at <a href="mailto:ecosheds@usgs.gov">ecosheds@usgs.gov</a>.
+            <strong>Questions or Feedback?</strong> You can reach us at <a href="mailto:ecosheds@usgs.gov">ecosheds@usgs.gov</a>.
           </p>
         </div>
       </v-col>
@@ -67,24 +66,55 @@
         </v-toolbar>
 
         <div class="mx-4">
-          <div class="d-flex align-end">
-            <div class="font-weight-light black--text text-h6">New Model Results, Annotation Interface, Station Permissions</div>
+          <div>
+            <div class="font-weight-light black--text text-h6">Newsletter Archive</div>
+            <v-divider class="mb-2"></v-divider>
+            <ul>
+              <li><a href="https://content.govdelivery.com/accounts/USDOIGS/bulletins/3db2be1">April 16, 2025</a>: Preprint, FPE Growth, Annotator Thank You, Model Development Report</li>
+              <li><a href="https://content.govdelivery.com/accounts/USDOIGS/bulletins/397081f">April 18, 2024</a>: Interface Updates, Model Results</li>
+            </ul>
+            <div class="mt-2">
+              <strong>Want to receive periodic updates about the project?</strong> <a href="https://public.govdelivery.com/accounts/USDOIGS/subscriber/new?topic_id=USDOIGS_120">Sign up</a> for our email newsletter.<br>
+            </div>
+          </div>
+          <div class="d-flex align-end mt-4">
+            <div class="font-weight-light black--text text-h6">Preprint Publication, Model Results, ROAR Report and Newsletter</div>
             <v-spacer></v-spacer>
-            <div class="text-subtitle-2 font-weight-light font-italic">October 10, 2024</div>
+            <div class="text-subtitle-2 font-weight-light font-italic">April 17, 2025</div>
           </div>
           <v-divider class="mb-2"></v-divider>
           <div class="body-1">
             <p>
-              Model predictions are now available on the <router-link :to="{ name: 'explorerHome' }">Photo Explorer</router-link> at 39 stations in the northeast, mid-atlantic, and midwest regions. While most of these stations focus on streamflow predictions, three of them located on the Fox River in Wisconsin and managed by the USGS Upper Midwest Water Science Center provide predictions of harmful algal blooms (HABs). These predictions were generated using the same annotation process and deep learning model as the streamflow stations and demonstrate how FPE can be used to estimate parameters other than streamflow. More variables (e.g., lake/wetland water levels, snow depths) are currently being developed and will be added soon.
+              A preprint is available for a new publication entitled <a href="https://doi.org/10.5194/egusphere-2025-1186"><em>A low-cost approach to monitoring streamflow dynamics in small, headwater streams using timelapse imagery and a deep learning model</em></a>. This paper presents an evaluation of FPE model performance at 11 camera sites colocated with USGS reference gages in western Massachusetts.
             </p>
             <p>
-              All registered users can now access the <router-link :to="{ name: 'annotator' }">Photo Annotator</router-link> where they can annotate pairs of photos for training the deep learning model at any given station. The annotation interface also now indicates which stations are the highest priority for collecting more annotations. Lastly, all new users are now required to annotate a training dataset before they can begin performing real annotations. This training dataset will help us better understand how annotation accuracy varies among different users.
+              Model predictions are now available at 84 public stations on the <router-link :to="{ name: 'explorerHome' }">Photo Explorer</router-link>. While most of these stations focus on streamflow predictions, there is <router-link :to="{ name: 'explorerStation', params: { id: 383 } }">one station in Alaska</router-link> where the model is being used to track a seabird colony and a <router-link :to="{ name: 'explorerStation', params: { id: 215 } }">few stations</router-link> <router-link :to="{ name: 'explorerStation', params: { id: 182 } }">in the</router-link> <router-link :to="{ name: 'explorerStation', params: { id: 183 } }">midwest</router-link> for monitoring harmful algal blooms (HABs).
             </p>
             <p>
-              Station owners can now grant access to their stations to other users. This allows multiple users to upload images and datasets for the same stations. These permissions can be managed by going to <router-link :to="{ name: 'manage' }">Manage Stations</router-link>, selecting a station, then going to the <i>Permissions</i> tab.
+              As part of the USEPA-funded ROAR project, we completed an in-depth exploration of the model methodology and performance, and evaluated the potential for (1) adding weather data as another input to the model and (2) applying pre-trained models between sites. You can read more about this in the <a href="https://doi.org/10.5281/zenodo.15133341">Year 1 ROAR Project Report</a>.
+            </p>
+            <p>
+              Lastly, we released <a href="https://content.govdelivery.com/accounts/USDOIGS/bulletins/3db2be1">our second newsletter</a> where you can find additional information about all these updates and more. To sign up for the our email newsletter, <a href="https://public.govdelivery.com/accounts/USDOIGS/subscriber/new?topic_id=USDOIGS_120">click here</a>.
             </p>
           </div>
           <div v-if="showMoreNews">
+            <div class="d-flex align-end">
+              <div class="font-weight-light black--text text-h6">New Model Results, Annotation Interface, Station Permissions</div>
+              <v-spacer></v-spacer>
+              <div class="text-subtitle-2 font-weight-light font-italic">October 10, 2024</div>
+            </div>
+            <v-divider class="mb-2"></v-divider>
+            <div class="body-1">
+              <p>
+                Model predictions are now available on the <router-link :to="{ name: 'explorerHome' }">Photo Explorer</router-link> at 39 stations in the northeast, mid-atlantic, and midwest regions. While most of these stations focus on streamflow predictions, three of them located on the Fox River in Wisconsin and managed by the USGS Upper Midwest Water Science Center provide predictions of harmful algal blooms (HABs). These predictions were generated using the same annotation process and deep learning model as the streamflow stations and demonstrate how FPE can be used to estimate parameters other than streamflow. More variables (e.g., lake/wetland water levels, snow depths) are currently being developed and will be added soon.
+              </p>
+              <p>
+                All registered users can now access the <router-link :to="{ name: 'annotator' }">Photo Annotator</router-link> where they can annotate pairs of photos for training the deep learning model at any given station. The annotation interface also now indicates which stations are the highest priority for collecting more annotations. Lastly, all new users are now required to annotate a training dataset before they can begin performing real annotations. This training dataset will help us better understand how annotation accuracy varies among different users.
+              </p>
+              <p>
+                Station owners can now grant access to their stations to other users. This allows multiple users to upload images and datasets for the same stations. These permissions can be managed by going to <router-link :to="{ name: 'manage' }">Manage Stations</router-link>, selecting a station, then going to the <i>Permissions</i> tab.
+              </p>
+            </div>
             <div class="d-flex align-end">
               <div class="font-weight-light black--text text-h6">Explorer Upgrade, Model Results, and Newsletter</div>
               <v-spacer></v-spacer>
@@ -144,27 +174,33 @@
         </div>
       </v-col>
 
-      <!-- DEEP LEARNING MODEL -->
+      <!-- METHODOLOGY -->
       <v-col cols="12" lg="6" xl="6" class="body-1 black--text" :class="{ 'px-8': $vuetify.breakpoint.lgAndUp }">
         <v-toolbar flat dense color="grey lighten-3 mb-4">
           <v-toolbar-title>
-            <h2 class="text-h5">Deep Learning Model</h2>
+            <h2 class="text-h5">Methodology</h2>
           </v-toolbar-title>
         </v-toolbar>
         <div class="ml-4">
           <v-row class="">
             <v-col cols="12" sm="7">
               <p>
-                We are actively working on developing and refining our deep learning model for estimating streamflow from timelapse images. <strong>Initial model results are now available</strong> for a select set of USGS stations located in the West Brook Study Area in central MA. More results will soon be added for other USGS stations, followed by the USEPA and its collaborators, and lastly all FPE users. See Phase II of the Project Status section below for more details on the model rollout.
+                FPE uses an artificial intelligence/machine learning (AI/ML) deep learning model to estimate relative streamflow using timelapse imagery. The model is trained using pairs of images for which a person (a.k.a. an annotator) has selected which of the two images in each pair appears to have more flow. From this, the model learns how to sort the images from lowest to highest apparent flow. The rankings of the sorted images then serve as indicators of the relative amount of streamflow.
               </p>
               <p>
-                The methodology and results for our preliminary model can be found in the following publication. A conference presentation by our collaborator and model developer, Dr. Amrita Gupta, can also be found at the link below, or <a href="mailto:ecosheds@usgs.gov">Contact us</a> for a copy.
+                See the following publications to read more about our methodology.
               </p>
             </v-col>
             <v-col cols="12" sm="5">
-              <v-img src="img/gupta2022-fig4.png" alt="Figure 4 of Gupta et al (2022) showing good agreement between observed and predicted streamflow"></v-img>
+              <img src="img/methodology.png" alt="Figure predicted and observed streamflow from Walker (2025)." style="width:100%" />
             </v-col>
           </v-row>
+          <p class="font-italic mt-4">
+            Goodling, P., Fair, J., Gupta, A., Walker, J., Dubreuil, T., Hayden, M., and Letcher, B. (2025). <b>A low-cost approach to monitoring streamflow dynamics in small, headwater streams using timelapse imagery and a deep learning model</b>. EGUsphere [preprint]. <a href="https://doi.org/10.5194/egusphere-2025-1186">https://doi.org/10.5194/egusphere-2025-1186</a>
+          </p>
+          <p class="font-italic mt-4">
+            Walker, J.D. (2025). <b>Low-cost Streamflow Monitoring using Timelapse Imagery and Machine Learning Models.</b> Year 1 Final Report, USEPA Regional-ORD Applied Research Program (ROAR) Project #2554. Prepared for US Environmental Protection Agency Office of Research and Development. April 3, 2025. <a href="https://doi.org/10.5281/zenodo.15133342">https://doi.org/10.5281/zenodo.15133342</a>
+          </p>
           <p class="font-italic mt-4">
             Gupta, A., Chang, T., Walker, J., and B. Letcher (2022). <strong>Towards Continuous Streamflow Monitoring with Time-Lapse Cameras and Deep Learning.</strong> In ACM SIGCAS/SIGCHI Conference on Computing and Sustainable Societies (COMPASS) (COMPASS '22). Association for Computing Machinery, New York, NY, USA, 353–363. <a href="https://doi.org/10.1145/3530190.3534805">https://doi.org/10.1145/3530190.3534805</a>
           </p>
@@ -173,7 +209,7 @@
     </v-row>
     <v-row justify="space-around">
       <!-- PROJECT STATUS -->
-      <v-col cols="12" lg="6" xl="6" class="body-1 black--text">
+      <v-col cols="12" lg="6" xl="6" class="body-1 black--text" :class="{ 'px-8': $vuetify.breakpoint.lgAndUp }">
         <v-toolbar flat dense color="grey lighten-3 mt-8 mb-4">
           <v-toolbar-title>
             <h2 class="text-h5">Project Status</h2>
@@ -184,10 +220,10 @@
           <p><span class="font-weight-bold"><u>Phase I (2020-2022)</u></span>: a database and cloud-based data pipeline was developed for storing, managing, and accessing timelapse imagery of streams and rivers along with associated flow and stage data. The system allows registered users to upload and manage their own photos and (optionally) flow data at multiple locations. The images and flow data are accessible through the <router-link :to="{ name: 'explorerHome' }">Photo Explorer</router-link>, which provides an interactive and exploratory interface for viewing the timelapse imagery coupled with observed flow data. The images and flow data in the FPE database will serve as the primary data source for developing and training the machine learning models in Phase II. All images are screened for the presence of <strong>Personal Identifying Information (PII)</strong> using the <a href="https://github.com/ecologize/CameraTraps/blob/main/megadetector.md">MegaDetector</a> object detection model.</p>
 
           <p>
-            <span class="font-weight-bold"><u>Phase II (ongoing)</u></span>: the photos and data uploaded to FPE are being used to develop <strong>deep learning models</strong> for estimating relative flow and other hydrologic parameters using timelapse imagery. See the Deep Learning Model section on the right or <a href="https://doi.org/10.1145/3530190.3534805">Gupta et al., 2022</a> for more details.
+            <span class="font-weight-bold"><u>Phase II (2023-2024)</u></span>: the photos and data uploaded to FPE were used to develop <strong>deep learning models</strong> for estimating relative flow and other hydrologic parameters using timelapse imagery. See the Deep Learning Model section on the right or <a href="https://doi.org/10.1145/3530190.3534805">Gupta et al., 2022</a> for more details.
           </p>
           <p>
-            During this phase, models will be trained and predictions made available in the following order:
+            During this phase, models were developed for:
           </p>
           <ol class="my-4">
             <li>
@@ -205,14 +241,15 @@
           </ol>
 
           <p>
-            <span class="font-weight-bold"><u>Phase III (2024-2025)</u></span>: as FPE continues to grow and expand, we plan to add many new features and capabilities including:
+            <span class="font-weight-bold"><u>Phase III (ongoing)</u></span>: as FPE continues to grow and expand, we are adding many new features and capabilities including:
           </p>
 
           <ol class="my-4">
             <li>Support for training models to predict other hydrologic parameters such as water level, ice cover, snow depth, algal biomass, and more.</li>
+            <li>Support for real-time image transmission and model predictions using cell-enabled cameras.</li>
+            <li>Packaging the model for local training and prediction, outside of the FPE platform.</li>
             <li>Development of a statistical methodology for converting the model output, which is currently a <i>relative</i> measure of streamflow to actual streamflow in cubic feet per second.</li>
             <li>Development of classification models for identifying flow/no flow or ice/no ice conditions.</li>
-            <li>Support for real-time image transmission and model predictions using cell-enabled cameras.</li>
             <li>In-the-field deployment of the FPE model using edge computing and satellite data transmission.</li>
           </ol>
         </div>
