@@ -192,7 +192,6 @@ async function processImageset (id, dryRun) {
   console.log(`updating imageset record (id=${imageset.id})`)
   imageset = await imageset.$query()
     .patch({
-      status: 'DONE',
       start_timestamp: imageSummary.start_timestamp,
       end_timestamp: imageSummary.end_timestamp,
       n_images: imageSummary.n_images
