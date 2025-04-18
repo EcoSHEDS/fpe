@@ -24,7 +24,7 @@ async function notifyMessage (id) {
 
 Imageset ID: ${imageset.id}
 Uploaded at: ${DateTime.fromJSDate(imageset.created_at).setZone('US/Eastern').toFormat('DD ttt')}
-Status: ${imageset.status}
+Status: ${imageset.status} ${imageset.status === 'PROCESSING' ? '(Upload Complete, Queued for PII Detector)' : ''}
 
 User ID: ${imageset.station.user.id}
 Affiliation: ${imageset.station.user.affiliation_code}
