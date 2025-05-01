@@ -62,8 +62,9 @@ function createRowParser (timestamp, variable, timezone) {
     const rawTimestamp = timestamp.timeColumn
       ? `${d[timestamp.column]}T${d[timestamp.timeColumn]}`
       : d[timestamp.column]
+    const timestampTimezone = utcOffset === 0 ? 'UTC' : `UTC${utcOffset}`
     const parsedTimestamp = DateTime.fromISO(rawTimestamp.replace(' ', 'T'))
-      .setZone(`UTC${utcOffset}`, { keepLocalTime: true })
+      .setZone(timestampTimezone, { keepLocalTime: true })
     if (!parsedTimestamp.isValid) {
       throw new Error(`Failed to parse timestamp at row ${i.toLocaleString()} ("${rawTimestamp}").`)
     }
