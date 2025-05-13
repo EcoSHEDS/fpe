@@ -124,7 +124,9 @@ async function processImage (image, utcOffset, timezone, dryRun) {
   // update record
   console.log(`updating image record (image_id=${image.id})`)
   const exifDatetime = exif.tags.DateTimeOriginal || exif.tags.CreateDate
-  const timestamp = DateTime.fromJSDate(new Date(exifDatetime * 1000)).setZone(`UTC${utcOffset}`, { keepLocalTime: true })
+  const timestampTimezone = utcOffset === 0 ? 'UTC' :
+    utcOffset > 0 ? `UTC+${utcOffset}` : `UTC${utcOffset}`
+  const timestamp = DateTime.fromJSDate(new Date(exifDatetime * 1000)).setZone(timestampTimezone, { keepLocalTime: true })
   const payload = {
     ...exif.imageSize,
     timestamp: timestamp.toISO(),
