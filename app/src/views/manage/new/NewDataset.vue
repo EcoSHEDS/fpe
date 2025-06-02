@@ -1053,7 +1053,7 @@ export default {
         config: {
           timestamp: {
             column: this.timestamp.column.selected,
-            timeColumn: this.timestamp.hasTimeColumn ? this.timestamp.timeColumn.select : null,
+            timeColumn: this.timestamp.hasTimeColumn ? this.timestamp.timeColumn.selected : null,
             utcOffset: this.timestamp.utcOffset.selected.value
           },
           variables: []
