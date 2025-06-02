@@ -477,8 +477,8 @@ export default {
       variables: [
         {
           value: 'FLOW',
-          label: 'Flow / Stage (Streams and Rivers)',
-          question: 'Which photo shows more flow and a higher stage?'
+          label: 'Flow (Streams and Rivers)',
+          question: 'Which photo shows more flow?'
         },
         {
           value: 'STAGE',
@@ -570,6 +570,7 @@ export default {
   },
   async mounted () {
     await this.fetchStations()
+    this.variable = this.variables[0]
     // TEMPORARY --------------------
     // this.selectStation(this.stations[0])
     // this.nPairs = 2
@@ -763,7 +764,7 @@ export default {
     nextPair () {
       this.error.submit = null
       if (!this.currentPair.rank) {
-        this.error.annotation = 'Select an option for which photo has more water.'
+        this.error.annotation = 'Select an option for which photo has more of the variable of interest.'
         return
       }
       if (this.currentIndex < this.pairs.length - 1) {
@@ -772,7 +773,7 @@ export default {
       }
     },
     reset () {
-      this.variable = null
+      this.variable = this.variables[0]
       this.pairs = []
       this.pairsStationId = null
       this.error.start = null
