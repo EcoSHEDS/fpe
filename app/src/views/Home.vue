@@ -78,9 +78,20 @@
             </div>
           </div>
           <div class="d-flex align-end mt-4">
+            <div class="font-weight-light black--text text-h6">Annotation Variables</div>
+            <v-spacer></v-spacer>
+            <div class="text-subtitle-2 font-weight-light font-italic">June 2, 2025</div>
+          </div>
+          <v-divider class="mb-2"></v-divider>
+          <div class="body-1">
+            <p>
+              On the annotations page, users can now specify which variable they would like to annotate for. This will allow us to train the model to predict variables other than flow include water level of lakes and wetlands, snow depth, algal biomass (HABs), and animal counts, among others.
+            </p>
+          </div>
+          <div class="d-flex align-end mt-4">
             <div class="font-weight-light black--text text-h6">Preprint Publication, Model Results, ROAR Report and Newsletter</div>
             <v-spacer></v-spacer>
-            <div class="text-subtitle-2 font-weight-light font-italic">April 17, 2025</div>
+            <div class="text-subtitle-2 font-weight-light font-italic">April 16, 2025</div>
           </div>
           <v-divider class="mb-2"></v-divider>
           <div class="body-1">
