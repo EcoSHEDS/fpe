@@ -11,5 +11,6 @@ router.use('/datasets', require('./datasets'))
 router.use('/images', require('./images'))
 router.use('/series', require('./series'))
 router.use('/stations', require('./stations'))
+router.use('/variables', require('./variables'))
 
 module.exports = router
