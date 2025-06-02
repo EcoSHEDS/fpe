@@ -54,6 +54,7 @@ Affiliation: ${user.affiliation_name} (${user.affiliation_code})
 
 Annotation ID: ${annotation.id}
 Station ID: ${annotation.station_id}
+Variable ID: ${annotation.variable_id}
 URL: ${annotation.url}
 `
 }

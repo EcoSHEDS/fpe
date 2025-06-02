@@ -8,6 +8,7 @@ class Annotation extends Base {
   static get relationMappings () {
     const Station = require('./Station')
     const User = require('./User')
+    const Variable = require('./Variable')
     return {
       user: {
         relation: Base.BelongsToOneRelation,
@@ -23,6 +24,14 @@ class Annotation extends Base {
         join: {
           from: 'annotations.station_id',
           to: 'stations.id'
+        }
+      },
+      variable: {
+        relation: Base.BelongsToOneRelation,
+        modelClass: Variable,
+        join: {
+          from: 'annotations.variable_id',
+          to: 'variables.id'
         }
       }
     }
