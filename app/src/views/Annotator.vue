@@ -71,14 +71,31 @@
                         </template>
                       </v-data-table>
                     </v-card>
+                    <div class="body-2 mt-8 mb-2">
+                      Select the variable you want to annotate. This will also be the variable the model will be trained to predict.
+                    </div>
+                    <v-select
+                      v-model="variable"
+                      :items="variables"
+                      item-text="label"
+                      item-value="value"
+                      label="Variable"
+                      outlined
+                      return-object
+                      hide-details
+                      class="mb-4"
+                    ></v-select>
+                    <div class="body-2 mt-8 mb-2">
+                      Select the number of photo pairs you would like to annotate during this session.
+                    </div>
                     <v-text-field
                       v-model.number="nPairs"
                       label="Number of photo pairs"
                       outlined
                       hide-details
-                      class="mb-4 mt-8"
+                      class="mb-4"
                     ></v-text-field>
-                    <p class="body-2">The following inputs are optional, and should only be used when requested. Leave blank to defaults, which will include only daytime photos (7:00 am to 6:59 pm) from any available date at the selected station.</p>
+                    <p class="body-2 mt-8">The following inputs are optional, and should only be used when requested. Leave blank to defaults, which will include only daytime photos (7:00 am to 6:59 pm) from any available date at the selected station.</p>
                     <v-row>
                       <v-col>
                         <v-text-field
@@ -181,7 +198,7 @@
                     <v-expansion-panel-content>
                       <v-sheet>
                         <ol>
-                          <li v-if="!showTraining">Select a station on the table (priority stations first, if possible), then enter the number of photo pairs you would like to annotate and specify the minimum/maximum hours and dates (optional). Then click <code>Start Annotating</code>.</li>
+                          <li v-if="!showTraining">Select a station on the table (priority stations first, if possible), select the variable you want to annotate, then enter the number of photo pairs you would like to annotate and specify the minimum/maximum hours and dates (optional). Then click <code>Start Annotating</code>.</li>
                           <li v-else>During this training you will be shown a series of photo pairs. Your goal is to determine which photo shows higher flows (or more water) in the stream. You will also be indicating if one or both of the photos show certain types of conditions, as explained below.</li>
                           <li>For each pair of photos:
                             <ol>
@@ -328,7 +345,7 @@
               </v-col>
             </v-row>
 
-            <div class="text-h6 text-center mb-8 mt-8">Which photo has more water?</div>
+            <div class="text-h6 text-center mb-8 mt-8">{{ variable.question }}</div>
             <v-item-group v-model="currentPair.rank" color="primary" class="mt-4 d-flex justify-space-around">
               <v-row>
                 <v-col cols="4" class="text-right">
@@ -457,6 +474,39 @@ export default {
       trainingComplete: false,
       stations: [],
       stationArray: [],
+      variables: [
+        {
+          value: 'FLOW',
+          label: 'Flow / Stage (Streams and Rivers)',
+          question: 'Which photo shows more flow and a higher stage?'
+        },
+        {
+          value: 'STAGE',
+          label: 'Water Level (Lakes and Wetlands)',
+          question: 'Which photo shows a higher water level?'
+        },
+        {
+          value: 'SNOW',
+          label: 'Snow Depth',
+          question: 'Which photo shows more snow?'
+        },
+        {
+          value: 'ALGAE',
+          label: 'Algal Biomass / Chlorophyll',
+          question: 'Which photo shows more algae?'
+        },
+        {
+          value: 'ANIMALS',
+          label: 'Animal Counts',
+          question: 'Which photo shows more individuals?'
+        },
+        {
+          value: 'OTHER',
+          label: 'Other',
+          question: 'Which photo shows more of the parameter of interest?'
+        }
+      ],
+      variable: null,
       search: '',
       nPairs: 100,
       minHour: null,
@@ -675,6 +725,7 @@ export default {
           throw new Error('Failed to get station')
         }
         this.selectStation(station)
+        this.variable = this.variables[0]
 
         this.pairs = pairs.map(d => {
           d.left.timestamp = new Date(d.left.timestamp)
@@ -721,6 +772,7 @@ export default {
       }
     },
     reset () {
+      this.variable = null
       this.pairs = []
       this.pairsStationId = null
       this.error.start = null
@@ -755,6 +807,7 @@ export default {
           training: this.showTraining,
           flag: this.showTraining,
           station_id: this.pairsStationId,
+          variable: this.variable?.value || null,
           duration_sec: durationSeconds,
           n: this.completedPairs.length,
           n_daytime: this.completedPairs
@@ -828,6 +881,10 @@ export default {
 
       if (!this.station) {
         this.error.start = 'Select a station in the table above'
+        return
+      }
+      if (!this.variable) {
+        this.error.start = 'Select a variable to annotate from the dropdown above'
         return
       }
       const nPairs = parseInt(this.nPairs)
