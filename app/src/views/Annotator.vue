@@ -486,6 +486,11 @@ export default {
           question: 'Which photo shows a higher water level?'
         },
         {
+          value: 'ICE',
+          label: 'Ice Cover',
+          question: 'Which photo shows more ice cover?'
+        },
+        {
           value: 'SNOW',
           label: 'Snow Depth',
           question: 'Which photo shows more snow?'
