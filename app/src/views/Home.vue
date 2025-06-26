@@ -78,6 +78,31 @@
             </div>
           </div>
           <div class="d-flex align-end mt-4">
+            <div class="font-weight-light black--text text-h6">June Model Batch</div>
+            <v-spacer></v-spacer>
+            <div class="text-subtitle-2 font-weight-light font-italic">June 26, 2025</div>
+          </div>
+          <v-divider class="mb-2"></v-divider>
+          <div class="body-1">
+            <p>
+              New models have been successfully trained and deployed for 41 stations, our largest batch to date! Results can be found on the <router-link :to="{ name: 'explorerHome' }">Photo Explorer</router-link>.
+            </p>
+          </div>
+          <div class="d-flex align-end mt-4">
+            <div class="font-weight-light black--text text-h6">Software Release of FPE Model</div>
+            <v-spacer></v-spacer>
+            <div class="text-subtitle-2 font-weight-light font-italic">June 12, 2025</div>
+          </div>
+          <v-divider class="mb-2"></v-divider>
+          <div class="body-1">
+            <p>
+              The AI/ML image ranking model used by FPE is now publicly available as an official USGS Software Release. This release includes the Python source code and detailed instructions for both training the model and generating predictions. With this release, users can now train their own models outside of the FPE platform, as well as generate predictions on images not uploaded to FPE by running a pre-trained model locally.
+            </p>
+            <p class="font-italic mt-4 ml-4">
+              Walker, J.D., Gupta, A., Fair, J.B., Goodling, P.J., and Letcher, B.A., 2025, Streamflow Rank Estimation (SRE) Model: U.S. Geological Survey software release, <a href="https://doi.org/10.5066/P1YSANVM">https://doi.org/10.5066/P1YSANVM</a>.
+            </p>
+          </div>
+          <div class="d-flex align-end mt-4">
             <div class="font-weight-light black--text text-h6">Annotation Variables</div>
             <v-spacer></v-spacer>
             <div class="text-subtitle-2 font-weight-light font-italic">June 2, 2025</div>
@@ -88,27 +113,27 @@
               On the annotations page, users can now specify which variable they would like to annotate for. This will allow us to train the model to predict variables other than flow include water level of lakes and wetlands, snow depth, algal biomass (HABs), and animal counts, among others.
             </p>
           </div>
-          <div class="d-flex align-end mt-4">
-            <div class="font-weight-light black--text text-h6">Preprint Publication, Model Results, ROAR Report and Newsletter</div>
-            <v-spacer></v-spacer>
-            <div class="text-subtitle-2 font-weight-light font-italic">April 16, 2025</div>
-          </div>
-          <v-divider class="mb-2"></v-divider>
-          <div class="body-1">
-            <p>
-              A preprint is available for a new publication entitled <a href="https://doi.org/10.5194/egusphere-2025-1186"><em>A low-cost approach to monitoring streamflow dynamics in small, headwater streams using timelapse imagery and a deep learning model</em></a>. This paper presents an evaluation of FPE model performance at 11 camera sites colocated with USGS reference gages in western Massachusetts.
-            </p>
-            <p>
-              Model predictions are now available at 84 public stations on the <router-link :to="{ name: 'explorerHome' }">Photo Explorer</router-link>. While most of these stations focus on streamflow predictions, there is <router-link :to="{ name: 'explorerStation', params: { id: 383 } }">one station in Alaska</router-link> where the model is being used to track a seabird colony and a <router-link :to="{ name: 'explorerStation', params: { id: 215 } }">few stations</router-link> <router-link :to="{ name: 'explorerStation', params: { id: 182 } }">in the</router-link> <router-link :to="{ name: 'explorerStation', params: { id: 183 } }">midwest</router-link> for monitoring harmful algal blooms (HABs).
-            </p>
-            <p>
-              As part of the USEPA-funded ROAR project, we completed an in-depth exploration of the model methodology and performance, and evaluated the potential for (1) adding weather data as another input to the model and (2) applying pre-trained models between sites. You can read more about this in the <a href="https://doi.org/10.5281/zenodo.15133341">Year 1 ROAR Project Report</a>.
-            </p>
-            <p>
-              Lastly, we released <a href="https://content.govdelivery.com/accounts/USDOIGS/bulletins/3db2be1">our second newsletter</a> where you can find additional information about all these updates and more. To sign up for the our email newsletter, <a href="https://public.govdelivery.com/accounts/USDOIGS/subscriber/new?topic_id=USDOIGS_120">click here</a>.
-            </p>
-          </div>
           <div v-if="showMoreNews">
+            <div class="d-flex align-end">
+              <div class="font-weight-light black--text text-h6">Preprint Publication, Model Results, ROAR Report and Newsletter</div>
+              <v-spacer></v-spacer>
+              <div class="text-subtitle-2 font-weight-light font-italic">April 16, 2025</div>
+            </div>
+            <v-divider class="mb-2"></v-divider>
+            <div class="body-1">
+              <p>
+                A preprint is available for a new publication entitled <a href="https://doi.org/10.5194/egusphere-2025-1186"><em>A low-cost approach to monitoring streamflow dynamics in small, headwater streams using timelapse imagery and a deep learning model</em></a>. This paper presents an evaluation of FPE model performance at 11 camera sites colocated with USGS reference gages in western Massachusetts.
+              </p>
+              <p>
+                Model predictions are now available at 84 public stations on the <router-link :to="{ name: 'explorerHome' }">Photo Explorer</router-link>. While most of these stations focus on streamflow predictions, there is <router-link :to="{ name: 'explorerStation', params: { id: 383 } }">one station in Alaska</router-link> where the model is being used to track a seabird colony and a <router-link :to="{ name: 'explorerStation', params: { id: 215 } }">few stations</router-link> <router-link :to="{ name: 'explorerStation', params: { id: 182 } }">in the</router-link> <router-link :to="{ name: 'explorerStation', params: { id: 183 } }">midwest</router-link> for monitoring harmful algal blooms (HABs).
+              </p>
+              <p>
+                As part of the USEPA-funded ROAR project, we completed an in-depth exploration of the model methodology and performance, and evaluated the potential for (1) adding weather data as another input to the model and (2) applying pre-trained models between sites. You can read more about this in the <a href="https://doi.org/10.5281/zenodo.15133341">Year 1 ROAR Project Report</a>.
+              </p>
+              <p>
+                Lastly, we released <a href="https://content.govdelivery.com/accounts/USDOIGS/bulletins/3db2be1">our second newsletter</a> where you can find additional information about all these updates and more. To sign up for the our email newsletter, <a href="https://public.govdelivery.com/accounts/USDOIGS/subscriber/new?topic_id=USDOIGS_120">click here</a>.
+              </p>
+            </div>
             <div class="d-flex align-end">
               <div class="font-weight-light black--text text-h6">New Model Results, Annotation Interface, Station Permissions</div>
               <v-spacer></v-spacer>
@@ -214,6 +239,12 @@
           </p>
           <p class="font-italic mt-4">
             Gupta, A., Chang, T., Walker, J., and B. Letcher (2022). <strong>Towards Continuous Streamflow Monitoring with Time-Lapse Cameras and Deep Learning.</strong> In ACM SIGCAS/SIGCHI Conference on Computing and Sustainable Societies (COMPASS) (COMPASS '22). Association for Computing Machinery, New York, NY, USA, 353–363. <a href="https://doi.org/10.1145/3530190.3534805">https://doi.org/10.1145/3530190.3534805</a>
+          </p>
+          <p class="mt-4">
+            Model code is available at the following USGS Software Release:
+          </p>
+          <p class="font-italic mt-4">
+            Walker, J.D., Gupta, A., Fair, J.B., Goodling, P.J., and Letcher, B.A., 2025, Streamflow Rank Estimation (SRE) Model: U.S. Geological Survey software release, <a href="https://doi.org/10.5066/P1YSANVM">https://doi.org/10.5066/P1YSANVM</a>.
           </p>
         </div>
       </v-col>
