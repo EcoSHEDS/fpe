@@ -204,7 +204,7 @@ export default {
           variableId: series.variableId,
           data: seriesValues,
           yAxis: series.variableId,
-          gapSize: 60 * 60 * 1000, // 1 hour
+          gapSize: 1.5 * 60 * 60 * 1000, // 1.5 hours
           gapUnit: 'value',
           legend: {
             enabled: true
