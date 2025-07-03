@@ -373,7 +373,7 @@ export default {
                 }
               }).filter(d => d.y !== null && d.y !== undefined)
               s.update({
-                gapSize: 60 * 60 * 1000 // 1 hour
+                gapSize: 1.5 * 60 * 60 * 1000 // 1.5 hours
               }, false)
               // console.log(seriesValues)
               s.setData(seriesValues)
