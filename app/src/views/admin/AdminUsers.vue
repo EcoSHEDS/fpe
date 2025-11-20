@@ -70,6 +70,14 @@
         <v-icon v-if="item.enabled" color="primary">mdi-check-circle</v-icon>
         <v-icon v-else color="gray">mdi-close-circle</v-icon>
       </template>
+      <template v-slot:item.training_required="{ item }">
+        <v-icon v-if="item.training_required" color="primary">mdi-check-circle</v-icon>
+        <v-icon v-else color="gray">mdi-close-circle</v-icon>
+      </template>
+      <template v-slot:item.training_complete="{ item }">
+        <v-icon v-if="item.training_complete" color="primary">mdi-check-circle</v-icon>
+        <v-icon v-else color="gray">mdi-close-circle</v-icon>
+      </template>
       <template v-slot:item.status="{ item }">
         <v-chip
           v-if="item.status==='CONFIRMED'"
@@ -147,6 +155,16 @@ export default {
       {
         text: 'Enabled',
         value: 'enabled',
+        align: 'left'
+      },
+      {
+        text: 'Training Required',
+        value: 'training_required',
+        align: 'left'
+      },
+      {
+        text: 'Training Complete',
+        value: 'training_complete',
         align: 'left'
       },
       {

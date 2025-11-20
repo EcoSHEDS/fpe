@@ -10,7 +10,6 @@
           </v-toolbar>
 
           <!-- SELECT STATION / INSTRUCTIONS -->
-          <div>{{  lastSavedCount }} {{ canResume }} {{ pairs.length }}</div>
           <v-card-text class="body-1 black--text mb-0">
             <v-row class="justify-space-around">
               <!-- TRAINING REQUIRED -->
@@ -19,12 +18,13 @@
                   <div class="text-h6">Welcome to the FPE Photo Annotator Training</div>
                   <p>You need to complete the required training before you can start annotating photos.</p>
                   <p>During this training, you will annotate 250 pairs of photos from a stream in central Massachusetts. This should take around 30-45 minutes to complete.</p>
+                  <p>If you need a break, you can save your progress and come back later to finish.</p>
                   <p>Start by reading the instructions to the right, then click the button below to begin the training.</p>
                   <p>If you have any questions, please contact us at <a href="mailto:ecosheds@usgs.gov">ecosheds@usgs.gov</a>.</p>
                   <v-btn
                     color="primary"
                     @click="startTraining"
-                    :loading="loading.training"
+                    :loading="loading.training || loading.resume"
                     :disabled="pairs.length > 0 || showTrainingComplete || canResume"
                   >
                     Begin Training
@@ -37,7 +37,7 @@
                   :loading="loading.training"
                   v-if="pairs.length > 0 && !trainingComplete"
                 ></Alert>
-                <Alert type="info" class="body-1" v-if="canResume && pairs.length === 0">
+                <Alert type="info" class="body-1 mt-4" v-if="canResume && pairs.length === 0 && !showTrainingComplete">
                   <div class="text-h6">Resume Training?</div>
                   <p>
                     You have an in-progress training session with
@@ -63,12 +63,12 @@
                     </v-btn>
                   </div>
                 </Alert>
-                <Alert type="success" class="mt-8 mb-0 body-1" v-if="showTrainingComplete">
+                <Alert type="success" class="mb-0 body-1 mt-4" v-if="showTrainingComplete">
                   <div class="text-h6">Training Complete!</div>
                   <p>Your results have been sent to the FPE team for review. You will receive an email within 1-2 business days containing further instructions on how to begin annotating photos.</p>
                   <p class="mb-0">Thank you for your time and for being a part of this project!</p>
                 </Alert>
-                <Alert type="error" class="mt-8 mb-0" title="Error Fetching Training Dataset" v-if="error.training">{{ error.training }}</Alert>
+                <Alert type="error" class="mt-4 mb-0" title="Error Fetching Training Dataset" v-if="error.training">{{ error.training }}</Alert>
               </v-col>
               <!-- SELECT STATION -->
               <v-col cols="6" v-else>
@@ -274,7 +274,7 @@
                             </ol>
                           </li>
                           <li v-if="showTraining">
-                            Your progress is automatically saved every minute. If you need to stop, click <code>Submit</code> and you can resume later. When you complete all {{ pairs.length || 250 }} pairs, click <code>Submit</code> to send your results to the FPE team for review. You will receive an email within 1-2 business days with instructions on how to begin annotating photos.
+                            Your progress is automatically saved every few seconds. If you need a break, click <code>Save Progress</code> and you can resume later. When you complete all {{ pairs.length || 250 }} pairs, click <code>Submit</code> to send your results to the FPE team for review. You will receive an email within 1-2 business days with instructions on how to begin annotating photos.
                           </li>
                           <li v-if="!showTraining">
                             When you are finished, click the <code>Submit</code> button to save your annotations to the server.
@@ -443,7 +443,7 @@
                     ></v-progress-linear>
                     <div class="caption mt-2" v-if="showTraining && lastSavedCount > 0">
                       <v-icon small color="success" :loading="loading.progress">mdi-check-circle</v-icon>
-                      Progress auto-saved ({{ lastSavedCount }} pair<span v-if="lastSavedCount > 1">s</span>)
+                      Progress saved ({{ lastSavedCount }} pair<span v-if="lastSavedCount > 1">s</span>)
                     </div>
                   </div>
                 </v-col>
@@ -483,13 +483,12 @@
             </div>
             <div class="text-center">
               <v-btn
-                v-if="showTraining && completedPairs.length > 0"
+                v-if="showTraining"
                 @click="saveProgress(true)"
                 color="secondary"
                 :loading="loading.progress"
                 large
                 class="mr-2"
-                :disabled="completedPairs.length === pairs.length"
               >
                 <v-icon left>mdi-content-save</v-icon>Save Progress
               </v-btn>
@@ -515,6 +514,8 @@ import { ascending } from 'd3-array'
 import { mapGetters } from 'vuex'
 import { fixDataUrl } from '@/lib/utils'
 import evt from '@/events'
+import store from '@/store'
+
 export default {
   name: 'Annotate',
   data () {
@@ -524,6 +525,7 @@ export default {
         station: false,
         training: false,
         submit: false,
+        resume: true,
         progress: false
       },
       error: {
@@ -716,6 +718,7 @@ export default {
     },
     async checkResumeTraining () {
       try {
+        this.loading.resume = true
         const response = await this.$http.restricted.get('/annotations/training/resume')
         if (response.data.canResume &&
           response.data.annotation.training_completed > 0 &&
@@ -726,6 +729,8 @@ export default {
       } catch (err) {
         console.error('Failed to check resume status', err)
         evt.$emit('notify', 'error', 'Failed to check resume status')
+      } finally {
+        this.loading.resume = false
       }
     },
     async resumeTraining () {
@@ -780,7 +785,11 @@ export default {
       }, 5000) // Every minute
     },
     async saveProgress (notify = false) {
-      if (!this.resumeAnnotation) return
+      if (
+        !this.resumeAnnotation ||
+        this.completedPairs.length === 0 ||
+        this.lastSavedCount === this.completedPairs.length
+      ) return
       this.loading.progress = true
 
       try {
@@ -834,7 +843,7 @@ export default {
     },
     onBeforeUnload (e) {
       // Only show warning if there are unsaved annotations
-      if (this.completedPairs.length > 0) {
+      if (!this.showTraining && this.completedPairs.length > 0) {
         e.preventDefault()
         // Modern browsers require returnValue to be set
         e.returnValue = ''
@@ -987,7 +996,6 @@ export default {
 
         const annotationResponse = await this.$http.restricted.post('/annotations', payload)
         this.resumeAnnotation = annotationResponse.data
-        console.log(this.resumeAnnotation)
 
         // Start auto-saving
         this.startAutoSave()
@@ -1098,7 +1106,8 @@ export default {
 
         if (this.showTraining) {
           evt.$emit('notify', 'success', 'Annotations have been submitted')
-          this.dbUser.training_complete = true
+          const dbUser = { ...this.dbUser, training_complete: true }
+          store.dispatch('setDbUser', dbUser)
         } else {
           this.station.n_annotations += payload.n
           this.station.n_annotations_daytime += payload.n_daytime
@@ -1106,7 +1115,7 @@ export default {
         }
         this.reset()
       } catch (err) {
-        console.log(err)
+        console.error(err)
         this.error.submit = err.message || err.toString()
         evt.$emit('notify', 'error', 'Failed to submit annotations')
       } finally {
@@ -1221,7 +1230,6 @@ export default {
       }
     },
     startTraining () {
-      console.log('startTraining')
       // Clear resume state when explicitly starting fresh
       this.canResume = false
       this.resumeAnnotation = null
