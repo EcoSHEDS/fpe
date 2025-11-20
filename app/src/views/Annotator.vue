@@ -656,9 +656,11 @@ export default {
     // this.fetchStationPairs()
     // ------------------------------
     window.addEventListener('keyup', this.onKeyUp)
+    window.addEventListener('beforeunload', this.onBeforeUnload)
   },
   beforeDestroy () {
     window.removeEventListener('keyup', this.onKeyUp)
+    window.removeEventListener('beforeunload', this.onBeforeUnload)
 
     // Clear auto-save interval
     if (this.autoSaveInterval) {
@@ -825,6 +827,16 @@ export default {
 
       return {
         url: `https://${this.resumeAnnotation.s3.Bucket}.s3.amazonaws.com/${this.resumeAnnotation.s3.Key}`
+      }
+    },
+    onBeforeUnload (e) {
+      // Only show warning if there are unsaved annotations
+      if (this.completedPairs.length > 0) {
+        e.preventDefault()
+        // Modern browsers require returnValue to be set
+        e.returnValue = ''
+        // Some browsers display this message, but most show a generic message
+        return ''
       }
     },
     onKeyUp (e) {
