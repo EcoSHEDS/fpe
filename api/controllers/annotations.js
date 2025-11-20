@@ -18,8 +18,11 @@ const getAnnotation = async (req, res, next) => {
 const postAnnotations = async (req, res, next) => {
   const props = {
     ...req.body,
-    status: 'CREATED',
-    uuid: uuidv4()
+    status: req.body.status || 'CREATED',
+    uuid: uuidv4(),
+    training_total: req.body.training_total || null,
+    training_completed: req.body.training_completed || 0,
+    training_dataset_url: req.body.training_dataset_url || null
   }
 
   const presignedUrl = await createPresignedPostPromise({
@@ -27,7 +30,7 @@ const postAnnotations = async (req, res, next) => {
     Fields: {
       key: `annotations/${props.uuid}.json`
     },
-    Expires: 60 * 60 * 1 // one hour
+    Expires: 60 * 60 * 24 // 24 hours
   })
   props.s3 = {
     Bucket: presignedUrl.fields.bucket,
@@ -63,7 +66,8 @@ const putAnnotation = async (req, res, next) => {
   const row = await Annotation.query()
     .patchAndFetchById(res.locals.annotation.id, req.body)
 
-  if (row.training) {
+  // Only notify on final training completion (not progress saves)
+  if (row.training && row.status === 'DONE') {
     const userId = row.user_id
     const cognitoUser = await fetchUser(userId)
     const attributes = transformUserAttributes(cognitoUser.UserAttributes)
@@ -120,6 +124,36 @@ const getAnnotationTraining = async (req, res, next) => {
   return res.status(200).json({ url })
 }
 
+const getTrainingResume = async (req, res, next) => {
+  const userId = req.auth.id
+
+  // Find incomplete training annotation
+  const row = await Annotation.query()
+    .where('user_id', userId)
+    .where('training', true)
+    .where('status', 'IN_PROGRESS')
+    .orderBy('updated_at', 'desc')
+    .first()
+
+  if (!row) {
+    return res.status(200).json({ canResume: false })
+  }
+
+  const presignedUrl = await createPresignedPostPromise({
+    Bucket: row.s3.Bucket,
+    Fields: {
+      key: row.s3.Key
+    },
+    Expires: 60 * 60 * 24 // 24 hours
+  })
+  row.presignedUrl = presignedUrl
+
+  return res.status(200).json({
+    canResume: true,
+    annotation: row
+  })
+}
+
 module.exports = {
   attachAnnotation,
   postAnnotations,
@@ -127,5 +161,6 @@ module.exports = {
   putAnnotation,
   getAnnotationStations,
   getAdminAnnotationStations,
-  getAnnotationTraining
+  getAnnotationTraining,
+  getTrainingResume
 }

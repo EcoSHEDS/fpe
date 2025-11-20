@@ -35,7 +35,7 @@ const postDatasets = async (req, res, next) => {
     Fields: {
       key: `datasets/${props.uuid}/${req.body.filename}`
     },
-    Expires: 60 * 60 * 1 // one hour
+    Expires: 60 * 60 * 24 // 24 hours
   })
   props.s3 = {
     Bucket: presignedUrl.fields.bucket,

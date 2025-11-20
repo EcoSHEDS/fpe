@@ -10,6 +10,7 @@
           </v-toolbar>
 
           <!-- SELECT STATION / INSTRUCTIONS -->
+          <div>{{  lastSavedCount }} {{ canResume }} {{ pairs.length }}</div>
           <v-card-text class="body-1 black--text mb-0">
             <v-row class="justify-space-around">
               <!-- TRAINING REQUIRED -->
@@ -20,15 +21,54 @@
                   <p>During this training, you will annotate 250 pairs of photos from a stream in central Massachusetts. This should take around 30-45 minutes to complete.</p>
                   <p>Start by reading the instructions to the right, then click the button below to begin the training.</p>
                   <p>If you have any questions, please contact us at <a href="mailto:ecosheds@usgs.gov">ecosheds@usgs.gov</a>.</p>
-                  <v-btn color="primary" @click="startTraining" :loading="loading.training" :disabled="pairs.length > 0 || trainingComplete">Begin Training</v-btn>
-                  <div class="caption mt-4" v-if="pairs.length > 0 && !trainingComplete">Training in progress...</div>
+                  <v-btn
+                    color="primary"
+                    @click="startTraining"
+                    :loading="loading.training"
+                    :disabled="pairs.length > 0 || trainingComplete || canResume"
+                  >
+                    Begin Training
+                  </v-btn>
                 </Alert>
-                <Alert type="error" class="mt-8 mb-0" title="Error Fetching Training Dataset" v-if="error.training">{{ error.training }}</Alert>
+                <Alert
+                  type="info"
+                  class="body-1 mt-4"
+                  title="Training in progress..."
+                  :loading="loading.training"
+                  v-if="pairs.length > 0 && !trainingComplete"
+                ></Alert>
+                <Alert type="info" class="body-1" v-if="canResume && pairs.length === 0">
+                  <div class="text-h6">Resume Training?</div>
+                  <p>
+                    You have an in-progress training session with
+                    <strong>{{ resumeAnnotation.training_completed }}</strong> of
+                    <strong>{{ resumeAnnotation.training_total }}</strong>
+                    pairs completed
+                    ({{ (resumeAnnotation.training_completed / resumeAnnotation.training_total * 100).toFixed(1) }}%).
+                  </p>
+                  <p>Would you like to continue where you left off, or start over?</p>
+                  <div>
+                    <v-btn
+                      color="primary"
+                      @click="resumeTraining"
+                      :loading="loading.training"
+                      class="mr-2"
+                    >
+                      <v-icon left>mdi-play</v-icon>
+                      Resume Training
+                    </v-btn>
+                    <v-btn @click="canResume = false; startTraining()">
+                      <v-icon left>mdi-restart</v-icon>
+                      Start Over
+                    </v-btn>
+                  </div>
+                </Alert>
                 <Alert type="success" class="mt-8 mb-0 body-1" v-if="trainingComplete">
                   <div class="text-h6">Training Complete!</div>
                   <p>Your results have been sent to the FPE team for review. You will receive an email within 1-2 business days containing further instructions on how to begin annotating photos.</p>
                   <p class="mb-0">Thank you for your time and for being a part of this project!</p>
                 </Alert>
+                <Alert type="error" class="mt-8 mb-0" title="Error Fetching Training Dataset" v-if="error.training">{{ error.training }}</Alert>
               </v-col>
               <!-- SELECT STATION -->
               <v-col cols="6" v-else>
@@ -234,7 +274,7 @@
                             </ol>
                           </li>
                           <li v-if="showTraining">
-                            When you are finished, click the <code>Submit</code> button to send your results to the FPE team for review. You will receive an email within 1-2 business days with instructions on how to begin annotating photos.
+                            Your progress is automatically saved every minute. If you need to stop, click <code>Submit</code> and you can resume later. When you complete all {{ pairs.length || 250 }} pairs, click <code>Submit</code> to send your results to the FPE team for review. You will receive an email within 1-2 business days with instructions on how to begin annotating photos.
                           </li>
                           <li v-if="!showTraining">
                             When you are finished, click the <code>Submit</code> button to save your annotations to the server.
@@ -401,6 +441,10 @@
                       :value="completedPairs.length / pairs.length * 100"
                       striped
                     ></v-progress-linear>
+                    <div class="caption mt-2" v-if="showTraining && lastSavedCount > 0">
+                      <v-icon small color="success" :loading="loading.progress">mdi-check-circle</v-icon>
+                      Progress auto-saved ({{ lastSavedCount }} pair<span v-if="lastSavedCount > 1">s</span>)
+                    </div>
                   </div>
                 </v-col>
                 <v-col cols="4" class="text-left">
@@ -438,7 +482,24 @@
               </Alert>
             </div>
             <div class="text-center">
-              <v-btn @click="submit" color="primary" :loading="loading.submit" large :disabled="showTraining && completedPairs.length !== pairs.length">
+              <v-btn
+                v-if="showTraining && completedPairs.length > 0"
+                @click="saveProgress(true)"
+                color="secondary"
+                :loading="loading.progress"
+                large
+                class="mr-2"
+                :disabled="completedPairs.length === pairs.length"
+              >
+                <v-icon left>mdi-content-save</v-icon>Save Progress
+              </v-btn>
+              <v-btn
+                @click="submit"
+                color="primary"
+                :loading="loading.submit"
+                large
+                :disabled="showTraining && completedPairs.length < pairs.length"
+              >
                 <v-icon left>mdi-upload</v-icon>Submit
               </v-btn>
             </div>
@@ -462,7 +523,8 @@ export default {
         stations: false,
         station: false,
         training: false,
-        submit: false
+        submit: false,
+        progress: false
       },
       error: {
         start: null,
@@ -472,6 +534,12 @@ export default {
         submit: null
       },
       trainingComplete: false,
+      // Resume functionality
+      resumeAnnotation: null,
+      canResume: false,
+      isResuming: false,
+      autoSaveInterval: null,
+      lastSavedCount: 0,
       stations: [],
       stationArray: [],
       variables: [
@@ -576,6 +644,12 @@ export default {
   async mounted () {
     await this.fetchStations()
     this.variable = this.variables[0]
+
+    // Check for resumable training
+    if (this.showTraining) {
+      await this.checkResumeTraining()
+    }
+
     // TEMPORARY --------------------
     // this.selectStation(this.stations[0])
     // this.nPairs = 2
@@ -585,6 +659,11 @@ export default {
   },
   beforeDestroy () {
     window.removeEventListener('keyup', this.onKeyUp)
+
+    // Clear auto-save interval
+    if (this.autoSaveInterval) {
+      clearInterval(this.autoSaveInterval)
+    }
   },
   beforeRouteLeave (to, from, next) {
     if (this.completedPairs.length > 0) {
@@ -628,6 +707,124 @@ export default {
         evt.$emit('notify', 'error', 'Failed to get stations from server')
       } finally {
         this.loading.stations = false
+      }
+    },
+    async checkResumeTraining () {
+      try {
+        const response = await this.$http.restricted.get('/annotations/training/resume')
+        if (response.data.canResume &&
+          response.data.annotation.training_completed > 0 &&
+          response.data.annotation.status === 'IN_PROGRESS') {
+          this.canResume = true
+          this.resumeAnnotation = response.data.annotation
+        }
+      } catch (err) {
+        console.error('Failed to check resume status', err)
+        evt.$emit('notify', 'error', 'Failed to check resume status')
+      }
+    },
+    async resumeTraining () {
+      this.loading.training = true
+      this.error.training = null
+      try {
+        // Fetch saved progress from S3
+        const url = fixDataUrl(this.resumeAnnotation.url)
+        const response = await this.$http.external.get(url)
+        const savedProgress = response.data
+
+        // Restore training state - get station
+        const stationResponse = await this.$http.restricted.get(
+          `/stations/${this.resumeAnnotation.station_id}`
+        )
+        this.selectStation(stationResponse.data)
+        this.pairsStationId = this.resumeAnnotation.station_id
+
+        // Restore variable
+        this.variable = this.variables.find(v =>
+          v.value === (this.resumeAnnotation.variable || 'FLOW')
+        ) || this.variables[0]
+
+        // Restore pairs with saved progress
+        this.pairs = savedProgress.allPairs
+        this.currentIndex = savedProgress.currentIndex || 0
+        this.startedAt = new Date(this.resumeAnnotation.created_at)
+        this.isResuming = true
+        this.lastSavedCount = savedProgress.completedCount || 0
+
+        // Begin auto-saving
+        this.startAutoSave()
+
+        evt.$emit('notify', 'success', 'Training resumed successfully')
+      } catch (err) {
+        console.error(err)
+        this.error.training = err.message || 'Failed to resume training'
+        evt.$emit('notify', 'error', 'Failed to resume training')
+      } finally {
+        this.loading.training = false
+      }
+    },
+    startAutoSave () {
+      // Clear any existing interval
+      if (this.autoSaveInterval) {
+        clearInterval(this.autoSaveInterval)
+      }
+
+      // Save every 60 seconds
+      this.autoSaveInterval = setInterval(() => {
+        this.saveProgress()
+      }, 5000) // Every minute
+    },
+    async saveProgress (notify = false) {
+      if (!this.resumeAnnotation) return
+      this.loading.progress = true
+
+      try {
+        const progressData = {
+          allPairs: this.pairs,
+          currentIndex: this.currentIndex,
+          completedCount: this.completedPairs.length
+        }
+
+        // Upload to S3
+        const s3Response = await this.uploadProgress(progressData)
+
+        // Update annotation record
+        await this.$http.restricted.put(
+          `/annotations/${this.resumeAnnotation.id}`,
+          {
+            training_completed: this.completedPairs.length,
+            url: s3Response.url,
+            duration_sec: (new Date() - this.startedAt) / 1000
+          }
+        )
+
+        this.lastSavedCount = this.completedPairs.length
+        if (notify) {
+          evt.$emit('notify', 'success', 'Progress saved! You can resume later.')
+        }
+      } catch (err) {
+        console.error('Auto-save failed', err)
+        evt.$emit('notify', 'error', 'Failed to auto-save progress')
+      } finally {
+        this.loading.progress = false
+      }
+    },
+    async uploadProgress (data) {
+      const body = JSON.stringify(data)
+      const formData = new FormData()
+
+      Object.keys(this.resumeAnnotation.presignedUrl.fields).forEach(key => {
+        formData.append(key, this.resumeAnnotation.presignedUrl.fields[key])
+      })
+      formData.append('file', body)
+
+      await this.$http.external.post(
+        this.resumeAnnotation.presignedUrl.url,
+        formData
+      )
+
+      return {
+        url: `https://${this.resumeAnnotation.s3.Bucket}.s3.amazonaws.com/${this.resumeAnnotation.s3.Key}`
       }
     },
     onKeyUp (e) {
@@ -699,6 +896,7 @@ export default {
       } catch (err) {
         console.error(err)
         this.error.station = err.message || err.toString()
+        evt.$emit('notify', 'error', 'Failed to get image pairs for selected station')
       } finally {
         this.loading.station = false
       }
@@ -755,9 +953,33 @@ export default {
         if (this.pairs.length > 0) {
           this.currentIndex = 0
         }
+
+        // Create initial annotation record with IN_PROGRESS status
+        const payload = {
+          user_id: this.user.username,
+          training: true,
+          flag: true,
+          station_id: station.id,
+          variable: this.variable?.value || 'FLOW',
+          training_total: pairs.length,
+          training_completed: 0,
+          training_dataset_url: url,
+          status: 'IN_PROGRESS',
+          duration_sec: 0,
+          n: 0,
+          n_daytime: 0
+        }
+
+        const annotationResponse = await this.$http.restricted.post('/annotations', payload)
+        this.resumeAnnotation = annotationResponse.data
+        console.log(this.resumeAnnotation)
+
+        // Start auto-saving
+        this.startAutoSave()
       } catch (err) {
         console.error(err)
         this.error.training = err.message || err.toString()
+        evt.$emit('notify', 'error', 'Failed to start training')
       } finally {
         this.loading.training = false
       }
@@ -788,6 +1010,16 @@ export default {
       this.currentIndex = null
       this.submitEarly = false
       this.startedAt = new Date()
+
+      // Clear resume state
+      this.resumeAnnotation = null
+      this.canResume = false
+      this.isResuming = false
+      this.lastSavedCount = 0
+      if (this.autoSaveInterval) {
+        clearInterval(this.autoSaveInterval)
+        this.autoSaveInterval = null
+      }
     },
     async submit () {
       this.error.submit = null
@@ -806,6 +1038,12 @@ export default {
 
       this.loading.submit = true
       try {
+        // Clear auto-save on final submit
+        if (this.autoSaveInterval) {
+          clearInterval(this.autoSaveInterval)
+          this.autoSaveInterval = null
+        }
+
         const finishedAt = new Date()
         const durationSeconds = (finishedAt.valueOf() - this.startedAt.valueOf()) / 1000
         const payload = {
@@ -824,12 +1062,21 @@ export default {
                      d.right.image.hour <= 18
             }).length
         }
-        const response = await this.$http.restricted.post('/annotations', payload)
-        const annotation = response.data
+
+        // Use existing annotation if available (training mode)
+        let annotation
+        if (this.resumeAnnotation) {
+          annotation = this.resumeAnnotation
+        } else {
+          const response = await this.$http.restricted.post('/annotations', payload)
+          annotation = response.data
+        }
 
         const s3Response = await this.uploadFile(annotation)
         const updatePayload = {
           status: 'DONE',
+          training_completed: this.completedPairs.length,
+          ...payload,
           ...s3Response
         }
         await this.$http.restricted.put(`/annotations/${annotation.id}`, updatePayload)
@@ -846,6 +1093,7 @@ export default {
       } catch (err) {
         console.log(err)
         this.error.submit = err.message || err.toString()
+        evt.$emit('notify', 'error', 'Failed to submit annotations')
       } finally {
         this.loading.submit = false
       }
@@ -959,6 +1207,9 @@ export default {
     },
     startTraining () {
       console.log('startTraining')
+      // Clear resume state when explicitly starting fresh
+      this.canResume = false
+      this.resumeAnnotation = null
       this.fetchTrainingPairs()
     }
   }
