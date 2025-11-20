@@ -53,11 +53,11 @@ Submitted: ${d.toLocaleString('en-US', { timeZone: 'America/New_York' })}
 User ID: ${user.id}
 Name: ${user.name}
 Email: ${user.email}
-Affiliation: ${user.affiliation_name} (${user.affiliation_code})
+Affiliation: ${user.affiliation_code}
 
 Annotation ID: ${annotation.id}
 Station ID: ${annotation.station_id}
-Variable ID: ${annotation.variable_id}
+Variable: ${annotation.variable}
 URL: ${annotation.url}
 `
 }
@@ -78,6 +78,9 @@ const putAnnotation = async (req, res, next) => {
     }
     const message = newTrainingMessage(row, user)
     await notify('Annotation Training Completed', message)
+
+    // Mark user as training complete
+    await User.query().findById(userId).update({ training_complete: true })
   }
   return res.status(200).json(row)
 }

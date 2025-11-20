@@ -25,7 +25,7 @@
                     color="primary"
                     @click="startTraining"
                     :loading="loading.training"
-                    :disabled="pairs.length > 0 || trainingComplete || canResume"
+                    :disabled="pairs.length > 0 || showTrainingComplete || canResume"
                   >
                     Begin Training
                   </v-btn>
@@ -63,7 +63,7 @@
                     </v-btn>
                   </div>
                 </Alert>
-                <Alert type="success" class="mt-8 mb-0 body-1" v-if="trainingComplete">
+                <Alert type="success" class="mt-8 mb-0 body-1" v-if="showTrainingComplete">
                   <div class="text-h6">Training Complete!</div>
                   <p>Your results have been sent to the FPE team for review. You will receive an email within 1-2 business days containing further instructions on how to begin annotating photos.</p>
                   <p class="mb-0">Thank you for your time and for being a part of this project!</p>
@@ -639,6 +639,9 @@ export default {
     },
     showTraining () {
       return this.dbUser && this.dbUser.training_required
+    },
+    showTrainingComplete () {
+      return this.dbUser && this.dbUser.training_complete
     }
   },
   async mounted () {
@@ -1095,7 +1098,7 @@ export default {
 
         if (this.showTraining) {
           evt.$emit('notify', 'success', 'Annotations have been submitted')
-          this.trainingComplete = true
+          this.dbUser.training_complete = true
         } else {
           this.station.n_annotations += payload.n
           this.station.n_annotations_daytime += payload.n_daytime

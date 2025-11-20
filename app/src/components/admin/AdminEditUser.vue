@@ -240,6 +240,21 @@
                     </div>
                   </td>
                 </tr>
+
+                <tr>
+                  <td
+                    class="text-right"
+                    style="width:180px"
+                  >
+                    Training Complete
+                  </td>
+                  <td class="font-weight-bold">
+                    <div class="d-flex align-center justify-space-between">
+                      <v-icon v-if="user.training_complete" color="primary">mdi-check-circle</v-icon>
+                      <v-icon v-else color="gray">mdi-close-circle</v-icon>
+                    </div>
+                  </td>
+                </tr>
               </tbody>
             </v-simple-table>
 

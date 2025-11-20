@@ -125,6 +125,7 @@ async function postUsers (req, res, next) {
     affiliation_name: affiliation.name,
     affiliation_code: affiliation.code,
     training_required: training_required,
+    training_complete: false,
     annotator_only: annotator_only
   })
 
@@ -132,6 +133,7 @@ async function postUsers (req, res, next) {
     ...cognitoUser,
     affiliation: dbUser.affiliation,
     training_required: dbUser.training_required,
+    training_complete: dbUser.training_complete,
     annotator_only: dbUser.annotator_only
   })
 }
@@ -271,6 +273,7 @@ async function getUsers (req, res, next) {
       return {
         ...cognitoUser,
         training_required: dbUser ? dbUser.training_required : null,
+        training_complete: dbUser ? dbUser.training_complete : null,
         annotator_only: dbUser ? dbUser.annotator_only : null
       }
     })
