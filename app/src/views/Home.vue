@@ -232,7 +232,7 @@
             </v-col>
           </v-row>
           <p class="font-italic mt-4">
-            Goodling, P., Fair, J., Gupta, A., Walker, J., Dubreuil, T., Hayden, M., and Letcher, B. (2025). <b>A low-cost approach to monitoring streamflow dynamics in small, headwater streams using timelapse imagery and a deep learning model</b>. EGUsphere [preprint]. <a href="https://doi.org/10.5194/egusphere-2025-1186">https://doi.org/10.5194/egusphere-2025-1186</a>
+            Goodling, P. J., Fair, J. H., Gupta, A., Walker, J. D., Dubreuil, T., Hayden, M., and Letcher, B. H. (2025). Technical note: A low-cost approach to monitoring relative streamflow dynamics in small headwater streams using time lapse imagery and a deep learning model, Hydrol. Earth Syst. Sci., 29, 6445–6460.<a href="https://doi.org/10.5194/hess-29-6445-2025">https://doi.org/10.5194/hess-29-6445-2025</a>
           </p>
           <p class="font-italic mt-4">
             Walker, J.D. (2025). <b>Low-cost Streamflow Monitoring using Timelapse Imagery and Machine Learning Models.</b> Year 1 Final Report, USEPA Regional-ORD Applied Research Program (ROAR) Project #2554. Prepared for US Environmental Protection Agency Office of Research and Development. April 3, 2025. <a href="https://doi.org/10.5281/zenodo.15133342">https://doi.org/10.5281/zenodo.15133342</a>
