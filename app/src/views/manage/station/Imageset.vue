@@ -70,6 +70,7 @@
                     </td>
                     <td class="font-weight-bold">
                       {{ imageset.n_images ? (+imageset.n_images).toLocaleString() : '' }}
+                      <span v-if="imageset.n_failed > 0" class="text-error"> ({{ imageset.n_failed }} failed)</span>
                     </td>
                   </tr>
                   <tr v-if="imageset.status === 'DONE'">

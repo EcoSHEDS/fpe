@@ -4,7 +4,6 @@ const { processDatasets, processImageset } = require('./processors')
 
 program.command('imageset <id>')
   .option('-d, --dry-run', 'dry run')
-  .option('-r, --rotate-only', 'rotate only')
   .description('Process imageset')
   .action(processImageset)
 

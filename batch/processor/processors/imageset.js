@@ -31,7 +31,7 @@ Affiliation: ${imageset.station.user.affiliation_code}
 Station: ${imageset.station.name}
 Station URL: https://www.usgs.gov/apps/ecosheds/fpe/#/explorer/${imageset.station.id}/
 
-# Images: ${imageset.n_images}
+# Images: ${imageset.n_images} ${imageset.n_failed > 0 ? `(${imageset.n_failed} failed)` : ''}
 Period: ${DateTime.fromJSDate(imageset.start_timestamp).setZone(imageset.station.timezone).toFormat('DD')} to ${DateTime.fromJSDate(imageset.end_timestamp).setZone(imageset.station.timezone).toFormat('DD')}
 `
 }
@@ -177,9 +177,23 @@ async function processImageset (id, dryRun) {
   }
 
   console.log(`processing images (id=${id}, n=${images.length})`)
+  let failedCount = 0
   for (let i = 0; i < images.length; i++) {
-    await processImage(images[i], imageset.config.timestamp.utcOffset, station.timezone, dryRun)
+    try {
+      await processImage(images[i], imageset.config.timestamp.utcOffset, station.timezone, dryRun)
+    } catch (err) {
+      failedCount++
+      console.log(`failed to process image (image_id=${images[i].id}, filename=${images[i].filename}): ${err.message || err.toString()}`)
+      console.error(err)
+      if (!dryRun) {
+        await images[i].$query().patch({
+          status: 'FAILED',
+          error_message: err.toString()
+        })
+      }
+    }
   }
+  console.log(`finished processing images (id=${id}, n=${images.length}, failed=${failedCount})`)
 
   if (dryRun) {
     console.log(`finished (id=${id})`)
@@ -196,7 +210,8 @@ async function processImageset (id, dryRun) {
     .patch({
       start_timestamp: imageSummary.start_timestamp,
       end_timestamp: imageSummary.end_timestamp,
-      n_images: imageSummary.n_images
+      n_images: imageSummary.n_images,
+      n_failed: imageSummary.n_failed
     })
     .returning('*')
 
@@ -226,80 +241,9 @@ async function processImageset (id, dryRun) {
   return imageset
 }
 
-async function rotateImage (image) {
-  console.log(`rotating image (image_id=${image.id})`)
-
-  // download full image file
-  console.log(`downloading image file (image_id=${image.id}, Key=${image.full_s3.Key})`)
-  let s3ImageFile = await s3.getObject(image.full_s3).promise()
-  let sharpImage = await sharp(s3ImageFile.Body)
-  let metadata = await sharpImage.metadata()
-  const orientation = metadata.orientation
-
-  if (orientation && orientation !== 1) {
-    console.log(`rotating image (image_id=${image.id}, orientation=${orientation})`)
-    sharpImage = await sharpImage.rotate()
-    let rotatedBuffer = await sharpImage.keepExif().toBuffer()
-    console.log(`saving rotated image (image_id=${image.id})`)
-    await s3.putObject({
-      Bucket: image.full_s3.Bucket,
-      Key: image.full_s3.Key,
-      Body: rotatedBuffer,
-      ContentType: 'image'
-    }).promise()
-
-    // download thumb image file
-    console.log(`downloading thumb file (image_id=${image.id}, Key=${image.thumb_s3.Key})`)
-    s3ImageFile = await s3.getObject(image.thumb_s3).promise()
-    sharpImage = await sharp(s3ImageFile.Body).withMetadata({ orientation })
-    metadata = await sharpImage.metadata()
-
-    console.log(`rotating thumb (image_id=${image.id}, orientation=${metadata.orientation})`)
-    sharpImage = await sharpImage.rotate()
-    rotatedBuffer = await sharpImage.keepExif().toBuffer()
-    console.log(`saving rotated thumb (image_id=${image.id}, key=${image.thumb_s3.Key})`)
-    await s3.putObject({
-      Bucket: image.thumb_s3.Bucket,
-      Key: image.thumb_s3.Key,
-      Body: rotatedBuffer,
-      ContentType: 'image'
-    }).promise()
-  } else {
-    console.log(`rotation not necessary (image_id=${image.id}, orientation=1)`)
-  }
-
-  return image
-}
-
-async function rotateImageset (id) {
-  console.log(`rotating imageset (id=${id})`)
-
-  console.log(`fetching imageset record (id=${id})`)
-  const imageset = await Imageset.query()
-    .findById(id)
-  if (!imageset) throw new Error(`Imageset record (id=${id}) not found`)
-
-  const images = await imageset.$relatedQuery('images').orderBy('id')
-  if (images.length === 0) {
-    console.log(`no images to rotate (id=${id})`)
-    return imageset
-  }
-
-  console.log(`rotating images (id=${id}, n=${images.length})`)
-  for (let i = 0; i < images.length; i++) {
-    await rotateImage(images[i])
-  }
-
-  return imageset
-}
-
-module.exports = async function (id, { dryRun, rotateOnly }) {
+module.exports = async function (id, { dryRun }) {
   try {
-    if (rotateOnly) {
-      await rotateImageset(id)
-    } else {
-      await processImageset(id, dryRun)
-    }
+    await processImageset(id, dryRun)
   } catch (e) {
     console.log(`failed (id=${id}): ${e.message || e.toString()}`)
     console.error(e)

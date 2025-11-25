@@ -14,12 +14,19 @@ class Imageset extends Base {
         builder.select(
           '*',
           Imageset.relatedQuery('images')
+            .where('status', 'DONE')
             .count()
             .as('n_images'),
           Imageset.relatedQuery('images')
+            .where('status', 'FAILED')
+            .count()
+            .as('n_failed'),
+          Imageset.relatedQuery('images')
+            .where('status', 'DONE')
             .min('timestamp')
             .as('start_timestamp'),
           Imageset.relatedQuery('images')
+            .where('status', 'DONE')
             .max('timestamp')
             .as('end_timestamp')
         )
