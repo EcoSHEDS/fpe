@@ -191,7 +191,7 @@ export default {
         value: false
       },
       trainingRequired: {
-        value: true
+        value: false
       },
       annotatorOnly: {
         value: false
@@ -209,7 +209,7 @@ export default {
         this.email.value = request.email
         this.affiliation.code.value = request.affiliation_code
         this.affiliation.name.value = request.affiliation_name
-        this.trainingRequired.value = true
+        this.trainingRequired.value = false
         this.annotatorOnly.value = false
         this.request = request
       }
@@ -262,7 +262,7 @@ export default {
       this.affiliation.name.value = ''
       this.affiliation.code.value = ''
       this.admin.value = false
-      this.trainingRequired.value = true
+      this.trainingRequired.value = false
       this.annotatorOnly.value = false
       this.request = null
     },
