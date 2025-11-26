@@ -44,10 +44,20 @@
           <span v-else-if="image.pii_off">Flag Photo for PII<br>(Stop Ignoring PII Detection)</span>
           <span v-else>Flag Photo for PII<br>(Add Manual PII Flag)</span>
         </v-tooltip>
+        <div v-else-if="image.status === 'FAILED'">
+          <v-chip
+            small
+            label
+            color="warning"
+            class="font-weight-bold"
+          >
+            FAILED
+          </v-chip>
+        </div>
       </div>
       <v-spacer></v-spacer>
       <div>
-        <v-tooltip bottom max-width="400px" open-delay="500" v-if="image.status === 'DONE'">
+        <v-tooltip bottom max-width="400px" open-delay="500">
           <template v-slot:activator="{ on }">
             <v-btn
               small
