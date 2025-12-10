@@ -18,7 +18,7 @@ function validateConfig (config, fields) {
     }),
     variables: Joi.array().items(
       Joi.object({
-        id: Joi.string().valid('FLOW_CFS', 'STAGE_FT', 'PRESSURE_KPA', 'SPCOND_USCM25', 'WTEMP_C', 'ATEMP_C', 'OTHER'),
+        id: Joi.string().valid('ANIMAL_COUNT', 'ATEMP_C', 'CHLA_PPB', 'FLOW_CFS', 'OTHER', 'PRESSURE_KPA', 'SNOW_FT', 'SPCOND_USCM25', 'STAGE_FT', 'WTEMP_C'),
         column: fileColumn.required(),
         flag: Joi.string().empty('').allow(null).valid(...fields),
         scale: Joi.number().default(1),
