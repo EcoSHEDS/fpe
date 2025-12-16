@@ -25,7 +25,7 @@
                     color="primary"
                     @click="startTraining"
                     :loading="loading.training || loading.resume"
-                    :disabled="pairs.length > 0 || showTrainingComplete || canResume"
+                    :disabled="pairs.length > 0 || canResume"
                   >
                     Begin Training
                   </v-btn>
