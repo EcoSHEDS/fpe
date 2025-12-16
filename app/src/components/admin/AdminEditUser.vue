@@ -252,6 +252,27 @@
                     <div class="d-flex align-center justify-space-between">
                       <v-icon v-if="user.training_complete" color="primary">mdi-check-circle</v-icon>
                       <v-icon v-else color="gray">mdi-close-circle</v-icon>
+
+                      <v-btn
+                        v-if="!user.training_complete"
+                        color="primary"
+                        small
+                        outlined
+                        :loading="loading.trainingComplete"
+                        @click="setTrainingComplete(true)"
+                      >
+                        <v-icon left>mdi-plus</v-icon> Add Training Complete
+                      </v-btn>
+                      <v-btn
+                        v-else
+                        color="default"
+                        small
+                        outlined
+                        :loading="loading.trainingComplete"
+                        @click="setTrainingComplete(false)"
+                      >
+                        <v-icon left>mdi-close</v-icon> Remove Training Complete
+                      </v-btn>
                     </div>
                   </td>
                 </tr>
@@ -398,7 +419,8 @@ export default {
         resetPassword: false,
         resendPassword: false,
         annotatorOnly: false,
-        trainingRequired: false
+        trainingRequired: false,
+        trainingComplete: false
       },
       affiliation: {
         name: {
@@ -599,6 +621,22 @@ export default {
         this.error = err
       } finally {
         this.loading.trainingRequired = false
+      }
+    },
+
+    async setTrainingComplete (value) {
+      this.loading.trainingComplete = true
+      this.modified = true
+      const action = 'setTrainingComplete'
+      try {
+        await this.$http.admin.put(`/users/${this.id}`, { action, value })
+        evt.$emit('notify', 'success', 'User has been updated')
+        this.refresh()
+      } catch (err) {
+        console.error(err)
+        this.error = err
+      } finally {
+        this.loading.trainingComplete = false
       }
     }
   }

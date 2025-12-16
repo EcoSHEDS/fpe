@@ -77,6 +77,10 @@ async function setTrainingRequired (id, training_required) {
   return await User.query().patchAndFetchById(id, { training_required })
 }
 
+async function setTrainingComplete (id, training_complete) {
+  return await User.query().patchAndFetchById(id, { training_complete })
+}
+
 async function setAnnotatorOnly (id, annotator_only) {
   console.log('setAnnotatorOnly', id, annotator_only)
   return await User.query().patchAndFetchById(id, { annotator_only })
@@ -322,6 +326,8 @@ async function putUser (req, res, next) {  console.log(req.body)
     response = await setAffiliation(res.locals.adminUser.id, req.body.payload.affiliation)
   } else if (req.body.action === 'setTrainingRequired') {
     response = await setTrainingRequired(res.locals.adminUser.id, req.body.value)
+  } else if (req.body.action === 'setTrainingComplete') {
+    response = await setTrainingComplete(res.locals.adminUser.id, req.body.value)
   } else if (req.body.action === 'setAnnotatorOnly') {
     response = await setAnnotatorOnly(res.locals.adminUser.id, req.body.value)
   } else if (req.body.action === 'signOut') {
