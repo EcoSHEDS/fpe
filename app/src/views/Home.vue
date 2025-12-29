@@ -79,9 +79,9 @@
             </div>
           </div>
           <div class="d-flex align-end mt-4">
-            <div class="font-weight-light black--text text-h6">December Model Batch</div>
+            <div class="font-weight-light black--text text-h6">December Model Batch, HESS Publication</div>
             <v-spacer></v-spacer>
-            <div class="text-subtitle-2 font-weight-light font-italic">December 12, 2025</div>
+            <div class="text-subtitle-2 font-weight-light font-italic">December 29, 2025</div>
           </div>
           <v-divider class="mb-2"></v-divider>
           <div class="body-1">
