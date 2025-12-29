@@ -70,12 +70,27 @@
             <div class="font-weight-light black--text text-h6">Newsletter Archive</div>
             <v-divider class="mb-2"></v-divider>
             <ul>
+              <li><a href="https://content.govdelivery.com/accounts/USDOIGS/bulletins/4003189">December 18, 2025</a>: Image and Annotation Guidance for Model Training, HESS Publication</li>
               <li><a href="https://content.govdelivery.com/accounts/USDOIGS/bulletins/3db2be1">April 16, 2025</a>: Preprint, FPE Growth, Annotator Thank You, Model Development Report</li>
               <li><a href="https://content.govdelivery.com/accounts/USDOIGS/bulletins/397081f">April 18, 2024</a>: Interface Updates, Model Results</li>
             </ul>
             <div class="mt-2">
               <strong>Want to receive periodic updates about the project?</strong> <a href="https://public.govdelivery.com/accounts/USDOIGS/subscriber/new?topic_id=USDOIGS_120">Sign up</a> for our email newsletter.<br>
             </div>
+          </div>
+          <div class="d-flex align-end mt-4">
+            <div class="font-weight-light black--text text-h6">December Model Batch</div>
+            <v-spacer></v-spacer>
+            <div class="text-subtitle-2 font-weight-light font-italic">December 12, 2025</div>
+          </div>
+          <v-divider class="mb-2"></v-divider>
+          <div class="body-1">
+            <p>
+              New models have been successfully trained and deployed for estimating relative streamflow at 31 stations. Results can be found on the <router-link :to="{ name: 'explorerHome' }">Photo Explorer</router-link>.
+            </p>
+            <p>
+              Our latest publication <a href="https://doi.org/10.5194/hess-29-6445-2025">"Technical note: A low-cost approach to monitoring relative streamflow dynamics in small headwater streams using time lapse imagery and a deep learning model"</a> has been published to HESS. This paper describes the modeling framework that underpins Flow Photo Explorer and evaluates model performance compared to observed streamflow across multiple stations.
+            </p>
           </div>
           <div class="d-flex align-end mt-4">
             <div class="font-weight-light black--text text-h6">June Model Batch</div>
@@ -102,18 +117,18 @@
               Walker, J.D., Gupta, A., Fair, J.B., Goodling, P.J., and Letcher, B.A., 2025, Streamflow Rank Estimation (SRE) Model: U.S. Geological Survey software release, <a href="https://doi.org/10.5066/P1YSANVM">https://doi.org/10.5066/P1YSANVM</a>.
             </p>
           </div>
-          <div class="d-flex align-end mt-4">
-            <div class="font-weight-light black--text text-h6">Annotation Variables</div>
-            <v-spacer></v-spacer>
-            <div class="text-subtitle-2 font-weight-light font-italic">June 2, 2025</div>
-          </div>
-          <v-divider class="mb-2"></v-divider>
-          <div class="body-1">
-            <p>
-              On the annotations page, users can now specify which variable they would like to annotate for. This will allow us to train the model to predict variables other than flow include water level of lakes and wetlands, snow depth, algal biomass (HABs), and animal counts, among others.
-            </p>
-          </div>
           <div v-if="showMoreNews">
+            <div class="d-flex align-end mt-4">
+              <div class="font-weight-light black--text text-h6">Annotation Variables</div>
+              <v-spacer></v-spacer>
+              <div class="text-subtitle-2 font-weight-light font-italic">June 2, 2025</div>
+            </div>
+            <v-divider class="mb-2"></v-divider>
+            <div class="body-1">
+              <p>
+                On the annotations page, users can now specify which variable they would like to annotate for. This will allow us to train the model to predict variables other than flow include water level of lakes and wetlands, snow depth, algal biomass (HABs), and animal counts, among others.
+              </p>
+            </div>
             <div class="d-flex align-end">
               <div class="font-weight-light black--text text-h6">Preprint Publication, Model Results, ROAR Report and Newsletter</div>
               <v-spacer></v-spacer>
@@ -232,7 +247,7 @@
             </v-col>
           </v-row>
           <p class="font-italic mt-4">
-            Goodling, P. J., Fair, J. H., Gupta, A., Walker, J. D., Dubreuil, T., Hayden, M., and Letcher, B. H. (2025). Technical note: A low-cost approach to monitoring relative streamflow dynamics in small headwater streams using time lapse imagery and a deep learning model, Hydrol. Earth Syst. Sci., 29, 6445–6460.<a href="https://doi.org/10.5194/hess-29-6445-2025">https://doi.org/10.5194/hess-29-6445-2025</a>
+            Goodling, P. J., Fair, J. H., Gupta, A., Walker, J. D., Dubreuil, T., Hayden, M., and Letcher, B. H. (2025). <b>Technical note: A low-cost approach to monitoring relative streamflow dynamics in small headwater streams using time lapse imagery and a deep learning model</b>, Hydrol. Earth Syst. Sci., 29, 6445–6460. <a href="https://doi.org/10.5194/hess-29-6445-2025">https://doi.org/10.5194/hess-29-6445-2025</a>
           </p>
           <p class="font-italic mt-4">
             Walker, J.D. (2025). <b>Low-cost Streamflow Monitoring using Timelapse Imagery and Machine Learning Models.</b> Year 1 Final Report, USEPA Regional-ORD Applied Research Program (ROAR) Project #2554. Prepared for US Environmental Protection Agency Office of Research and Development. April 3, 2025. <a href="https://doi.org/10.5281/zenodo.15133342">https://doi.org/10.5281/zenodo.15133342</a>
