@@ -3,7 +3,6 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 const logger = require('morgan')
 const createError = require('http-errors')
-const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware')
 const jwt = require('jsonwebtoken')
 
 const { isLambda } = require('./utils')
@@ -13,31 +12,6 @@ const app = express()
 app.use(logger('tiny'))
 app.use(bodyParser.json())
 app.use(cors())
-
-if (isLambda()) {
-  app.use(awsServerlessExpressMiddleware.eventContext())
-} else if (process.env.NODE_ENV === 'development') {
-  // mock awsServerlessExpressMiddleware
-  console.log('mock awsServerlessExpressMiddleware')
-  app.use((req, res, next) => {
-    if (req.headers.authorization) {
-      const decoded = jwt.decode(req.headers.authorization)
-      if (decoded['cognito:groups']) {
-        decoded['cognito:groups'] = decoded['cognito:groups'].join(',')
-      }
-      req.apiGateway = {
-        event: {
-          requestContext: {
-            authorizer: {
-              claims: decoded
-            }
-          }
-        }
-      }
-    }
-    next()
-  })
-}
 
 app.use('/', require('./routes'))
 

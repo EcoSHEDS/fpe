@@ -1,10 +1,12 @@
 const createError = require('http-errors')
+const { getCurrentInvoke } = require('@codegenie/serverless-express')
 
 function attachUser (req, res, next) {
-  if (!req.apiGateway || !req.apiGateway.event.requestContext.authorizer) {
+  const currentInvoke = getCurrentInvoke()
+  const claims = currentInvoke?.event?.requestContext?.authorizer?.claims
+  if (!claims) {
     return next(createError(401, 'Unauthorized'))
   }
-  const claims = req.apiGateway.event.requestContext.authorizer.claims
   const groups = claims['cognito:groups'] ? claims['cognito:groups'].split(',') : []
   const isAdmin = groups.includes('admins')
   req.auth = {
