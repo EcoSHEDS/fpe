@@ -2,6 +2,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 node_modules/
+__pycache__/
 
 # dotenv environment variables files (local only)
 .env.local
