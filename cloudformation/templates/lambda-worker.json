@@ -93,7 +93,7 @@
             "Arn"
           ]
         },
-        "Runtime": "nodejs14.x",
+        "Runtime": "nodejs24.x",
         "Timeout": "15",
         "Code": "../../lambda/worker/",
         "VpcConfig": {
