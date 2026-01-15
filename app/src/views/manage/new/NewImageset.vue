@@ -111,8 +111,8 @@
                       <v-btn-toggle
                         v-model="files.selectFolders"
                         mandatory
-                        class="mt-4"
-                        @change="resetFiles"
+                        class="mt-8"
+                        @change="resetFiles(true)"
                       >
                         <v-btn small>
                           <v-icon left>mdi-file-multiple</v-icon> Select Files
@@ -240,7 +240,7 @@
                       colored-border
                       border="left"
                       class="body-2 mb-0 mt-4"
-                      v-if="!files.selected || files.selected.length === 0"
+                      v-if="selectedImageFiles.length === 0"
                     >
                       <div class="font-weight-bold body-1">Missing Photo Files</div>
                       <div>
@@ -787,13 +787,15 @@ export default {
 
       return await this.validateExifData(file)
     },
-    resetFiles () {
-      this.files.selected = null
+    resetFiles (clearSelected = false) {
       this.files.error = null
       this.files.loading = false
       this.files.message = null
       this.files.progress = 0
       this.files.valid = false
+      if (clearSelected) {
+        this.files.selected = null
+      }
     },
     async validateFiles () {
       const files = this.selectedImageFiles
