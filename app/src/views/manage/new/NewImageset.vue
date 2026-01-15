@@ -101,7 +101,8 @@
                   <v-col cols="12" md="8">
                     <div class="text-h6">Select Photo Files</div>
                     <ul class="mt-2 body-2">
-                      <li>Each file must be in <strong>JPEG format</strong> with a *.jpg or *.jpeg.</li>
+                      <li>Select a batch of image files from a single folder. If your camera saves images to separate subfolders, then place all those subfolders into a single parent folder, and select the parent folder. Note that you cannot directly select multiple subfolders at once, so be sure to put all the subfolders into a single parent folder first.</li>
+                      <li>Each image file must be in <strong>JPEG format</strong> with a *.jpg or *.jpeg.</li>
                       <li>Files may use <strong>any file naming scheme</strong>. Timestamps and other metadata are extracted from the embedded EXIF data (see next point) so the filename does not matter.</li>
                       <li>Each file must contain an <strong>accurate timestamp within its EXIF data</strong>. Be sure to set the date and time on the camera correctly before collecting photos! If the timestamps are incorrect in the files, try using free tools such as <a href="https://exiftool.org/" target="_blank">ExifTool</a> or <a href="http://www.friedemann-schmidt.com/software/exifer/" target="_blank">Exifer (Windows only)</a> to adjust them.</li>
                     </ul>
@@ -113,6 +114,7 @@
                         label="Select photo files"
                         truncate-length="200"
                         multiple
+                        webkitdirectory
                         class="mt-4"
                         @change="selectFiles"
                       ></v-file-input>
@@ -350,7 +352,7 @@
                               <tbody>
                                 <tr>
                                   <td class="text-right pr-2" style="width:140px">Filename:</td>
-                                  <td class="font-weight-bold">{{ timestamp.verify.file.name }}</td>
+                                  <td class="font-weight-bold">{{ getFilenameOrPath(timestamp.verify.file) }}</td>
                                 </tr>
                                 <tr>
                                   <td class="text-right pr-2" style="width:140px;vertical-align:top">EXIF Timestamp:</td>
@@ -685,6 +687,11 @@ export default {
     },
     station () {
       return this.$parent.$parent.station
+    },
+    selectedImageFiles () {
+      if (!this.files.selected) return []
+      return this.files.selected
+        .filter(file => file.type === 'image/jpeg')
     }
   },
   beforeDestroy () {
@@ -696,6 +703,16 @@ export default {
     }
   },
   methods: {
+    getFilenameOrPath (file) {
+      if (file.webkitRelativePath) {
+        // Remove the parent folder prefix (first path segment) since all files share it
+        const parts = file.webkitRelativePath.split('/')
+        if (parts.length > 1) {
+          return parts.slice(1).join('/')
+        }
+      }
+      return file.name
+    },
     readImageFile (file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader()
@@ -719,15 +736,15 @@ export default {
         exif = await this.extractExifData(file)
       } catch (err) {
         console.error(err)
-        throw new Error(`Failed to extract EXIF data from first file (${file.name})`)
+        throw new Error(`Failed to extract EXIF data from first file (${this.getFilenameOrPath(file)})`)
       }
 
       if (!exif.tags || Object.keys(exif.tags).length === 0) {
-        throw new Error(`Photo file (${file.name}) does not have valid EXIF data`)
+        throw new Error(`Photo file (${this.getFilenameOrPath(file)}) does not have valid EXIF data`)
       }
 
       if (!exif.tags.DateTimeOriginal && !exif.tags.CreateDate) {
-        throw new Error(`Photo file (${file.name}) is missing timestamp (DateTimeOriginal or CreateDate) in EXIF data`)
+        throw new Error(`Photo file (${this.getFilenameOrPath(file)}) is missing timestamp (DateTimeOriginal or CreateDate) in EXIF data`)
       }
 
       return exif
@@ -738,7 +755,7 @@ export default {
 
       const fileExtension = file.name.split('.').pop().toLowerCase()
       if (!['jpg', 'jpeg'].includes(fileExtension)) {
-        throw new Error(`${file.name} is not a valid file. All files must be in JPEG format with extension '.jpg' or '.jpeg'.`)
+        throw new Error(`${this.getFilenameOrPath(file)} is not a valid file. All files must be in JPEG format with extension '.jpg' or '.jpeg'.`)
       }
 
       return await this.validateExifData(file)
@@ -751,7 +768,7 @@ export default {
       this.files.valid = false
     },
     async validateFiles () {
-      const files = this.files.selected
+      const files = this.selectedImageFiles
 
       if (files === null) {
         throw new Error('No files selected.')
@@ -765,7 +782,7 @@ export default {
 
       for (let i = 0; i < files.length; i++) {
         if (this.files.cancelled) return
-        this.files.message = `Validating ${files[i].name}...`
+        this.files.message = `Validating ${this.getFilenameOrPath(files[i])}...`
         this.files.progress = i / files.length * 100
         await this.validateImageFile(files[i])
       }
@@ -792,8 +809,8 @@ export default {
       if (this.files.error) return
 
       // Generate preview for the first image
-      if (this.files.selected && this.files.selected.length > 0) {
-        const firstFile = this.files.selected[0]
+      if (this.selectedImageFiles.length > 0) {
+        const firstFile = this.selectedImageFiles[0]
         this.confirmStation.previewUrl = URL.createObjectURL(firstFile)
       }
 
@@ -816,11 +833,11 @@ export default {
       this.timestamp.error = null
       if (!this.timestamp.utcOffset.selected) return
 
-      if (!this.files.selected || !this.files.selected.length === 0) {
+      if (!this.selectedImageFiles || !this.selectedImageFiles.length === 0) {
         this.timestamp.error = 'No files could be loaded. Please return to the previous step and select the photo files.'
       }
 
-      const file = this.files.selected[0]
+      const file = this.selectedImageFiles[0]
       const url = URL.createObjectURL(file)
 
       let exif
@@ -854,7 +871,7 @@ export default {
     nextTimestamp () {
       if (!this.$refs.timestampForm.validate()) return
 
-      if (!this.files.selected || this.files.selected.length === 0) {
+      if (this.selectedImageFiles.length === 0) {
         this.timestamp.error('No files selected. Please return to previous step and select the photo files.')
         return
       }
@@ -866,7 +883,7 @@ export default {
     nextMetadata () {
       if (!this.$refs.metadataForm.validate()) return
 
-      if (!this.files.selected || this.files.selected.length === 0) return
+      if (this.selectedImageFiles.length === 0) return
 
       this.step += 1
     },
@@ -879,7 +896,7 @@ export default {
       this.step -= 1
     },
     validateUpload () {
-      if (!this.files.selected || this.files.selected.length === 0) {
+      if (this.selectedImageFiles.length === 0) {
         this.upload.status = 'FAILED'
         this.upload.error = 'No files have been selected'
         return false
@@ -912,7 +929,7 @@ export default {
 
       this.$nextTick(() => this.$vuetify.goTo(this.$refs.pending))
 
-      const files = this.files.selected
+      const files = this.selectedImageFiles
 
       if (!this.upload.imageset) {
         try {
@@ -956,7 +973,7 @@ export default {
         const start = new Date()
         const file = files[i]
 
-        this.upload.message = `Uploading ${file.name} (${(i + 1).toLocaleString()} of ${n.toLocaleString()})...`
+        this.upload.message = `Uploading ${this.getFilenameOrPath(file)} (${(i + 1).toLocaleString()} of ${n.toLocaleString()})...`
         this.upload.progress = (i / n) * 100
         this.upload.index = i
 
@@ -969,7 +986,7 @@ export default {
           if (this.upload.status === 'CANCELLED') return
 
           this.upload.status = 'FAILED'
-          this.upload.message = `Failed to upload photo: ${file.name}. Press Retry to continue trying to upload this photo set, Finish to stop uploading and skip the remaining photos (previously uploaded photos will be saved), or Cancel to delete this photo set entirely including all previously uploaded images from the server.`
+          this.upload.message = `Failed to upload photo: ${this.getFilenameOrPath(file)}. Press Retry to continue trying to upload this photo set, Finish to stop uploading and skip the remaining photos (previously uploaded photos will be saved), or Cancel to delete this photo set entirely including all previously uploaded images from the server.`
           this.upload.error = (err.response && err.response.data.message) || err.toString()
 
           return
@@ -1082,7 +1099,8 @@ export default {
     async uploadFileToS3 (file, i) {
       const formData = new FormData()
 
-      const s3Key = this.upload.presignedUrl.fields.key + file.name
+      const uniqueFilename = this.getFilenameOrPath(file)
+      const s3Key = this.upload.presignedUrl.fields.key + uniqueFilename
 
       Object.keys(this.upload.presignedUrl.fields).forEach((key) => {
         if (key === 'key') {
@@ -1106,7 +1124,7 @@ export default {
         }
       })
       return {
-        filename: file.name,
+        filename: uniqueFilename,
         s3: {
           Bucket: this.upload.presignedUrl.fields.bucket,
           Key: s3Key
@@ -1146,7 +1164,7 @@ export default {
       }
     },
     nextConfirmStation () {
-      if (!this.files.selected || this.files.selected.length === 0) {
+      if (this.selectedImageFiles.length === 0) {
         this.confirmStation.error = 'No files selected. Please return to previous step and select the photo files.'
         return
       }
