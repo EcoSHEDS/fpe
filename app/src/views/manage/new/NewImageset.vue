@@ -101,7 +101,7 @@
                   <v-col cols="12" md="8">
                     <div class="text-h6">Select Photo Files</div>
                     <ul class="mt-2 body-2">
-                      <li>Select a batch of image files. You can choose to either select the individual files directly or select a single folder containing the files, which can be nested within subfolders. If your camera saves images to separate subfolders, then place all those subfolders into a single parent folder, and select the parent folder. Note that you cannot directly select multiple subfolders at once, so be sure to put all the subfolders into a single parent folder first.</li>
+                      <li>Select a batch of image files. You can choose to either select multiple files directly or select a single folder containing the files, which can be nested within subfolders. If your camera saves images to separate subfolders (e.g., by day or in batches of 1,000 files each), then place all those subfolders into a single parent folder and select the parent folder. Note that you cannot directly select multiple subfolders at once, so be sure to put all the subfolders into a single parent folder first.</li>
                       <li>Each image file must be in <strong>JPEG format</strong> with a *.jpg or *.jpeg.</li>
                       <li>Files may use <strong>any file naming scheme</strong>. Timestamps and other metadata are extracted from the embedded EXIF data (see next point) so the filename does not matter.</li>
                       <li>Each file must contain an <strong>accurate timestamp within its EXIF data</strong>. Be sure to set the date and time on the camera correctly before collecting photos! If the timestamps are incorrect in the files, try using free tools such as <a href="https://exiftool.org/" target="_blank">ExifTool</a> or <a href="http://www.friedemann-schmidt.com/software/exifer/" target="_blank">Exifer (Windows only)</a> to adjust them.</li>
@@ -114,11 +114,11 @@
                         class="mt-4"
                         @change="resetFiles"
                       >
-                        <v-btn :value="false" small>
-                          <v-icon left small>mdi-file-multiple</v-icon> Select Files
+                        <v-btn small>
+                          <v-icon left>mdi-file-multiple</v-icon> Select Files
                         </v-btn>
-                        <v-btn :value="true" small>
-                          <v-icon left small>mdi-folder</v-icon> Select Folder
+                        <v-btn small>
+                          <v-icon left>mdi-folder</v-icon> Select Folder
                         </v-btn>
                       </v-btn-toggle>
 
@@ -137,7 +137,7 @@
                         v-else
                         v-model="files.selected"
                         :rules="files.rules"
-                        label="Select image files"
+                        label="Select multiple image files"
                         truncate-length="200"
                         multiple
                         accept="image/jpeg"
