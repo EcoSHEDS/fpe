@@ -15,6 +15,7 @@ import './plugins/highcharts'
 import './plugins/leaflet'
 import './plugins/luxon'
 import './plugins/vue-filter-pretty-bytes'
+import './plugins/vue2-filters'
 
 import Alert from '@/components/Alert'
 import RefreshButton from '@/components/RefreshButton'
