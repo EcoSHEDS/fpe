@@ -70,13 +70,24 @@
             <div class="font-weight-light black--text text-h6">Newsletter Archive</div>
             <v-divider class="mb-2"></v-divider>
             <ul>
-              <li><a href="https://content.govdelivery.com/accounts/USDOIGS/bulletins/4003189">December 18, 2025</a>: Image and Annotation Guidance for Model Training, HESS Publication</li>
-              <li><a href="https://content.govdelivery.com/accounts/USDOIGS/bulletins/3db2be1">April 16, 2025</a>: Preprint, FPE Growth, Annotator Thank You, Model Development Report</li>
-              <li><a href="https://content.govdelivery.com/accounts/USDOIGS/bulletins/397081f">April 18, 2024</a>: Interface Updates, Model Results</li>
+              <li><a href="https://content.govdelivery.com/accounts/USDOIGS/bulletins/4003189">Dec 18, 2025</a>: Image and Annotation Guidance for Model Training, HESS Publication</li>
+              <li><a href="https://content.govdelivery.com/accounts/USDOIGS/bulletins/3db2be1">Apr 16, 2025</a>: Preprint, FPE Growth, Annotator Thank You, Model Development Report</li>
+              <li><a href="https://content.govdelivery.com/accounts/USDOIGS/bulletins/397081f">Apr 18, 2024</a>: Interface Updates, Model Results</li>
             </ul>
             <div class="mt-2">
               <strong>Want to receive periodic updates about the project?</strong> <a href="https://public.govdelivery.com/accounts/USDOIGS/subscriber/new?topic_id=USDOIGS_120">Sign up</a> for our email newsletter.<br>
             </div>
+          </div>
+          <div class="d-flex align-end mt-4">
+            <div class="font-weight-light black--text text-h6">February Model Batch</div>
+            <v-spacer></v-spacer>
+            <div class="text-subtitle-2 font-weight-light font-italic">February 6, 2026</div>
+          </div>
+          <v-divider class="mb-2"></v-divider>
+          <div class="body-1">
+            <p>
+              This month, 43 models were trained and deployed for estimating relative streamflow. In addition, models were also trained at two stations for monitoring relative snow/ice cover. Results can be found on the <router-link :to="{ name: 'explorerHome' }">Photo Explorer</router-link>.
+            </p>
           </div>
           <div class="d-flex align-end mt-4">
             <div class="font-weight-light black--text text-h6">December Model Batch, HESS Publication</div>
