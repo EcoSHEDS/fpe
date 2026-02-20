@@ -514,7 +514,7 @@
 
                   <v-img src="img/user-guide/upload/photos-form-files-valid.png" alt="Screenshot of selected photos after validation is complete" class="my-4 mx-auto"></v-img>
 
-                  <p><strong>Select the UTC offset</strong> for the timezone associated with the timestamp of each photo. This setting is important for converting the photo timestamps to UTC (aka GMT) for storage in the database. If you typically set the camera clock to the local time on your watch or phone, then choose the standard or daylight savings version of your local timezone that was in effect when you last set the camera clock. For example, if you last set the camera clock in the summer and you are in US/Eastern time zone, then choose UTC-04 (EDT) for eastern daylight time.</p>
+                  <p><strong>Select the UTC offset</strong> for the timezone associated with the timestamp of each photo. This setting is important for converting the photo timestamps to UTC (aka GMT) for storage in the database. If you typically set the camera clock to the local time on your watch or phone, then choose the standard or daylight savings version of your local timezone that was in effect when you last set the camera clock. For example, if you last set the camera clock in the summer and you are in America/New_York time zone, then choose UTC-04 (EDT) for eastern daylight time.</p>
 
                   <v-img src="img/user-guide/upload/photos-form-timestamp.png" alt="Screenshot of timestamp settings" class="my-4 mx-auto"></v-img>
 

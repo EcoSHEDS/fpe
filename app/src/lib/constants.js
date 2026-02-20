@@ -209,28 +209,32 @@ export const variables = [
 
 export const stationTimezones = [
   {
-    id: 'US/Eastern',
-    label: 'US/Eastern (UTC-5/UTC-4)'
+    id: 'America/Halifax',
+    label: 'America/Halifax (Atlantic, UTC-4/UTC-3)'
   },
   {
-    id: 'US/Central',
-    label: 'US/Central (UTC-6/UTC-5)'
+    id: 'America/New_York',
+    label: 'America/New_York (Eastern, UTC-5/UTC-4)'
   },
   {
-    id: 'US/Mountain',
-    label: 'US/Mountain (UTC-7/UTC-6)'
+    id: 'America/Chicago',
+    label: 'America/Chicago (Central, UTC-6/UTC-5)'
   },
   {
-    id: 'US/Pacific',
-    label: 'US/Pacific (UTC-8/UTC-7)'
+    id: 'America/Denver',
+    label: 'America/Denver (Mountain, UTC-7/UTC-6)'
   },
   {
-    id: 'US/Alaska',
-    label: 'US/Alaska (UTC-9/UTC-8)'
+    id: 'America/Los_Angeles',
+    label: 'America/Los_Angeles (Pacific, UTC-8/UTC-7)'
   },
   {
-    id: 'US/Hawaii',
-    label: 'US/Hawaii (UTC-10/UTC-9)'
+    id: 'America/Anchorage',
+    label: 'America/Anchorage (Alaska, UTC-9/UTC-8)'
+  },
+  {
+    id: 'Pacific/Honolulu',
+    label: 'Pacific/Honolulu (Hawaii, UTC-10)'
   }
 ]
 
@@ -241,8 +245,13 @@ export const utcOffsets = [
     value: 0
   },
   {
+    id: 'UTC-03',
+    label: 'UTC-03 (ADT)',
+    value: -3
+  },
+  {
     id: 'UTC-04',
-    label: 'UTC-04 (EDT)',
+    label: 'UTC-04 (AST or EDT)',
     value: -4
   },
   {

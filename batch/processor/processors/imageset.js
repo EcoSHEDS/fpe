@@ -23,7 +23,7 @@ async function notifyMessage (id) {
   return `New photoset has been uploaded to FPE
 
 Imageset ID: ${imageset.id}
-Uploaded at: ${DateTime.fromJSDate(imageset.created_at).setZone('US/Eastern').toFormat('DD ttt')}
+Uploaded at: ${DateTime.fromJSDate(imageset.created_at).setZone('America/New_York').toFormat('DD ttt')}
 Status: ${imageset.status} ${imageset.status === 'PROCESSING' ? '(Upload Complete, Queued for PII Detector)' : ''}
 
 User ID: ${imageset.station.user.id}

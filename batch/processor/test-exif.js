@@ -35,7 +35,7 @@ for (let i = 0; i < files.length; i++) {
   const rawDate = new Date(exifDatetime * 1000)
   const timestamp = DateTime.fromJSDate(rawDate).setZone(`UTC${offset}`, { keepLocalTime: true })
   const timestampUtc = timestamp.setZone('UTC')
-  const timestampLocal = timestamp.setZone('US/Eastern')
+  const timestampLocal = timestamp.setZone('America/New_York')
 
   console.log(
     path.basename(file).substr(0, 13),
