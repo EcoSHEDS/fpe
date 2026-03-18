@@ -19,6 +19,10 @@
       "Description": "Name of model bucket",
       "Type": "String"
     },
+    "storageBucketName": {
+      "Description": "Name of storage bucket",
+      "Type": "String"
+    },
     "developerRoleArn": {
       "Description": "ARN of developer role",
       "Type": "String"
@@ -110,6 +114,21 @@
                     },
                     {
                       "Fn::Sub": "arn:aws:s3:::${modelBucketName}/*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject",
+                    "s3:ListBucket"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:aws:s3:::${storageBucketName}"
+                    },
+                    {
+                      "Fn::Sub": "arn:aws:s3:::${storageBucketName}/*"
                     }
                   ]
                 }

@@ -68,6 +68,7 @@
           "env": { "Ref": "env" },
           "permissionsBoundaryName": { "Ref": "permissionsBoundaryName" },
           "modelBucketName": { "Ref": "modelBucketName" },
+          "storageBucketName": { "Ref": "storageBucketName" },
           "developerRoleArn": { "Ref": "developerRoleArn" }
         }
       }
