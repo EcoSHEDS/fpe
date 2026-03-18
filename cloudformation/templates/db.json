@@ -34,6 +34,11 @@
       "Type": "String",
       "Default": "db.t3.micro"
     },
+    "dbEngineVersion": {
+      "Description": "Database engine version",
+      "Type": "String",
+      "Default": "18"
+    },
     "publiclyAccessible": {
       "Description": "Enable public access",
       "Type": "String",
@@ -101,8 +106,8 @@
     "DBParameterGroup": {
         "Type": "AWS::RDS::DBParameterGroup",
         "Properties": {
-            "Description": "Postgres16",
-            "Family": "postgres16",
+            "Description": "Postgres18",
+            "Family": "postgres18",
             "Parameters": {
                 "rds.force_ssl": 0
             }
@@ -135,7 +140,7 @@
           "Ref": "DBSubnetGroup"
         },
         "Engine": "postgres",
-        "EngineVersion": 16.3,
+        "EngineVersion": { "Ref": "dbEngineVersion" },
         "MasterUsername": {
           "Fn::Join": [
             "",
@@ -159,7 +164,7 @@
         "MultiAZ": false,
         "Port": 5432,
         "PubliclyAccessible": { "Ref": "publiclyAccessible" },
-        "StorageType": "gp2",
+        "StorageType": "gp3",
         "VPCSecurityGroups": {
           "Ref": "vpcSecurityGroupIds"
         },
