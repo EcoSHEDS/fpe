@@ -4,4 +4,5 @@
 
 set -eu
 
-aws cloudformation deploy --stack-name ${STACK_NAME}-db --template-file templates/db.json
+aws cloudformation deploy --stack-name ${STACK_NAME}-db --template-file templates/db.json --parameter-overrides file://parameters/db.${ENV}.local.json
+

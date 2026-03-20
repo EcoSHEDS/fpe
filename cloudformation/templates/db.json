@@ -37,7 +37,7 @@
     "dbEngineVersion": {
       "Description": "Database engine version",
       "Type": "String",
-      "Default": "18"
+      "Default": 18.3
     },
     "publiclyAccessible": {
       "Description": "Enable public access",
@@ -63,6 +63,7 @@
     },
     "DBInstanceSecret": {
       "Type": "AWS::SecretsManager::Secret",
+      "DeletionPolicy": "Retain",
       "Properties": {
         "Name": {
           "Fn::Join": [
@@ -115,6 +116,7 @@
     },
     "DBInstance": {
       "Type": "AWS::RDS::DBInstance",
+      "DeletionPolicy": "Retain",
       "Properties": {
         "DBParameterGroupName": { "Ref": "DBParameterGroup" },
         "DeletionProtection": true,
