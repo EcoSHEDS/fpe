@@ -164,7 +164,7 @@ function cameraToStation (camera, imageSummary = { start_date: null, end_date: n
     waterbody_type: 'ST',
     status: 'ACTIVE',
     annotation_priority: false,
-    affiliation_code: 'USGS',
+    affiliation_code: 'USGS NIMS',
     affiliation_name: 'USGS National Imagery Management System',
     images: imageSummary,
     variables: [],
