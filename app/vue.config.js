@@ -1,5 +1,5 @@
-const package = require('./package.json')
-process.env.VUE_APP_VERSION = package.version
+const packageInfo = require('./package.json')
+process.env.VUE_APP_VERSION = packageInfo.version
 module.exports = {
   transpileDependencies: [
     'vuetify'

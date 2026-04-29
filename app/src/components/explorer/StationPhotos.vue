@@ -348,6 +348,7 @@ import { rank, rollup, mean, max, deviation } from 'd3-array'
 import { csv } from 'd3-fetch'
 import { scaleUtc } from 'd3-scale'
 import nwis from '@/lib/nwis'
+import nims from '@/lib/nims'
 import { fixDataUrl } from '@/lib/utils'
 import PhotoTimeseriesChart from '@/components/charts/PhotoTimeseriesChart'
 import DistributionChart from '@/components/charts/DistributionChart'
@@ -412,6 +413,9 @@ export default {
     }
   },
   computed: {
+    isNimsStation () {
+      return nims.isNimsStationId(this.station.id)
+    },
     imagesInTimeRange () {
       if (!this.timeRange) return this.images
       if (this.mode === 'INST' && this.instantaneous) {
@@ -559,6 +563,10 @@ export default {
       }
     },
     async fetchInstantaneousImages (start, end) {
+      if (this.isNimsStation) {
+        return nims.getImages(start, end)
+      }
+
       const response = await this.$http.public.get(`/stations/${this.station.id}/images?start=${start}&end=${end}`)
       const images = response.data
       images.forEach(d => {
@@ -615,6 +623,8 @@ export default {
       return instSeries
     },
     async fetchInstantaneousValues (variableId, startDate, endDate) {
+      if (this.isNimsStation) return []
+
       const response = await this.$http.public.get(`/stations/${this.station.id}/values?variable=${variableId}&start=${startDate}&end=${endDate}`)
       const values = response.data
       values.forEach(d => {
@@ -687,6 +697,15 @@ export default {
       return series
     },
     async fetchDailyImages () {
+      if (this.isNimsStation) {
+        const images = await nims.getDailyImages()
+        return images.map(d => ({
+          ...d.image,
+          n_images: d.n_images,
+          date: d.date
+        }))
+      }
+
       const response = await this.$http.public.get(`/stations/${this.station.id}/daily/images`)
       const images = response.data
       return images.map(d => {
@@ -700,6 +719,8 @@ export default {
       })
     },
     async fetchDailyValues (variableId, startDate, endDate) {
+      if (this.isNimsStation) return []
+
       const response = await this.$http.public.get(`/stations/${this.station.id}/daily/values?variableId=${variableId}&start=${startDate}&end=${endDate}`)
       const values = response.data
       values.forEach(d => {
@@ -718,6 +739,8 @@ export default {
     },
 
     async fetchModelPredictions (model) {
+      if (this.isNimsStation) return []
+
       if (!model || !model.predictions_url) return []
       const data = await csv(model.predictions_url, (d, i) => {
         return {
@@ -734,6 +757,8 @@ export default {
       return data
     },
     async fetchModels () {
+      if (this.isNimsStation) return []
+
       const models = this.station.models
       for (const model of models) {
         model.values = await this.fetchModelPredictions(model)

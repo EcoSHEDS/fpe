@@ -50,6 +50,7 @@ import { mapGetters } from 'vuex'
 
 import StationsMap from '@/components/explorer/StationsMap'
 import StationsTable from '@/components/explorer/StationsTable'
+import nims from '@/lib/nims'
 
 export default {
   name: 'ExplorerHome',
@@ -72,12 +73,12 @@ export default {
   async mounted () {
     await this.fetch()
     if (this.$route.params.id) {
-      this.stations.selected = this.stations.all.find(d => d.id === +this.$route.params.id)
+      this.setSelectedFromRoute()
     }
   },
   watch: {
     '$route.params.id' () {
-      this.stations.selected = this.stations.all.find(d => d.id === +this.$route.params.id)
+      this.setSelectedFromRoute()
     }
   },
   methods: {
@@ -101,8 +102,10 @@ export default {
         stations.forEach(d => {
           d.has_obs = (d.variables && d.variables.length > 0) || !!d.nwis_id
           d.has_model = (d.models && d.models.length > 0)
+          d.demo_order = 1
         })
-        this.stations.all = stations.sort((a, b) => ascending(a.id, b.id))
+        const nimsStation = await nims.getStation()
+        this.stations.all = [nimsStation, ...stations.sort((a, b) => ascending(a.id, b.id))]
           .filter(d => d.images && d.images.count > 0)
         this.stations.filtered = this.stations.all
       } catch (err) {
@@ -111,6 +114,14 @@ export default {
       } finally {
         this.loading = false
       }
+    },
+    setSelectedFromRoute () {
+      const id = this.$route.params.id
+      if (!id) {
+        this.stations.selected = null
+        return
+      }
+      this.stations.selected = this.stations.all.find(d => String(d.id) === String(id))
     },
     select (station) {
       if (station && this.stations.selected !== station) {

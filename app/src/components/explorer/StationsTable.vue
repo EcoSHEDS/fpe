@@ -171,8 +171,8 @@ export default {
     return {
       filterMenu: false,
       search: '',
-      sortBy: ['has_model', 'images.count'],
-      sortDesc: [true, true],
+      sortBy: ['demo_order', 'has_model', 'images.count'],
+      sortDesc: [false, true, true],
       filters: {
         affiliation: null,
         waterbodyType: null,

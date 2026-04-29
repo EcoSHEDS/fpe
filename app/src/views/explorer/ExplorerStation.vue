@@ -50,6 +50,7 @@
 import { mapGetters } from 'vuex'
 import StationInfo from '@/components/explorer/StationInfo'
 import StationPhotos from '@/components/explorer/StationPhotos'
+import nims from '@/lib/nims'
 
 export default {
   name: 'StationViewer',
@@ -81,6 +82,11 @@ export default {
       this.error = null
       this.station = null
       try {
+        if (nims.isNimsStationId(this.$route.params.id)) {
+          this.station = await nims.getStation()
+          return
+        }
+
         let response
         if (this.user) {
           response = await this.$http.restricted.get(`/stations/${this.$route.params.id}`)
