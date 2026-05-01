@@ -91,7 +91,7 @@
 
                       <div class="caption px-4 pb-2">
                         <v-icon small left>mdi-information</v-icon>
-                        Priority stations are those we are actively seeking more annotations for. Please annotate those first unless there are others you are specifically interested in. Once a station has at least 2,000 <i>daytime</i> annotations, please move on to another.
+                        Priority stations are those we are actively seeking more annotations for. Please annotate those first unless there are others you are specifically interested in. Once a station has at least 2,000 <i>daytime</i> annotations, please move on to another. Annotation counts are only for the selected variable. Change the variable below to see counts for other variables.
                       </div>
                       <v-data-table
                         v-model="stationArray"
@@ -112,7 +112,7 @@
                       </v-data-table>
                     </v-card>
                     <div class="body-2 mt-8 mb-2">
-                      Select the variable you want to annotate. This will also be the variable the model will be trained to predict.
+                      Select the variable you want to annotate, which will also be the variable the model will be trained to predict.
                     </div>
                     <v-select
                       v-model="variable"
