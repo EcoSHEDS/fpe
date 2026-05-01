@@ -97,7 +97,7 @@
                         v-model="stationArray"
                         :loading="loading.stations"
                         :headers="headers"
-                        :items="stations"
+                        :items="stationTableItems"
                         :search="search"
                         :items-per-page="5"
                         :sort-by.sync="sortBy"
@@ -632,6 +632,17 @@ export default {
     station () {
       return this.stationArray.length > 0 ? this.stationArray[0] : null
     },
+    stationTableItems () {
+      const variable = this.variable?.value
+      return this.stations.map(station => {
+        const counts = station.annotation_counts_by_variable?.[variable] || {}
+        return {
+          ...station,
+          n_annotations: Number(counts.n_annotations) || 0,
+          n_annotations_daytime: Number(counts.n_annotations_daytime) || 0
+        }
+      })
+    },
     currentPair () {
       if (this.currentIndex === null) return null
       return this.pairs[this.currentIndex]
@@ -704,8 +715,7 @@ export default {
           return ascending(a.name, b.name)
         })
         stations.forEach(d => {
-          d.n_annotations = d.n_annotations || 0
-          d.n_annotations_daytime = d.n_annotations_daytime || 0
+          d.annotation_counts_by_variable = d.annotation_counts_by_variable || {}
           d.annotation_priority = d.annotation_priority || 0
         })
         this.stations = stations
@@ -1109,8 +1119,7 @@ export default {
           const dbUser = { ...this.dbUser, training_complete: true }
           store.dispatch('setDbUser', dbUser)
         } else {
-          this.station.n_annotations += payload.n
-          this.station.n_annotations_daytime += payload.n_daytime
+          this.incrementStationAnnotationCounts(payload)
           evt.$emit('notify', 'success', 'Annotations have been saved')
         }
         this.reset()
@@ -1223,11 +1232,30 @@ export default {
       }
     },
     selectStation (station) {
-      if (station === this.station) {
+      const selectedStation = this.stations.find(d => d.id === station.id) || station
+      if (this.station && selectedStation.id === this.station.id) {
         this.stationArray = []
       } else {
-        this.stationArray = [station]
+        this.stationArray = [selectedStation]
       }
+    },
+    incrementStationAnnotationCounts (payload) {
+      if (!this.station || !payload.variable) return
+
+      const countsByVariable = this.station.annotation_counts_by_variable || {}
+      if (!this.station.annotation_counts_by_variable) {
+        this.$set(this.station, 'annotation_counts_by_variable', countsByVariable)
+      }
+
+      const counts = countsByVariable[payload.variable] || {
+        n_annotations: 0,
+        n_annotations_daytime: 0
+      }
+
+      this.$set(countsByVariable, payload.variable, {
+        n_annotations: (Number(counts.n_annotations) || 0) + payload.n,
+        n_annotations_daytime: (Number(counts.n_annotations_daytime) || 0) + payload.n_daytime
+      })
     },
     startTraining () {
       // Clear resume state when explicitly starting fresh

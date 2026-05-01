@@ -1,4 +1,5 @@
 const { v4: uuidv4 } = require('uuid')
+const createError = require('http-errors')
 
 const { createPresignedPostPromise, notify } = require('../aws')
 const { Annotation, Station, User } = require('../db/models')
@@ -104,10 +105,7 @@ const getAnnotationStations = async (req, res, next) => {
     index === self.findIndex((t) => t.id === station.id)
   )
 
-  uniqueStations.forEach(d => {
-    d.n_annotations = Number(d.n_annotations) || 0
-    d.n_annotations_daytime = Number(d.n_annotations_daytime) || 0
-  })
+  uniqueStations.forEach(normalizeAnnotationCounts)
   return res.status(200).json(uniqueStations)
 }
 
@@ -115,11 +113,12 @@ const getAdminAnnotationStations = async (req, res, next) => {
   const rows = await Station.query()
     .modify('annotationSummary')
 
-  rows.forEach(d => {
-    d.n_annotations = Number(d.n_annotations) || 0
-    d.n_annotations_daytime = Number(d.n_annotations_daytime) || 0
-  })
+  rows.forEach(normalizeAnnotationCounts)
   return res.status(200).json(rows)
+}
+
+function normalizeAnnotationCounts (station) {
+  station.annotation_counts_by_variable = station.annotation_counts_by_variable || {}
 }
 
 const getAnnotationTraining = async (req, res, next) => {

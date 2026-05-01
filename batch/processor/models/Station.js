@@ -1,4 +1,5 @@
 const Base = require('./Base')
+const knex = require('../knex')
 
 class Station extends Base {
   static get tableName () {
@@ -10,12 +11,28 @@ class Station extends Base {
       annotationSummary (builder) {
         builder.select(
           '*',
-          Station.relatedQuery('annotations')
-            .where('flag', 'false')
-            .sum('n').as('n_annotations'),
-          Station.relatedQuery('annotations')
-            .where('flag', 'false')
-            .sum('n_daytime').as('n_annotations_daytime')
+          knex.raw(`
+            coalesce((
+              select json_object_agg(
+                variable,
+                json_build_object(
+                  'n_annotations', n_annotations,
+                  'n_annotations_daytime', n_annotations_daytime
+                )
+              )
+              from (
+                select
+                  annotations.variable,
+                  sum(annotations.n)::integer as n_annotations,
+                  sum(annotations.n_daytime)::integer as n_annotations_daytime
+                from annotations
+                where annotations.station_id = stations.id
+                  and annotations.flag = false
+                  and annotations.status = 'DONE'
+                group by annotations.variable
+              ) annotation_counts
+            ), '{}'::json) as annotation_counts_by_variable
+          `)
         )
       }
     }
