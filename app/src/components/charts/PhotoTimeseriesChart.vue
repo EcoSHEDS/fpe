@@ -129,6 +129,7 @@ export default {
   props: ['loading', 'series', 'images', 'station', 'image', 'scaleValues', 'mode', 'instantaneous'],
   data () {
     return {
+      suppressAfterSetExtremes: false,
       chartOptions: {
         chart: {
           animation: false,
@@ -317,6 +318,7 @@ export default {
     async afterSetExtremes (event) {
       // console.log('afterSetExtremes', event)
       // this.clearHighlight()
+      if (this.suppressAfterSetExtremes) return
       if (event.min && event.max) {
         this.$emit('zoom', [new Date(event.min), new Date(event.max)])
       }
@@ -335,6 +337,11 @@ export default {
 
       if (!this.instantaneous) return
 
+      const xAxis = this.chart.xAxis[0]
+      const previousMin = xAxis.min
+      const previousMax = xAxis.max
+      this.suppressAfterSetExtremes = true
+
       this.chart.series.forEach(s => {
         if (s.name === 'Navigator 1') return
 
@@ -344,7 +351,7 @@ export default {
             return { x: d.timestamp.valueOf(), y: 0, image: d }
           })
           // console.log(images)
-          s.setData(images)
+          s.setData(images, false)
         } else {
           // console.log(`find ${s.name} in ${this.instantaneous.series.map(d => d.name)}`)
           const instantaneousSeries = this.instantaneous.series.find(ss => ss.name === s.name)
@@ -362,7 +369,7 @@ export default {
                 }
               }).filter(d => d.y !== null && d.y !== undefined)
               // console.log(imageValues)
-              s.setData(imageValues)
+              s.setData(imageValues, false)
             } else {
               // console.log('!marker.enabled')
               // update line with series values
@@ -376,13 +383,22 @@ export default {
                 gapSize: 2.5 * 60 * 60 * 1000 // 2.5 hours
               }, false)
               // console.log(seriesValues)
-              s.setData(seriesValues)
+              s.setData(seriesValues, false)
             }
+          } else {
+            s.setData([], false)
           }
         }
       })
       // this.chart.render(true, false, false)
       this.chart.redraw()
+      if (previousMin !== undefined && previousMax !== undefined &&
+          (xAxis.min !== previousMin || xAxis.max !== previousMax)) {
+        xAxis.setExtremes(previousMin, previousMax, true, false, { trigger: 'dataRender' })
+      }
+      setTimeout(() => {
+        this.suppressAfterSetExtremes = false
+      }, 0)
       // console.log('renderInstantaneous: done')
 
       if (this.instantaneous.series.length === 0) {
