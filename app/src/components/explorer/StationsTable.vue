@@ -50,11 +50,48 @@
               <v-autocomplete
                 :items="affiliations"
                 v-model="filters.affiliation"
+                item-text="label"
+                item-value="value"
                 label="Select affiliation"
                 clearable
                 hide-details
                 @change="filter"
-              ></v-autocomplete>
+              >
+                <template v-slot:item="{ item }">
+                  <v-list-item-content>
+                    <v-list-item-title>{{ item.label }}</v-list-item-title>
+                  </v-list-item-content>
+                  <v-list-item-action>
+                    <v-chip x-small label>{{ item.stationCount }}</v-chip>
+                  </v-list-item-action>
+                </template>
+                <template v-slot:selection="{ item }">
+                  {{ item.label }} ({{ item.stationCount }})
+                </template>
+              </v-autocomplete>
+              <v-autocomplete
+                :items="stationWaterbodyTypes"
+                v-model="filters.waterbodyType"
+                item-text="label"
+                item-value="value"
+                label="Select waterbody type"
+                clearable
+                hide-details
+                @change="filter"
+                class="mt-4"
+              >
+                <template v-slot:item="{ item }">
+                  <v-list-item-content>
+                    <v-list-item-title>{{ item.label }}</v-list-item-title>
+                  </v-list-item-content>
+                  <v-list-item-action>
+                    <v-chip x-small label>{{ item.stationCount }}</v-chip>
+                  </v-list-item-action>
+                </template>
+                <template v-slot:selection="{ item }">
+                  {{ item.label }} ({{ item.stationCount }})
+                </template>
+              </v-autocomplete>
               <v-switch
                 v-model="filters.hasModels"
                 label="Has Model Results"
@@ -126,6 +163,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import { waterbodyTypes } from '@/lib/constants'
 export default {
   name: 'StationsTable',
   props: ['stations', 'filtered', 'selected', 'loading'],
@@ -137,6 +175,7 @@ export default {
       sortDesc: [true, true],
       filters: {
         affiliation: null,
+        waterbodyType: null,
         hasValues: false,
         hasModels: false,
         userOnly: false
@@ -195,7 +234,34 @@ export default {
     ...mapGetters(['user']),
     affiliations () {
       if (!this.stations) return []
-      return this.stations.map(d => d.affiliation_code).sort()
+      const affiliationCounts = this.stations.reduce((counts, station) => {
+        if (station.affiliation_code) {
+          counts[station.affiliation_code] = (counts[station.affiliation_code] || 0) + 1
+        }
+        return counts
+      }, {})
+      return Object.entries(affiliationCounts)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([affiliation, stationCount]) => ({
+          label: affiliation,
+          value: affiliation,
+          stationCount
+        }))
+    },
+    stationWaterbodyTypes () {
+      if (!this.stations) return []
+      const stationWaterbodyTypeCounts = this.stations.reduce((counts, station) => {
+        if (station.waterbody_type) {
+          counts[station.waterbody_type] = (counts[station.waterbody_type] || 0) + 1
+        }
+        return counts
+      }, {})
+      return waterbodyTypes
+        .filter(d => stationWaterbodyTypeCounts[d.value])
+        .map(d => ({
+          ...d,
+          stationCount: stationWaterbodyTypeCounts[d.value]
+        }))
     },
     selectedArray () {
       // wrap in array for v-data-table in StationTable
@@ -219,6 +285,7 @@ export default {
     filter () {
       const filtered = this.stations
         .filter(d => (!this.filters.affiliation || d.affiliation_code === this.filters.affiliation))
+        .filter(d => (!this.filters.waterbodyType || d.waterbody_type === this.filters.waterbodyType))
         .filter(d => (!this.search || d.name.toLowerCase().includes(this.search.toLowerCase())))
         .filter(d => (d.images && d.images.count > 0))
         .filter(d => (!this.filters.hasValues || (d.has_obs)))
