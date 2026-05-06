@@ -113,6 +113,13 @@
                 @change="filter"
                 class="my-4"
               ></v-switch>
+              <v-switch
+                v-model="filters.nimsOnly"
+                label="NIMS Stations Only"
+                hide-details
+                @change="filter"
+                class="my-4"
+              ></v-switch>
             </div>
           </v-sheet>
         </v-menu>
@@ -134,18 +141,21 @@
       {{ item.waterbody_type | waterbodyType | truncate(17) }}
     </template> -->
     <template v-slot:item.images.count="{ item }">
-      <span v-if="item.images && item.images.count > 0">
+      <span v-if="item.nims_camera_id">N/A</span>
+      <span v-else-if="item.images && item.images.count > 0">
         {{ item.images.count.toLocaleString() }}
       </span>
       <span v-else>0</span>
     </template>
     <template v-slot:item.images.start_date="{ item }">
-      <span v-if="item.images && item.images.count > 0">
+      <span v-if="item.nims_camera_id">N/A</span>
+      <span v-else-if="item.images && item.images.count > 0">
         {{ item.images.start_date | formatDate }}
       </span>
     </template>
     <template v-slot:item.images.end_date="{ item }">
-      <span v-if="item.images && item.images.count > 0">
+      <span v-if="item.nims_camera_id">N/A</span>
+      <span v-else-if="item.images && item.images.count > 0">
         {{ item.images.end_date | formatDate }}
       </span>
     </template>
@@ -178,7 +188,8 @@ export default {
         waterbodyType: null,
         hasValues: false,
         hasModels: false,
-        userOnly: false
+        userOnly: false,
+        nimsOnly: false
       },
       headers: [
         {
@@ -287,10 +298,11 @@ export default {
         .filter(d => (!this.filters.affiliation || d.affiliation_code === this.filters.affiliation))
         .filter(d => (!this.filters.waterbodyType || d.waterbody_type === this.filters.waterbodyType))
         .filter(d => (!this.search || d.name.toLowerCase().includes(this.search.toLowerCase())))
-        .filter(d => (d.images && d.images.count > 0))
+        .filter(d => d.nims_camera_id || (d.images && d.images.count > 0))
         .filter(d => (!this.filters.hasValues || (d.has_obs)))
         .filter(d => (!this.filters.hasModels || (d.models && d.models.length > 0)))
         .filter(d => (!this.filters.userOnly || (this.user && d.user_id === this.user.username)))
+        .filter(d => (!this.filters.nimsOnly || d.nims_camera_id))
       this.$emit('filter', filtered)
     },
     select (station) {

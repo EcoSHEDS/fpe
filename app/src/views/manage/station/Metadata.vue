@@ -105,6 +105,16 @@
                 <td
                   class="text-right grey--text text--darken-2"
                   style="width:140px">
+                  NIMS Camera ID
+                </td>
+                <td class="font-weight-bold">
+                  {{ station.nims_camera_id || 'N/A' }}
+                </td>
+              </tr>
+              <tr>
+                <td
+                  class="text-right grey--text text--darken-2"
+                  style="width:140px">
                   Status
                 </td>
                 <td class="font-weight-bold">{{ station.status | stationStatus }}</td>

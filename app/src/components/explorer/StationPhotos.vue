@@ -414,7 +414,7 @@ export default {
   },
   computed: {
     isNimsStation () {
-      return nims.isNimsStationId(this.station.id)
+      return nims.isNimsStation(this.station)
     },
     imagesInTimeRange () {
       if (!this.timeRange) return this.images
@@ -450,7 +450,10 @@ export default {
         const startDate = images[0].date
         const endDate = images[images.length - 1].date
 
-        const variableIds = this.station.summary.values.variables.map(d => d.variable_id)
+        const variables = this.station.summary && this.station.summary.values && this.station.summary.values.variables
+          ? this.station.summary.values.variables
+          : []
+        const variableIds = variables.map(d => d.variable_id)
 
         const models = await this.fetchModels()
         models.sort((a, b) => a.created_at < b.created_at ? 1 : -1)
@@ -564,7 +567,7 @@ export default {
     },
     async fetchInstantaneousImages (start, end) {
       if (this.isNimsStation) {
-        return nims.getImages(start, end)
+        return nims.getImages(this.station, start, end)
       }
 
       const response = await this.$http.public.get(`/stations/${this.station.id}/images?start=${start}&end=${end}`)
@@ -698,7 +701,7 @@ export default {
     },
     async fetchDailyImages () {
       if (this.isNimsStation) {
-        const images = await nims.getDailyImages()
+        const images = await nims.getDailyImages(this.station)
         return images.map(d => ({
           ...d.image,
           n_images: d.n_images,
@@ -759,7 +762,7 @@ export default {
     async fetchModels () {
       if (this.isNimsStation) return []
 
-      const models = this.station.models
+      const models = this.station.models || []
       for (const model of models) {
         model.values = await this.fetchModelPredictions(model)
         const dailyRollup = rollup(model.values, v => {

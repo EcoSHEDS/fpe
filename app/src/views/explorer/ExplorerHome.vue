@@ -50,7 +50,6 @@ import { mapGetters } from 'vuex'
 
 import StationsMap from '@/components/explorer/StationsMap'
 import StationsTable from '@/components/explorer/StationsTable'
-import nims from '@/lib/nims'
 
 export default {
   name: 'ExplorerHome',
@@ -104,9 +103,9 @@ export default {
           d.has_model = (d.models && d.models.length > 0)
           d.demo_order = 1
         })
-        const nimsStation = await nims.getStation()
-        this.stations.all = [nimsStation, ...stations.sort((a, b) => ascending(a.id, b.id))]
-          .filter(d => d.images && d.images.count > 0)
+        this.stations.all = stations
+          .sort((a, b) => ascending(a.id, b.id))
+          .filter(d => d.nims_camera_id || (d.images && d.images.count > 0))
         this.stations.filtered = this.stations.all
       } catch (err) {
         console.error(err)

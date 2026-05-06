@@ -308,7 +308,7 @@
               <v-col cols="6">
                 <v-sheet elevation="2" class="pa-4">
                   <div class="fpe-image-url text-center"><a :href="fixDataUrl(currentPair.left.image.thumb_url)">{{ currentPair.left.image.filename }}</a></div>
-                  <div class="text-center">{{ currentPair.left.image.timestamp | formatTimestamp(station.timezone) }}</div>
+                  <div class="text-center">{{ currentPair.left.image.timestamp | formatTimestamp(currentPair.left.image.timezone || station.timezone) }}</div>
                   <v-img
                     lazy-src="img/placeholder.png"
                     max-height="400"
@@ -347,7 +347,7 @@
               <v-col cols="6">
                 <v-sheet elevation="2" class="pa-4">
                   <div class="fpe-image-url text-center"><a :href="fixDataUrl(currentPair.right.image.thumb_url)">{{ currentPair.right.image.filename }}</a></div>
-                  <div class="text-center">{{ currentPair.right.image.timestamp | formatTimestamp(station.timezone) }}</div>
+                  <div class="text-center">{{ currentPair.right.image.timestamp | formatTimestamp(currentPair.right.image.timezone || station.timezone) }}</div>
                   <v-img
                     lazy-src="img/placeholder.png"
                     max-height="400"
@@ -513,6 +513,7 @@
 import { ascending } from 'd3-array'
 import { mapGetters } from 'vuex'
 import { fixDataUrl } from '@/lib/utils'
+import nims from '@/lib/nims'
 import evt from '@/events'
 import store from '@/store'
 
@@ -697,6 +698,114 @@ export default {
   },
   methods: {
     fixDataUrl,
+    isNimsStation (station) {
+      return nims.isNimsStation(station)
+    },
+    shuffle (array) {
+      const shuffled = [...array]
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        const tmp = shuffled[i]
+        shuffled[i] = shuffled[j]
+        shuffled[j] = tmp
+      }
+      return shuffled
+    },
+    pairFromImages (left, right) {
+      return {
+        left: {
+          image: left,
+          attributes: []
+        },
+        right: {
+          image: right,
+          attributes: []
+        },
+        rank: null,
+        comment: null
+      }
+    },
+    getPairFilters () {
+      const minHour = parseInt(this.minHour)
+      const maxHour = parseInt(this.maxHour)
+      return {
+        nPairs: Math.min(parseInt(this.nPairs) || 100, 10000),
+        minHour: isNaN(minHour) ? 7 : minHour,
+        maxHour: isNaN(maxHour) ? 18 : maxHour,
+        minDate: this.minDate || '2000-01-01',
+        maxDate: this.maxDate || '2099-12-31'
+      }
+    },
+    async buildImagePairsFromNimsFiles (station) {
+      const camera = await nims.fetchCamera(station)
+      const files = await nims.fetchAllFiles(station)
+      const cameraId = nims.getCameraId(station)
+      const timezone = station.timezone || camera.timezone || 'UTC'
+      const filters = this.getPairFilters()
+
+      const images = files
+        .map(file => {
+          const parsedTimestamp = nims.parseTimestamp(file.timestamp)
+          const localTimestamp = parsedTimestamp.setZone(timezone)
+          const url = `${camera.smallDir}${file.filename}`
+          return {
+            image_id: `nims:${cameraId}:${file.filename}`,
+            id: `nims:${cameraId}:${file.filename}`,
+            filename: file.filename,
+            timestamp: parsedTimestamp.toJSDate(),
+            thumb_url: url,
+            full_url: url,
+            hour: localTimestamp.hour,
+            date: localTimestamp.toISODate(),
+            timezone,
+            nims_camera_id: cameraId,
+            nims: {
+              cameraId,
+              filename: file.filename,
+              timestamp: parsedTimestamp.toUTC().toISO(),
+              url
+            }
+          }
+        })
+        .filter(image => {
+          return image.hour >= filters.minHour &&
+            image.hour <= filters.maxHour &&
+            image.date >= filters.minDate &&
+            image.date <= filters.maxDate
+        })
+
+      if (images.length < 2) return []
+
+      const leftImages = this.shuffle(images)
+      const rightImages = this.shuffle(images)
+      const pairs = []
+      for (let i = 0; i < images.length && pairs.length < filters.nPairs; i++) {
+        if (leftImages[i].image_id === rightImages[i].image_id) continue
+        pairs.push(this.pairFromImages(leftImages[i], rightImages[i]))
+      }
+      return pairs
+    },
+    mapFpeImagePair (pair) {
+      pair.left.timestamp = new Date(pair.left.timestamp)
+      pair.left.hour = this.$luxon.DateTime.fromJSDate(pair.left.timestamp).setZone(this.station.timezone).hour
+      pair.right.timestamp = new Date(pair.right.timestamp)
+      pair.right.hour = this.$luxon.DateTime.fromJSDate(pair.right.timestamp).setZone(this.station.timezone).hour
+      return this.pairFromImages(pair.left, pair.right)
+    },
+    annotationImagePayload (side) {
+      const image = side.image
+      const payload = {
+        imageId: image.image_id,
+        attributes: side.attributes
+      }
+      if (image.nims) {
+        payload.cameraId = image.nims.cameraId
+        payload.filename = image.nims.filename
+        payload.timestamp = image.nims.timestamp
+        payload.url = image.nims.url
+      }
+      return payload
+    },
     async fetchStations () {
       this.loading.stations = true
       try {
@@ -883,6 +992,16 @@ export default {
       this.pairs = []
       this.pairsStationId = null
       try {
+        if (this.isNimsStation(this.station)) {
+          this.pairs = await this.buildImagePairsFromNimsFiles(this.station)
+          if (this.pairs.length === 0) {
+            throw new Error('No image pairs found for given inputs')
+          }
+          this.pairsStationId = this.station.id
+          this.currentIndex = 0
+          return
+        }
+
         let query = `n_pairs=${this.nPairs}`
         const minHour = parseInt(this.minHour)
         const maxHour = parseInt(this.maxHour)
@@ -905,24 +1024,7 @@ export default {
           throw new Error('No image pairs found for given inputs')
         }
 
-        this.pairs = response.data.map(d => {
-          d.left.timestamp = new Date(d.left.timestamp)
-          d.left.hour = this.$luxon.DateTime.fromJSDate(d.left.timestamp).setZone(this.station.timezone).hour
-          d.right.timestamp = new Date(d.right.timestamp)
-          d.right.hour = this.$luxon.DateTime.fromJSDate(d.right.timestamp).setZone(this.station.timezone).hour
-          return {
-            left: {
-              image: d.left,
-              attributes: []
-            },
-            right: {
-              image: d.right,
-              attributes: []
-            },
-            rank: null,
-            comment: null
-          }
-        })
+        this.pairs = response.data.map(d => this.mapFpeImagePair(d))
         this.pairsStationId = this.station.id
         if (this.pairs.length > 0) {
           this.currentIndex = 0
@@ -1135,14 +1237,8 @@ export default {
       const annotations = this.completedPairs
         .map(d => {
           return {
-            left: {
-              imageId: d.left.image.image_id,
-              attributes: d.left.attributes
-            },
-            right: {
-              imageId: d.right.image.image_id,
-              attributes: d.right.attributes
-            },
+            left: this.annotationImagePayload(d.left),
+            right: this.annotationImagePayload(d.right),
             rank: d.rank,
             comment: d.comment
           }

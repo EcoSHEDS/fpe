@@ -1,6 +1,22 @@
 <template>
   <v-container>
-    <v-row align="stretch">
+    <v-row v-if="stationIsNims">
+      <v-col cols="12">
+        <v-alert
+          type="info"
+          text
+          colored-border
+          border="left"
+          class="body-2 mb-0"
+        >
+          <div class="font-weight-bold body-1">NIMS Data Managed Externally</div>
+          <div>
+            This station is linked to NIMS camera {{ station.nims_camera_id }}. FPE data uploads are unavailable because imagery is loaded directly from USGS NIMS, and observed data should use the station's configured NWIS source when available.
+          </div>
+        </v-alert>
+      </v-col>
+    </v-row>
+    <v-row v-else align="stretch">
       <v-col cols="12" md="6">
         <v-card elevation="2" height="100%">
           <v-card-title class="text-h5 py-2">
@@ -97,7 +113,7 @@
         </v-card>
       </v-col>
     </v-row>
-    <v-row v-if="stationHasDatasetMetadata">
+    <v-row v-if="!stationIsNims && stationHasDatasetMetadata">
       <v-col cols="12">
         <v-card elevation="2">
           <v-data-table
@@ -204,7 +220,7 @@
         <router-view @refresh="refresh"></router-view>
       </v-col>
     </v-row>
-    <DatasetMetadataForm ref="datasetMetadataForm"></DatasetMetadataForm>
+    <DatasetMetadataForm v-if="!stationIsNims" ref="datasetMetadataForm"></DatasetMetadataForm>
   </v-container>
 </template>
 
@@ -272,6 +288,9 @@ export default {
     ...mapGetters(['dbUser']),
     station () {
       return this.$parent.$parent.station
+    },
+    stationIsNims () {
+      return !!(this.station && this.station.nims_camera_id)
     },
     stationHasDatasetMetadata () {
       return this.station && this.station.metadata && this.station.metadata.dataset

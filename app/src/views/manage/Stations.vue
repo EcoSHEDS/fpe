@@ -27,6 +27,9 @@
       <template v-slot:item.waterbody_type="{ item }">
         {{ item.waterbody_type | waterbodyType }}
       </template>
+      <template v-slot:item.nims_camera_id="{ item }">
+        {{ item.nims_camera_id || '' }}
+      </template>
       <template v-slot:item.status="{ item }">
         <v-chip
           color="grey-lighten-2"
@@ -37,13 +40,15 @@
         </v-chip>
       </template>
       <template v-slot:item.images.count="{ item }">
-        <span v-if="item.images && item.images.count > 0">
+        <span v-if="item.nims_camera_id">N/A</span>
+        <span v-else-if="item.images && item.images.count > 0">
           {{ item.images.count.toLocaleString() }}
         </span>
         <span v-else>0</span>
       </template>
       <template v-slot:item.images.period="{ item }">
-        <span v-if="item.images && item.images.count > 0">
+        <span v-if="item.nims_camera_id">N/A</span>
+        <span v-else-if="item.images && item.images.count > 0">
           {{ item.images.start_date | formatDate }} &#8211;
           {{ item.images.end_date | formatDate }}
         </span>
@@ -99,6 +104,12 @@ export default {
           text: 'Waterbody Type',
           value: 'waterbody_type',
           align: 'left'
+        },
+        {
+          text: 'NIMS Camera',
+          value: 'nims_camera_id',
+          align: 'left',
+          width: 180
         },
         {
           text: '# Photos',

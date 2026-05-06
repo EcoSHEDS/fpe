@@ -14,8 +14,8 @@
         </v-toolbar-title>
       </v-toolbar>
 
-      <v-form ref="stationForm" @submit.prevent="submit">
-        <v-card-text class="body-2 py-8 px-4">
+      <v-card-text class="body-2 pt-8 px-4">
+        <v-form ref="stationForm" @submit.prevent="submit">
           <v-text-field
             v-model="name.value"
             :rules="name.rules"
@@ -26,6 +26,7 @@
             persistent-hint
             validate-on-blur
             outlined
+            class="mb-4"
           ></v-text-field>
           <v-text-field
             v-model="description.value"
@@ -37,14 +38,15 @@
             persistent-hint
             validate-on-blur
             outlined
+            class="my-4"
           ></v-text-field>
-          <v-row>
+          <v-row class="my-4">
             <v-col cols="6">
               <v-text-field
                 v-model="latitude.value"
                 :rules="latitude.rules"
                 label="Latitude"
-                hint="Decimal degrees in northerly direction (e.g. 42.312)"
+                hint="Decimal degrees (e.g. 42.312)"
                 persistent-hint
                 validate-on-blur
                 outlined
@@ -55,7 +57,7 @@
                 v-model="longitude.value"
                 :rules="longitude.rules"
                 label="Longitude"
-                hint="Decimal degrees in westerly direction (e.g. -72.342)"
+                hint="Decimal degrees (e.g. -72.342)"
                 persistent-hint
                 validate-on-blur
                 outlined
@@ -71,7 +73,54 @@
             label="Time Zone"
             validate-on-blur
             outlined
+            class="my-4"
           ></v-select>
+          <v-text-field
+            v-model="nwisId.value"
+            :rules="nwisId.rules"
+            label="USGS NWIS Station ID"
+            hint="ID of an existing USGS NWIS station (e.g. 01171090)"
+            persistent-hint
+            validate-on-blur
+            outlined
+            class="my-4"
+          ></v-text-field>
+          <v-row class="my-4">
+            <v-col cols="12" sm="8">
+              <v-text-field
+                v-model="nimsCameraId.value"
+                :rules="nimsCameraId.rules"
+                label="NIMS Camera ID"
+                hint="ID of an existing USGS NIMS camera"
+                persistent-hint
+                validate-on-blur
+                outlined
+              ></v-text-field>
+            </v-col>
+            <v-col cols="12" sm="4">
+              <v-btn
+                block
+                outlined
+                color="primary"
+                class="mt-sm-1"
+                :loading="nimsCameraId.loading"
+                :disabled="!trimmedNimsCameraId"
+                @click="lookupNimsCamera"
+              >
+                <v-icon left>mdi-magnify</v-icon>
+                Lookup
+              </v-btn>
+            </v-col>
+          </v-row>
+          <v-alert
+            type="error"
+            text
+            colored-border
+            border="left"
+            class="body-2 my-4"
+            v-if="nimsCameraId.error">
+            <div>{{ nimsCameraId.error }}</div>
+          </v-alert>
           <v-autocomplete
             v-model="waterbodyType.value"
             :items="waterbodyType.options"
@@ -81,6 +130,7 @@
             label="Waterbody Type"
             validate-on-blur
             outlined
+            class="my-4"
           >
             <template v-slot:item="{ item }">
               <v-list-item-content style="max-width:600px">
@@ -89,15 +139,6 @@
               </v-list-item-content>
             </template>
           </v-autocomplete>
-          <v-text-field
-            v-model="nwisId.value"
-            :rules="nwisId.rules"
-            label="USGS NWIS Station ID"
-            hint="ID of an existing USGS NWIS station (e.g. 01171090)"
-            persistent-hint
-            validate-on-blur
-            outlined
-          ></v-text-field>
           <v-select
             v-model="status.value"
             :items="status.options"
@@ -108,7 +149,7 @@
             validate-on-blur
             outlined
             clearable
-            hide-details
+            class="my-4"
           >
             <template v-slot:item="{ item }">
               <v-list-item-content style="max-width:600px">
@@ -124,7 +165,10 @@
             persistent-hint
             validate-on-blur
             outlined
+            class="my-4"
           ></v-checkbox>
+
+          <v-divider class="my-6"></v-divider>
 
           <v-alert
             type="error"
@@ -136,21 +180,19 @@
             <div class="body-1 font-weight-bold">Failed to Save Station</div>
             <div>{{ error }}</div>
           </v-alert>
-        </v-card-text>
 
-        <v-divider></v-divider>
-
-        <v-card-actions class="pa-4">
-          <v-btn
-            type="submit"
-            color="primary"
-            class="mr-4"
-            :loading="loading">submit</v-btn>
-          <v-btn text @click="reset">reset</v-btn>
-          <v-spacer></v-spacer>
-          <v-btn text @click="cancel">cancel</v-btn>
-        </v-card-actions>
-      </v-form>
+          <div class="d-flex mb-0">
+            <v-btn
+              type="submit"
+              color="primary"
+              class="mr-4"
+              :loading="loading">submit</v-btn>
+            <v-btn text @click="reset">reset</v-btn>
+            <v-spacer></v-spacer>
+            <v-btn text @click="cancel">cancel</v-btn>
+          </div>
+        </v-form>
+      </v-card-text>
     </v-card>
   </v-dialog>
 </template>
@@ -159,6 +201,7 @@
 import { mapGetters } from 'vuex'
 import { stationTimezones, waterbodyTypes, stationStatusTypes } from '@/lib/constants'
 import nwis from '@/lib/nwis'
+import nims from '@/lib/nims'
 import evt from '@/events'
 
 export default {
@@ -218,7 +261,9 @@ export default {
       waterbodyType: {
         value: null,
         options: waterbodyTypes,
-        rules: []
+        rules: [
+          v => !!v || 'Waterbody type is required'
+        ]
       },
       status: {
         value: 'ACTIVE',
@@ -229,6 +274,12 @@ export default {
         value: '',
         rules: []
       },
+      nimsCameraId: {
+        value: '',
+        loading: false,
+        error: null,
+        rules: []
+      },
       private_: {
         value: false,
         rules: []
@@ -236,7 +287,10 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['user'])
+    ...mapGetters(['user']),
+    trimmedNimsCameraId () {
+      return this.nimsCameraId.value ? this.nimsCameraId.value.trim() : ''
+    }
   },
   methods: {
     open (station) {
@@ -252,6 +306,7 @@ export default {
         this.waterbodyType.value = this.station.waterbody_type
         this.status.value = this.station.status
         this.nwisId.value = this.station.nwis_id
+        this.nimsCameraId.value = this.station.nims_camera_id
         this.private_.value = this.station.private
       }
       return new Promise((resolve, reject) => {
@@ -281,6 +336,7 @@ export default {
           await nwis.getStation(this.nwisId.value.trim())
         }
         payload.nwis_id = this.nwisId.value ? this.nwisId.value.trim() : this.nwisId.value
+        payload.nims_camera_id = this.trimmedNimsCameraId || null
 
         let response
         if (this.station) {
@@ -303,11 +359,30 @@ export default {
         this.loading = false
       }
     },
+    async lookupNimsCamera () {
+      this.nimsCameraId.error = null
+      this.nimsCameraId.loading = true
+      try {
+        const camera = await nims.fetchCamera(this.trimmedNimsCameraId)
+        this.name.value = camera.camName || this.name.value
+        this.description.value = camera.camDesc || this.description.value
+        this.latitude.value = camera.lat != null ? Number(camera.lat) : this.latitude.value
+        this.longitude.value = camera.lng != null ? Number(camera.lng) : this.longitude.value
+        this.timezone.value = nims.normalizeTimezone(camera.tz)
+        this.nwisId.value = camera.nwisId || this.nwisId.value
+      } catch (err) {
+        this.nimsCameraId.error = err.message || err.toString()
+      } finally {
+        this.nimsCameraId.loading = false
+      }
+    },
     reset () {
       if (!this.$refs.stationForm) return
       this.$refs.stationForm.resetValidation()
       this.loading = false
       this.error = null
+      this.nimsCameraId.loading = false
+      this.nimsCameraId.error = null
 
       if (this.station) {
         this.name.value = this.station.name
@@ -318,6 +393,7 @@ export default {
         this.waterbodyType.value = this.station.waterbody_type
         this.status.value = this.station.status
         this.nwisId.value = this.station.nwis_id
+        this.nimsCameraId.value = this.station.nims_camera_id
         this.private_.value = this.station.private
       } else {
         this.name.value = null
@@ -328,6 +404,7 @@ export default {
         this.waterbodyType.value = null
         this.status.value = null
         this.nwisId.value = null
+        this.nimsCameraId.value = null
         this.private_.value = false
       }
     },

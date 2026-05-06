@@ -3,12 +3,16 @@ import { ascending, rollup } from 'd3-array'
 import { DateTime } from 'luxon'
 
 const BASE_URL = 'https://api.waterdata.usgs.gov/nims/v0'
-const CAM_ID = 'MA_West_Branch_Farmington_River_near_New_Boston'
-const STATION_ID = `nims:${CAM_ID}`
 const DEFAULT_LIMIT = 10000
 
-let cameraCache = null
-let filesCache = null
+const cameraCache = new Map()
+const filesCache = new Map()
+
+function getHeaders () {
+  return process.env.VUE_APP_NIMS_API_KEY
+    ? { 'X-Api-Key': process.env.VUE_APP_NIMS_API_KEY }
+    : {}
+}
 
 function normalizeTimezone (timezone) {
   if (timezone === 'US/Eastern') return 'America/New_York'
@@ -20,35 +24,46 @@ function parseTimestamp (timestamp) {
   return DateTime.fromISO(iso, { zone: 'UTC' })
 }
 
-function isNimsStationId (id) {
-  return typeof id === 'string' && id.startsWith('nims:')
+function isNimsStation (station) {
+  return !!(station && station.nims_camera_id)
 }
 
-function getCamIdFromStationId (id) {
-  return isNimsStationId(id) ? id.replace(/^nims:/, '') : null
+function getCameraId (stationOrCameraId) {
+  if (typeof stationOrCameraId === 'string') return stationOrCameraId.trim()
+  if (stationOrCameraId && stationOrCameraId.nims_camera_id) {
+    return stationOrCameraId.nims_camera_id.trim()
+  }
+  return null
 }
 
-async function fetchCamera () {
-  if (cameraCache) return cameraCache
+async function fetchCamera (stationOrCameraId) {
+  const cameraId = getCameraId(stationOrCameraId)
+  if (!cameraId) throw new Error('NIMS camera ID is required')
+  if (cameraCache.has(cameraId)) return cameraCache.get(cameraId)
 
   const response = await axios.get(`${BASE_URL}/cameras`, {
+    headers: getHeaders(),
     params: {
-      camId: CAM_ID
+      camId: cameraId
     }
   })
   const camera = response.data && response.data[0]
-  if (!camera) throw new Error(`NIMS camera not found (${CAM_ID})`)
+  if (!camera) throw new Error(`NIMS camera not found (${cameraId})`)
 
-  cameraCache = {
+  const normalizedCamera = {
     ...camera,
     timezone: normalizeTimezone(camera.tz)
   }
-  return cameraCache
+  cameraCache.set(cameraId, normalizedCamera)
+  return normalizedCamera
 }
 
-async function fetchFilesPage ({ after, before, recent = true, limit = DEFAULT_LIMIT } = {}) {
+async function fetchFilesPage (stationOrCameraId, { after, before, recent = true, limit = DEFAULT_LIMIT } = {}) {
+  const cameraId = getCameraId(stationOrCameraId)
+  if (!cameraId) throw new Error('NIMS camera ID is required')
+
   const params = {
-    camId: CAM_ID,
+    camId: cameraId,
     rawItem: true,
     recent,
     limit
@@ -56,16 +71,21 @@ async function fetchFilesPage ({ after, before, recent = true, limit = DEFAULT_L
   if (after) params.after = after
   if (before) params.before = before
 
-  const response = await axios.get(`${BASE_URL}/listFiles`, { params })
+  const response = await axios.get(`${BASE_URL}/listFiles`, {
+    headers: getHeaders(),
+    params
+  })
   return response.data || []
 }
 
-async function fetchFiles (options = {}) {
-  return fetchFilesPage(options)
+async function fetchFiles (stationOrCameraId, options = {}) {
+  return fetchFilesPage(stationOrCameraId, options)
 }
 
-async function fetchAllFiles () {
-  if (filesCache) return filesCache
+async function fetchAllFiles (stationOrCameraId) {
+  const cameraId = getCameraId(stationOrCameraId)
+  if (!cameraId) throw new Error('NIMS camera ID is required')
+  if (filesCache.has(cameraId)) return filesCache.get(cameraId)
 
   const seen = new Set()
   const rows = []
@@ -73,7 +93,7 @@ async function fetchAllFiles () {
   let hasMore = true
 
   while (hasMore) {
-    const page = await fetchFilesPage({
+    const page = await fetchFilesPage(cameraId, {
       before,
       recent: true,
       limit: DEFAULT_LIMIT
@@ -97,8 +117,9 @@ async function fetchAllFiles () {
     }
   }
 
-  filesCache = rows.sort((a, b) => ascending(parseTimestamp(a.timestamp), parseTimestamp(b.timestamp)))
-  return filesCache
+  const files = rows.sort((a, b) => ascending(parseTimestamp(a.timestamp), parseTimestamp(b.timestamp)))
+  filesCache.set(cameraId, files)
+  return files
 }
 
 function getFileDate (file, timezone) {
@@ -134,70 +155,15 @@ function summarizeFiles (files, timezone) {
   }
 }
 
-async function getImageSummary () {
-  const camera = await fetchCamera()
-  const files = await fetchAllFiles()
+async function getImageSummary (stationOrCameraId) {
+  const camera = await fetchCamera(stationOrCameraId)
+  const files = await fetchAllFiles(stationOrCameraId)
   return summarizeFiles(files, camera.timezone)
 }
 
-function cameraToStation (camera, imageSummary = { start_date: null, end_date: null, count: 0 }) {
-  return {
-    id: STATION_ID,
-    user_id: null,
-    name: camera.camName,
-    description: camera.camDesc,
-    latitude: Number(camera.lat),
-    longitude: Number(camera.lng),
-    timezone: camera.timezone,
-    metadata: {
-      imageset: {
-        useAffiliation: false,
-        source: 'USGS National Imagery Management System',
-        methodology: 'Images are loaded directly from the USGS National Imagery Management System (NIMS) API for this proof of concept.',
-        citation: 'USGS National Imagery Management System. https://api.waterdata.usgs.gov/docs/nims'
-      }
-    },
-    created_at: camera.createdDate,
-    updated_at: camera.modifiedDate,
-    private: false,
-    nwis_id: camera.nwisId,
-    waterbody_type: 'ST',
-    status: 'ACTIVE',
-    annotation_priority: false,
-    affiliation_code: 'USGS NIMS',
-    affiliation_name: 'USGS National Imagery Management System',
-    images: imageSummary,
-    variables: [],
-    models: [],
-    has_obs: !!camera.nwisId,
-    has_model: false,
-    demo_order: 0,
-    nims: {
-      camId: camera.camId,
-      smallDir: camera.smallDir,
-      thumbDir: camera.thumbDir,
-      overlayDir: camera.overlayDir,
-      tlDir: camera.tlDir
-    },
-    summary: {
-      images: imageSummary,
-      values: {
-        count: 0,
-        variables: []
-      }
-    }
-  }
-}
-
-async function getStation () {
-  const camera = await fetchCamera()
-  const imageSummary = await getImageSummary()
-  return cameraToStation(camera, imageSummary)
-}
-
-async function getDailyImages () {
-  const camera = await fetchCamera()
-  const files = await fetchAllFiles()
+async function getDailyImages (stationOrCameraId) {
+  const camera = await fetchCamera(stationOrCameraId)
+  const files = await fetchAllFiles(stationOrCameraId)
   const timezone = camera.timezone
   const noonByDate = rollup(files, values => {
     const noon = DateTime.fromISO(getFileDate(values[0], timezone), { zone: timezone }).set({ hour: 12 })
@@ -217,9 +183,9 @@ async function getDailyImages () {
   return Array.from(noonByDate.values()).sort((a, b) => ascending(a.date, b.date))
 }
 
-async function getImages (startDate, endDate) {
-  const camera = await fetchCamera()
-  const files = await fetchAllFiles()
+async function getImages (stationOrCameraId, startDate, endDate) {
+  const camera = await fetchCamera(stationOrCameraId)
+  const files = await fetchAllFiles(stationOrCameraId)
   const timezone = camera.timezone
   const endExclusive = DateTime.fromISO(endDate, { zone: timezone })
 
@@ -232,14 +198,15 @@ async function getImages (startDate, endDate) {
 }
 
 export default {
-  CAM_ID,
-  STATION_ID,
+  normalizeTimezone,
   fetchCamera,
   fetchFiles,
   fetchAllFiles,
-  getStation,
+  parseTimestamp,
+  fileToImage,
+  getImageSummary,
   getDailyImages,
   getImages,
-  isNimsStationId,
-  getCamIdFromStationId
+  isNimsStation,
+  getCameraId
 }

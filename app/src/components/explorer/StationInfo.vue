@@ -58,6 +58,12 @@
             </a>
           </td>
         </tr> -->
+        <tr v-if="isNimsStation">
+          <td class="text-right grey--text text--darken-2">
+            NIMS Camera ID
+          </td>
+          <td class="font-weight-bold">{{ station.nims_camera_id }}</td>
+        </tr>
         <tr>
           <td class="text-right grey--text text--darken-2">
             Status
@@ -177,7 +183,41 @@
       Photos
     </div>
     <v-divider></v-divider>
-    <div class="body-2 ma-2 font-weight-bold" v-if="!station.summary.images || station.summary.images.count == 0">
+    <div v-if="isNimsStation">
+      <v-simple-table dense>
+        <tbody>
+          <tr>
+            <td class="text-right grey--text text--darken-2">
+              Period
+            </td>
+            <td class="font-weight-bold">N/A</td>
+          </tr>
+          <tr>
+            <td class="text-right grey--text text--darken-2">
+              # Photos
+            </td>
+            <td class="font-weight-bold">N/A</td>
+          </tr>
+          <tr>
+            <td class="text-right grey--text text--darken-2">
+              Imagery Database
+            </td>
+            <td class="font-weight-bold">USGS NIMS</td>
+          </tr>
+          <tr>
+            <td class="text-right grey--text text--darken-2">
+              HIVIS Link
+            </td>
+            <td class="font-weight-bold">
+              <a :href="nimsCameraUrl" target="_blank">
+                {{ station.nims_camera_id }}
+              </a>
+            </td>
+          </tr>
+        </tbody>
+      </v-simple-table>
+    </div>
+    <div class="body-2 ma-2 font-weight-bold" v-else-if="!station.summary.images || station.summary.images.count == 0">
       No Photos Available
     </div>
     <div v-else>
@@ -430,6 +470,13 @@ export default {
     }
   },
   computed: {
+    isNimsStation () {
+      return !!(this.station && this.station.nims_camera_id)
+    },
+    nimsCameraUrl () {
+      if (!this.isNimsStation) return null
+      return `https://apps.usgs.gov/hivis/camera/${encodeURIComponent(this.station.nims_camera_id)}`
+    },
     imageSource () {
       if (!this.station || !this.station.metadata || !this.station.metadata.imageset) return 'None'
       return this.station.metadata.imageset.useAffiliation
