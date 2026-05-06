@@ -9,7 +9,8 @@ const userPoolId = process.env.USERPOOL_ID
 const knex = require('../db/knex')
 const { deleteDatasetFiles } = require('./datasets')
 const { deleteImagesetFiles } = require('./imagesets')
-const { Station, Model, User, StationPermission } = require('../db/models')
+const { fetchCamera } = require('../services/nims')
+const { Station, Model, User, StationPermission, Dataset, Imageset } = require('../db/models')
 
 const stationsQuery = function () {
   return Station.query()
@@ -78,6 +79,53 @@ const getAllStations = async (req, res, next) => {
   return res.status(200).json(rows)
 }
 
+const normalizeStationPayload = (body) => {
+  const payload = { ...body }
+  if (Object.prototype.hasOwnProperty.call(payload, 'nims_camera_id')) {
+    payload.nims_camera_id = payload.nims_camera_id
+      ? payload.nims_camera_id.trim()
+      : null
+    if (!payload.nims_camera_id) payload.nims_camera_id = null
+  }
+  return payload
+}
+
+const validateNimsCameraId = async (nimsCameraId) => {
+  if (!nimsCameraId) return
+
+  let camera
+  try {
+    camera = await fetchCamera(nimsCameraId)
+  } catch (err) {
+    throw createError(502, `Failed to validate NIMS camera ID (${nimsCameraId}): ${err.message}`)
+  }
+
+  if (!camera) {
+    throw createError(400, `NIMS camera not found (${nimsCameraId})`)
+  }
+}
+
+const stationHasUploads = async (stationId) => {
+  const datasets = await Dataset.query()
+    .where({ station_id: stationId })
+    .resultSize()
+  if (datasets > 0) return true
+
+  const imagesets = await Imageset.query()
+    .where({ station_id: stationId })
+    .resultSize()
+  return imagesets > 0
+}
+
+const validateNimsStationConversion = async (station, payload) => {
+  if (!Object.prototype.hasOwnProperty.call(payload, 'nims_camera_id')) return
+  if (!payload.nims_camera_id) return
+  if (payload.nims_camera_id === station.nims_camera_id) return
+  if (!await stationHasUploads(station.id)) return
+
+  throw createError(400, 'Cannot add a NIMS camera ID to a station that already has uploaded photos or timeseries data')
+}
+
 const postStations = async (req, res, next) => {
   const existing = await Station.query()
     .where('user_id', req.auth.id)
@@ -87,7 +135,8 @@ const postStations = async (req, res, next) => {
       message: `Station names must be unique. "${req.body.name}" already exists.`
     })
   }
-  const payload = { ...req.body, user_id: req.auth.id }
+  const payload = { ...normalizeStationPayload(req.body), user_id: req.auth.id }
+  await validateNimsCameraId(payload.nims_camera_id)
   const row = await Station.query().insert(payload).returning('*')
   return res.status(201).json(row)
 }
@@ -119,7 +168,10 @@ const putStation = async (req, res, next) => {
       message: 'Station owner cannot be changed'
     })
   }
-  const row = await Station.query().patchAndFetchById(res.locals.station.id, req.body)
+  const payload = normalizeStationPayload(req.body)
+  await validateNimsCameraId(payload.nims_camera_id)
+  await validateNimsStationConversion(res.locals.station, payload)
+  const row = await Station.query().patchAndFetchById(res.locals.station.id, payload)
   return res.status(200).json(row)
 }
 
@@ -221,7 +273,7 @@ const getStationModels = async (req, res, next) => {
   return res.status(200).json(rows)
 }
 
-async function getStationPermissions(req, res) {
+async function getStationPermissions (req, res) {
   const permissions = await StationPermission.query()
     .where({ station_id: res.locals.station.id })
     .withGraphFetched('user')
@@ -259,7 +311,7 @@ async function getStationPermissions(req, res) {
   res.json(enhancedPermissions)
 }
 
-addUserPermission = async (req, res) => {
+const addUserPermission = async (req, res) => {
   const { station } = res.locals
   const { userEmail } = req.body
 
@@ -318,7 +370,7 @@ addUserPermission = async (req, res) => {
   res.status(201).json({ message: 'User permission added successfully' })
 }
 
-removeUserPermission = async (req, res) => {
+const removeUserPermission = async (req, res) => {
   const { userId } = req.params
 
   const deletedRows = await StationPermission.query()

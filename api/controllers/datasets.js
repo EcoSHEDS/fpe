@@ -23,7 +23,14 @@ const getDataset = async (req, res, next) => {
   return res.status(200).json(res.locals.dataset)
 }
 
+const assertStationAcceptsDatasetUploads = (station) => {
+  if (!station.nims_camera_id) return
+  throw createError(400, 'Cannot upload timeseries data to a NIMS-linked station. NIMS-linked stations use external NIMS/NWIS data directly.')
+}
+
 const postDatasets = async (req, res, next) => {
+  assertStationAcceptsDatasetUploads(res.locals.station)
+
   const props = {
     ...req.body,
     status: 'CREATED',

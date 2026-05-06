@@ -44,16 +44,23 @@ const getImagesetLastImage = async (req, res, next) => {
   const lastImage = await res.locals.imageset
     .$relatedQuery('images')
     .orderBy('timestamp', 'desc')
-    .first();
+    .first()
 
   if (!lastImage) {
-    return res.status(404).json({ message: 'No images found in this imageset' });
+    return res.status(404).json({ message: 'No images found in this imageset' })
   }
 
-  return res.status(200).json(lastImage);
+  return res.status(200).json(lastImage)
+}
+
+const assertStationAcceptsImageUploads = (station) => {
+  if (!station.nims_camera_id) return
+  throw createError(400, 'Cannot upload or process FPE photos for a NIMS-linked station. NIMS-linked stations use external NIMS imagery directly.')
 }
 
 const postImagesets = async (req, res, next) => {
+  assertStationAcceptsImageUploads(res.locals.station)
+
   const props = {
     ...req.body,
     status: 'CREATED',
@@ -80,6 +87,8 @@ const postImagesets = async (req, res, next) => {
 }
 
 const presignImageset = async (req, res, next) => {
+  assertStationAcceptsImageUploads(res.locals.station)
+
   const presignedUrl = await createPresignedPostPromise({
     Bucket: process.env.BUCKET,
     Conditions: [
@@ -99,6 +108,8 @@ const putImageset = async (req, res, next) => {
 }
 
 const processImageset = async (req, res, next) => {
+  assertStationAcceptsImageUploads(res.locals.station)
+
   console.log(`process imageset (id=${res.locals.imageset.id})`)
 
   const response = await batch.submitJob({
@@ -121,6 +132,8 @@ const processImageset = async (req, res, next) => {
 }
 
 const piiImageset = async (req, res, next) => {
+  assertStationAcceptsImageUploads(res.locals.station)
+
   console.log(`run pii detector on imageset (id=${res.locals.imageset.id})`)
 
   const response = await batch.submitJob({
@@ -132,7 +145,7 @@ const piiImageset = async (req, res, next) => {
         'detect-fpe-imageset',
         '--workers', '7',
         '--batch-size', '100',
-        imageset.id.toString()
+        res.locals.imageset.id.toString()
       ]
     }
   }).promise()
