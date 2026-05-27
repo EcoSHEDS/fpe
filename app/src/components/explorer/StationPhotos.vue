@@ -934,7 +934,11 @@ export default {
         imageElement.onerror = () => {
           this.imageError = true
         }
-        imageElement.src = fixDataUrl(image.thumb_url)
+        if (!this.isNimsStation) {
+          imageElement.src = fixDataUrl(image.thumb_url)
+        } else {
+          imageElement.src = image.thumb_url
+        }
       }
     },
     nextImage () {
