@@ -2,7 +2,7 @@ import axios from 'axios'
 import { ascending, rollup } from 'd3-array'
 import { DateTime } from 'luxon'
 
-const BASE_URL = 'https://api.waterdata.usgs.gov/nims/v0'
+const BASE_URL = process.env.VUE_APP_NIMS_API_URL
 const DEFAULT_LIMIT = 10000
 
 const cameraCache = new Map()
@@ -40,7 +40,7 @@ async function fetchCamera (stationOrCameraId) {
   const cameraId = getCameraId(stationOrCameraId)
   if (!cameraId) throw new Error('NIMS camera ID is required')
   if (cameraCache.has(cameraId)) return cameraCache.get(cameraId)
-
+  console.log(`Fetching NIMS camera ${cameraId}: ${BASE_URL}/cameras?camId=${cameraId}...`)
   const response = await axios.get(`${BASE_URL}/cameras`, {
     headers: getHeaders(),
     params: {

@@ -1,4 +1,4 @@
-const BASE_URL = 'https://api.waterdata.usgs.gov/nims/v0'
+const BASE_URL = process.env.VUE_APP_NIMS_API_URL
 
 async function fetchCamera (cameraId) {
   const url = new URL(`${BASE_URL}/cameras`)
