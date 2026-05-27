@@ -1,4 +1,4 @@
-const BASE_URL = process.env.VUE_APP_NIMS_API_URL
+const BASE_URL = process.env.NIMS_API_BASE_URL
 
 async function fetchCamera (cameraId) {
   const url = new URL(`${BASE_URL}/cameras`)
