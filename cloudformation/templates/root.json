@@ -56,6 +56,10 @@
     "developerRoleArn": {
       "Description": "ARN of developer role",
       "Type": "String"
+    },
+    "nimsApiBaseUrl": {
+      "Description": "Base URL for NIMS API",
+      "Type": "String"
     }
   },
   "Resources": {
@@ -111,7 +115,8 @@
           "userPoolId": { "Ref": "userPoolId" },
           "notifyTopicArn": {
             "Fn::GetAtt": [ "NotifyStack", "Outputs.TopicArn" ]
-          }
+          },
+          "nimsApiBaseUrl": { "Ref": "nimsApiBaseUrl" }
         }
       }
     },

@@ -24,7 +24,11 @@
     "ParameterValue": ""
   },
   {
-    "ParameterKey": "subnetIds",
+    "ParameterKey": "publicSubnetIds",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "privateSubnetIds",
     "ParameterValue": ""
   },
   {
@@ -41,6 +45,14 @@
   },
   {
     "ParameterKey": "emailPassword",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "developerRoleArn",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "nimsApiBaseUrl",
     "ParameterValue": ""
   }
 ]

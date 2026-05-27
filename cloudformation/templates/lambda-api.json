@@ -58,6 +58,10 @@
     "notifyTopicArn": {
       "Description": "Arn of notification topic",
       "Type": "String"
+    },
+    "nimsApiBaseUrl": {
+      "Description": "Base URL for NIMS API",
+      "Type": "String"
     }
   },
   "Conditions": {
@@ -148,6 +152,9 @@
             },
             "NOTIFY_TOPIC": {
               "Ref": "notifyTopicArn"
+            },
+            "NIMS_API_BASE_URL": {
+              "Ref": "nimsApiBaseUrl"
             }
           }
         },
