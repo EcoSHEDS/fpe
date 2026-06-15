@@ -2,4 +2,4 @@
 # deploy root template
 # usage: ./deploy.sh
 
-aws cloudformation deploy --stack-name ${STACK_NAME} --template-file templates/root.local.json --parameter-overrides file://parameters/root.${ENV}.json --capabilities CAPABILITY_NAMED_IAM ${OPT_ROLE_ARN}
+aws cloudformation deploy --stack-name ${STACK_NAME} --template-file templates/root.local.json --parameter-overrides file://parameters/root.${ENV}.local.json --capabilities CAPABILITY_NAMED_IAM ${OPT_ROLE_ARN}
