@@ -141,6 +141,7 @@
           "permissionsBoundaryName": { "Ref": "permissionsBoundaryName" },
           "dbSecretName": { "Ref": "dbSecretName" },
           "storageBucketName": { "Ref": "storageBucketName" },
+          "modelBucketName": { "Ref": "modelBucketName" },
           "notifyTopicArn": {
             "Fn::GetAtt": [ "NotifyStack", "Outputs.TopicArn" ]
           }

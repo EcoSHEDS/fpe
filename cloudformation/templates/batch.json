@@ -33,6 +33,10 @@
       "Description": "Name of S3 storage bucket",
       "Type": "String"
     },
+    "modelBucketName": {
+      "Description": "Name of S3 model bucket",
+      "Type": "String"
+    },
     "notifyTopicArn": {
       "Description": "Arn of notification topic",
       "Type": "String"
@@ -603,6 +607,39 @@
             ]
           ]
         }
+      }
+    },
+    "RepositoryPredict": {
+      "Type": "AWS::ECR::Repository",
+      "Properties": {
+        "RepositoryName": { "Fn::Join": ["-", [{ "Ref": "appName" }, { "Ref": "env" }, "batch-predict"]] }
+      }
+    },
+    "JobDefinitionPredict": {
+      "Type": "AWS::Batch::JobDefinition",
+      "Properties": {
+        "Type": "container",
+        "JobDefinitionName": { "Fn::Join": ["-", [{ "Ref": "appName" }, { "Ref": "env" }, "batch-job-definition-predict"]] },
+        "PlatformCapabilities": ["FARGATE"],
+        "ContainerProperties": {
+          "Image": { "Fn::Sub": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${RepositoryPredict}:latest" },
+          "ExecutionRoleArn": { "Fn::GetAtt": ["ExecutionRole", "Arn"] },
+          "JobRoleArn": { "Fn::GetAtt": ["JobRole", "Arn"] },
+          "FargatePlatformConfiguration": { "PlatformVersion": "LATEST" },
+          "ResourceRequirements": [
+            { "Type": "MEMORY", "Value": 8192 },
+            { "Type": "VCPU", "Value": 4.0 }
+          ],
+          "Command": ["--help"],
+          "NetworkConfiguration": { "AssignPublicIp": "ENABLED" },
+          "Environment": [
+            { "Name": "AWS_REGION", "Value": { "Ref": "AWS::Region" } },
+            { "Name": "FPE_DB_SECRET", "Value": { "Ref": "dbSecretName" } },
+            { "Name": "FPE_S3_STORAGE_BUCKET", "Value": { "Ref": "storageBucketName" } },
+            { "Name": "FPE_S3_MODEL_BUCKET", "Value": { "Ref": "modelBucketName" } }
+          ]
+        },
+        "RetryStrategy": { "Attempts": 1 }
       }
     },
     "EventRuleFailedJob": {
