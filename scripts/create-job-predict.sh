@@ -102,7 +102,7 @@ if ! [[ "$STATION_ID" =~ ^[0-9]+$ ]]; then
     exit 1
 fi
 
-TIMESTAMP=$(date "+%Y%m%d%H%M")
+TIMESTAMP=$(date "+%Y%m%d%H%M%S%3N")
 JOB_NAME="predict-station-${STATION_ID}-${TIMESTAMP}"
 
 echo "Configuration:"
