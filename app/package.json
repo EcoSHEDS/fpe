@@ -55,7 +55,7 @@
     "eslint-plugin-promise": "^5.1.0",
     "eslint-plugin-standard": "^4.0.0",
     "eslint-plugin-vue": "^8.0.3",
-    "sass": "^1.32.13",
+    "sass": "1.32.13",
     "sass-loader": "^8.0.0",
     "vue-cli-plugin-vuetify": "^2.4.6",
     "vue-template-compiler": "^2.6.14",
