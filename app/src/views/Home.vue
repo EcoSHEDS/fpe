@@ -70,6 +70,7 @@
             <div class="font-weight-light black--text text-h6">Newsletter Archive</div>
             <v-divider class="mb-2"></v-divider>
             <ul>
+              <li><a href="https://content.govdelivery.com/accounts/USDOIGS/bulletins/41f77fe">July 8, 2026</a>: ScienceBase Data Release of Model Outputs</li>
               <li><a href="https://content.govdelivery.com/accounts/USDOIGS/bulletins/4003189">Dec 18, 2025</a>: Image and Annotation Guidance for Model Training, HESS Publication</li>
               <li><a href="https://content.govdelivery.com/accounts/USDOIGS/bulletins/3db2be1">Apr 16, 2025</a>: Preprint, FPE Growth, Annotator Thank You, Model Development Report</li>
               <li><a href="https://content.govdelivery.com/accounts/USDOIGS/bulletins/397081f">Apr 18, 2024</a>: Interface Updates, Model Results</li>
@@ -79,6 +80,61 @@
             </div>
           </div>
           <div class="d-flex align-end mt-4">
+            <div class="font-weight-light black--text text-h6">ScienceBase Release of Model Results</div>
+            <v-spacer></v-spacer>
+            <div class="text-subtitle-2 font-weight-light font-italic">July 9, 2026</div>
+          </div>
+          <v-divider class="mb-2"></v-divider>
+          <div class="body-1">
+            <p>
+              As mentioned in our latest <a href="https://content.govdelivery.com/accounts/USDOIGS/bulletins/41f77fe">newsletter</a>, model outputs of all stations <b>not marked as private</b> will be made publicly available on ScienceBase on Aug 28, 2026. If you do not want your station's data to be released, please mark the station as private or contact us at <a href="mailto:ecosheds@usgs.gov">ecosheds@usgs.gov</a> by August 14, 2026.
+            </p>
+          </div>
+          <div class="d-flex align-end mt-4">
+            <div class="font-weight-light black--text text-h6">June Model Batch</div>
+            <v-spacer></v-spacer>
+            <div class="text-subtitle-2 font-weight-light font-italic">June 17, 2026</div>
+          </div>
+          <v-divider class="mb-2"></v-divider>
+          <div class="body-1">
+            <p>
+              New models were trained at 21 stations for estimating relative streamflow. In addition, predictions from 23 existing models in the Shenendoah National Park region were extended to new imagery updated since model training.
+            </p>
+          </div>
+          <div class="d-flex align-end mt-4">
+            <div class="font-weight-light black--text text-h6">May Model Batch</div>
+            <v-spacer></v-spacer>
+            <div class="text-subtitle-2 font-weight-light font-italic">May 27, 2026</div>
+          </div>
+          <v-divider class="mb-2"></v-divider>
+          <div class="body-1">
+            <p>
+              New models were trained at 7 stations for estimating snow and ice cover, and 1 station for estimating algal biomass.
+            </p>
+          </div>
+          <div class="d-flex align-end mt-4">
+            <div class="font-weight-light black--text text-h6">April Model Batch</div>
+            <v-spacer></v-spacer>
+            <div class="text-subtitle-2 font-weight-light font-italic">April 6, 2026</div>
+          </div>
+          <v-divider class="mb-2"></v-divider>
+          <div class="body-1">
+            <p>
+              New models were trained at 2 stations for predicting ice cover.
+            </p>
+          </div>
+          <div class="d-flex align-end mt-4">
+            <div class="font-weight-light black--text text-h6">March Model Batch</div>
+            <v-spacer></v-spacer>
+            <div class="text-subtitle-2 font-weight-light font-italic">March 13, 2026</div>
+          </div>
+          <v-divider class="mb-2"></v-divider>
+          <div class="body-1">
+            <p>
+              New models were trained at 19 stations for estimating relative streamflow.
+            </p>
+          </div>
+          <div class="d-flex align-end mt-4">
             <div class="font-weight-light black--text text-h6">February Model Batch</div>
             <v-spacer></v-spacer>
             <div class="text-subtitle-2 font-weight-light font-italic">February 6, 2026</div>
@@ -86,49 +142,49 @@
           <v-divider class="mb-2"></v-divider>
           <div class="body-1">
             <p>
-              This month, 43 models were trained and deployed for estimating relative streamflow. In addition, models were also trained at two stations for monitoring relative snow/ice cover. Results can be found on the <router-link :to="{ name: 'explorerHome' }">Photo Explorer</router-link>.
-            </p>
-          </div>
-          <div class="d-flex align-end mt-4">
-            <div class="font-weight-light black--text text-h6">December Model Batch, HESS Publication</div>
-            <v-spacer></v-spacer>
-            <div class="text-subtitle-2 font-weight-light font-italic">December 29, 2025</div>
-          </div>
-          <v-divider class="mb-2"></v-divider>
-          <div class="body-1">
-            <p>
-              New models have been successfully trained and deployed for estimating relative streamflow at 31 stations. Results can be found on the <router-link :to="{ name: 'explorerHome' }">Photo Explorer</router-link>.
-            </p>
-            <p>
-              Our latest publication <a href="https://doi.org/10.5194/hess-29-6445-2025">"Technical note: A low-cost approach to monitoring relative streamflow dynamics in small headwater streams using time lapse imagery and a deep learning model"</a> has been published to HESS. This paper describes the modeling framework that underpins Flow Photo Explorer and evaluates model performance compared to observed streamflow across multiple stations.
-            </p>
-          </div>
-          <div class="d-flex align-end mt-4">
-            <div class="font-weight-light black--text text-h6">June Model Batch</div>
-            <v-spacer></v-spacer>
-            <div class="text-subtitle-2 font-weight-light font-italic">June 26, 2025</div>
-          </div>
-          <v-divider class="mb-2"></v-divider>
-          <div class="body-1">
-            <p>
-              New models have been successfully trained and deployed for 41 stations, our largest batch to date! Results can be found on the <router-link :to="{ name: 'explorerHome' }">Photo Explorer</router-link>.
-            </p>
-          </div>
-          <div class="d-flex align-end mt-4">
-            <div class="font-weight-light black--text text-h6">Software Release of FPE Model</div>
-            <v-spacer></v-spacer>
-            <div class="text-subtitle-2 font-weight-light font-italic">June 12, 2025</div>
-          </div>
-          <v-divider class="mb-2"></v-divider>
-          <div class="body-1">
-            <p>
-              The AI/ML image ranking model used by FPE is now publicly available as an official USGS Software Release. This release includes the Python source code and detailed instructions for both training the model and generating predictions. With this release, users can now train their own models outside of the FPE platform, as well as generate predictions on images not uploaded to FPE by running a pre-trained model locally.
-            </p>
-            <p class="font-italic mt-4 ml-4">
-              Walker, J.D., Gupta, A., Fair, J.B., Goodling, P.J., and Letcher, B.A., 2025, Streamflow Rank Estimation (SRE) Model: U.S. Geological Survey software release, <a href="https://doi.org/10.5066/P1YSANVM">https://doi.org/10.5066/P1YSANVM</a>.
+              New models were trained at 43 stations for estimating relative streamflow and at 2 stations for estimating snow and ice cover.
             </p>
           </div>
           <div v-if="showMoreNews">
+            <div class="d-flex align-end mt-4">
+              <div class="font-weight-light black--text text-h6">December Model Batch, HESS Publication</div>
+              <v-spacer></v-spacer>
+              <div class="text-subtitle-2 font-weight-light font-italic">December 29, 2025</div>
+            </div>
+            <v-divider class="mb-2"></v-divider>
+            <div class="body-1">
+              <p>
+                New models have been successfully trained and deployed for estimating relative streamflow at 31 stations. Results can be found on the <router-link :to="{ name: 'explorerHome' }">Photo Explorer</router-link>.
+              </p>
+              <p>
+                Our latest publication <a href="https://doi.org/10.5194/hess-29-6445-2025">"Technical note: A low-cost approach to monitoring relative streamflow dynamics in small headwater streams using time lapse imagery and a deep learning model"</a> has been published to HESS. This paper describes the modeling framework that underpins Flow Photo Explorer and evaluates model performance compared to observed streamflow across multiple stations.
+              </p>
+            </div>
+            <div class="d-flex align-end mt-4">
+              <div class="font-weight-light black--text text-h6">June Model Batch</div>
+              <v-spacer></v-spacer>
+              <div class="text-subtitle-2 font-weight-light font-italic">June 26, 2025</div>
+            </div>
+            <v-divider class="mb-2"></v-divider>
+            <div class="body-1">
+              <p>
+                New models have been successfully trained and deployed for 41 stations, our largest batch to date! Results can be found on the <router-link :to="{ name: 'explorerHome' }">Photo Explorer</router-link>.
+              </p>
+            </div>
+            <div class="d-flex align-end mt-4">
+              <div class="font-weight-light black--text text-h6">Software Release of FPE Model</div>
+              <v-spacer></v-spacer>
+              <div class="text-subtitle-2 font-weight-light font-italic">June 12, 2025</div>
+            </div>
+            <v-divider class="mb-2"></v-divider>
+            <div class="body-1">
+              <p>
+                The AI/ML image ranking model used by FPE is now publicly available as an official USGS Software Release. This release includes the Python source code and detailed instructions for both training the model and generating predictions. With this release, users can now train their own models outside of the FPE platform, as well as generate predictions on images not uploaded to FPE by running a pre-trained model locally.
+              </p>
+              <p class="font-italic mt-4 ml-4">
+                Walker, J.D., Gupta, A., Fair, J.B., Goodling, P.J., and Letcher, B.A., 2025, Streamflow Rank Estimation (SRE) Model: U.S. Geological Survey software release, <a href="https://doi.org/10.5066/P1YSANVM">https://doi.org/10.5066/P1YSANVM</a>.
+              </p>
+            </div>
             <div class="d-flex align-end mt-4">
               <div class="font-weight-light black--text text-h6">Annotation Variables</div>
               <v-spacer></v-spacer>
