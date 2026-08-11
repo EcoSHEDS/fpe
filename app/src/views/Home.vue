@@ -79,6 +79,22 @@
               <strong>Want to receive periodic updates about the project?</strong> <a href="https://public.govdelivery.com/accounts/USDOIGS/subscriber/new?topic_id=USDOIGS_120">Sign up</a> for our email newsletter.<br>
             </div>
           </div>
+
+          <div class="d-flex align-end mt-4">
+            <div class="font-weight-light black--text text-h6">August Model Batch</div>
+            <v-spacer></v-spacer>
+            <div class="text-subtitle-2 font-weight-light font-italic">Aug 11, 2026</div>
+          </div>
+          <v-divider class="mb-2"></v-divider>
+          <div class="body-1">
+            <p>
+              New models were trained for estimating relative flow levels at 13 stations.
+            </p>
+            <p>
+              The timeseries chart showing observed data and model predictions no longer defaults to showing the data as rank percentiles, but instead as the raw values of each variable. Use the checkbox above the chart to switch between raw values and rank percentiles. 
+            </p>
+          </div>
+
           <div class="d-flex align-end mt-4">
             <div class="font-weight-light black--text text-h6">ScienceBase Release of Model Results</div>
             <v-spacer></v-spacer>
@@ -134,18 +150,18 @@
               New models were trained at 19 stations for estimating relative streamflow.
             </p>
           </div>
-          <div class="d-flex align-end mt-4">
-            <div class="font-weight-light black--text text-h6">February Model Batch</div>
-            <v-spacer></v-spacer>
-            <div class="text-subtitle-2 font-weight-light font-italic">February 6, 2026</div>
-          </div>
-          <v-divider class="mb-2"></v-divider>
-          <div class="body-1">
-            <p>
-              New models were trained at 43 stations for estimating relative streamflow and at 2 stations for estimating snow and ice cover.
-            </p>
-          </div>
           <div v-if="showMoreNews">
+            <div class="d-flex align-end mt-4">
+              <div class="font-weight-light black--text text-h6">February Model Batch</div>
+              <v-spacer></v-spacer>
+              <div class="text-subtitle-2 font-weight-light font-italic">February 6, 2026</div>
+            </div>
+            <v-divider class="mb-2"></v-divider>
+            <div class="body-1">
+              <p>
+                New models were trained at 43 stations for estimating relative streamflow and at 2 stations for estimating snow and ice cover.
+              </p>
+            </div>
             <div class="d-flex align-end mt-4">
               <div class="font-weight-light black--text text-h6">December Model Batch, HESS Publication</div>
               <v-spacer></v-spacer>

@@ -451,13 +451,6 @@ export default {
         const models = await this.fetchModels()
         models.sort((a, b) => a.created_at < b.created_at ? 1 : -1)
 
-        // show data as rank percentile by default if model is available
-        if (models.length > 0) {
-          this.scaleValues = true
-        } else {
-          this.scaleValues = false
-        }
-
         const series = await this.fetchDailySeries(variableIds, startDate, endDate, models)
 
         images.forEach(d => {
