@@ -91,7 +91,7 @@
               New models were trained for estimating relative flow levels at 13 stations.
             </p>
             <p>
-              The timeseries chart showing observed data and model predictions no longer defaults to showing the data as rank percentiles, but instead as the raw values of each variable. Use the checkbox above the chart to switch between raw values and rank percentiles. 
+              The timeseries chart showing observed data and model predictions no longer defaults to showing the data as rank percentiles, but instead as the raw values of each variable. Use the checkbox above the chart to switch between raw values and rank percentiles.
             </p>
           </div>
 
