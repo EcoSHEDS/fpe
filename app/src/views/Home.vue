@@ -81,6 +81,18 @@
           </div>
 
           <div class="d-flex align-end mt-4">
+            <div class="font-weight-light black--text text-h6">Data Release of Trained Model Outputs</div>
+            <v-spacer></v-spacer>
+            <div class="text-subtitle-2 font-weight-light font-italic">Aug 31, 2026</div>
+          </div>
+          <v-divider class="mb-2"></v-divider>
+          <div class="body-1">
+            <p>
+              Trained model objects and prediction outputs for public stations can be found on <a href="https://doi.org/10.5066/P1DYVVFC" target="_blank">USGS ScienceBase</a>.
+            </p>
+          </div>
+
+          <div class="d-flex align-end mt-4">
             <div class="font-weight-light black--text text-h6">August Model Batch</div>
             <v-spacer></v-spacer>
             <div class="text-subtitle-2 font-weight-light font-italic">Aug 11, 2026</div>
@@ -117,40 +129,40 @@
               New models were trained at 21 stations for estimating relative streamflow. In addition, predictions from 23 existing models in the Shenendoah National Park region were extended to new imagery updated since model training.
             </p>
           </div>
-          <div class="d-flex align-end mt-4">
-            <div class="font-weight-light black--text text-h6">May Model Batch</div>
-            <v-spacer></v-spacer>
-            <div class="text-subtitle-2 font-weight-light font-italic">May 27, 2026</div>
-          </div>
-          <v-divider class="mb-2"></v-divider>
-          <div class="body-1">
-            <p>
-              New models were trained at 7 stations for estimating snow and ice cover, and 1 station for estimating algal biomass.
-            </p>
-          </div>
-          <div class="d-flex align-end mt-4">
-            <div class="font-weight-light black--text text-h6">April Model Batch</div>
-            <v-spacer></v-spacer>
-            <div class="text-subtitle-2 font-weight-light font-italic">April 6, 2026</div>
-          </div>
-          <v-divider class="mb-2"></v-divider>
-          <div class="body-1">
-            <p>
-              New models were trained at 2 stations for predicting ice cover.
-            </p>
-          </div>
-          <div class="d-flex align-end mt-4">
-            <div class="font-weight-light black--text text-h6">March Model Batch</div>
-            <v-spacer></v-spacer>
-            <div class="text-subtitle-2 font-weight-light font-italic">March 13, 2026</div>
-          </div>
-          <v-divider class="mb-2"></v-divider>
-          <div class="body-1">
-            <p>
-              New models were trained at 19 stations for estimating relative streamflow.
-            </p>
-          </div>
           <div v-if="showMoreNews">
+            <div class="d-flex align-end mt-4">
+              <div class="font-weight-light black--text text-h6">May Model Batch</div>
+              <v-spacer></v-spacer>
+              <div class="text-subtitle-2 font-weight-light font-italic">May 27, 2026</div>
+            </div>
+            <v-divider class="mb-2"></v-divider>
+            <div class="body-1">
+              <p>
+                New models were trained at 7 stations for estimating snow and ice cover, and 1 station for estimating algal biomass.
+              </p>
+            </div>
+            <div class="d-flex align-end mt-4">
+              <div class="font-weight-light black--text text-h6">April Model Batch</div>
+              <v-spacer></v-spacer>
+              <div class="text-subtitle-2 font-weight-light font-italic">April 6, 2026</div>
+            </div>
+            <v-divider class="mb-2"></v-divider>
+            <div class="body-1">
+              <p>
+                New models were trained at 2 stations for predicting ice cover.
+              </p>
+            </div>
+            <div class="d-flex align-end mt-4">
+              <div class="font-weight-light black--text text-h6">March Model Batch</div>
+              <v-spacer></v-spacer>
+              <div class="text-subtitle-2 font-weight-light font-italic">March 13, 2026</div>
+            </div>
+            <v-divider class="mb-2"></v-divider>
+            <div class="body-1">
+              <p>
+                New models were trained at 19 stations for estimating relative streamflow.
+              </p>
+            </div>
             <div class="d-flex align-end mt-4">
               <div class="font-weight-light black--text text-h6">February Model Batch</div>
               <v-spacer></v-spacer>
@@ -338,10 +350,18 @@
           <p class="font-italic mt-4">
             Gupta, A., Chang, T., Walker, J., and B. Letcher (2022). <strong>Towards Continuous Streamflow Monitoring with Time-Lapse Cameras and Deep Learning.</strong> In ACM SIGCAS/SIGCHI Conference on Computing and Sustainable Societies (COMPASS) (COMPASS '22). Association for Computing Machinery, New York, NY, USA, 353–363. <a href="https://doi.org/10.1145/3530190.3534805">https://doi.org/10.1145/3530190.3534805</a>
           </p>
+
           <p class="mt-4">
-            Model code is available at the following USGS Software Release:
+            Trained model outputs for public stations are available in the following USGS Data Release:
           </p>
-          <p class="font-italic mt-4">
+          <p class="font-italic ml-4">
+            Goodling, P., Walker, J.D., Fair, J.H., and Gupta, A., 2026, Outputs for Image-based Estimation Models: US Geological Survey data release, <a href="https://doi.org/10.5066/P1DYVVFC" target="_blank">https://doi.org/10.5066/P1DYVVFC</a>
+          </p>
+
+          <p class="mt-4">
+            Model code is available in the following USGS Software Release:
+          </p>
+          <p class="font-italic ml-4">
             Walker, J.D., Gupta, A., Fair, J.B., Goodling, P.J., and Letcher, B.A., 2025, Streamflow Rank Estimation (SRE) Model: U.S. Geological Survey software release, <a href="https://doi.org/10.5066/P1YSANVM">https://doi.org/10.5066/P1YSANVM</a>.
           </p>
         </div>
