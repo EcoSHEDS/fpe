@@ -88,7 +88,7 @@
           <v-divider class="mb-2"></v-divider>
           <div class="body-1">
             <p>
-              Trained model objects and prediction outputs for public stations can be found on <a href="https://doi.org/10.5066/P1DYVVFC" target="_blank">USGS ScienceBase</a>.
+              Trained model objects and prediction outputs can be found on <a href="https://doi.org/10.5066/P1DYVVFC" target="_blank">USGS ScienceBase</a>. The initial release only includes public stations with models trained on or before mid-March 2026. Models trained since then will be added to the data release at a later date.
             </p>
           </div>
 
