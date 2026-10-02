@@ -81,6 +81,18 @@
           </div>
 
           <div class="d-flex align-end mt-4">
+            <div class="font-weight-light black--text text-h6">October Model Batch</div>
+            <v-spacer></v-spacer>
+            <div class="text-subtitle-2 font-weight-light font-italic">October 2, 2026</div>
+          </div>
+          <v-divider class="mb-2"></v-divider>
+          <div class="body-1">
+            <p>
+              New models were trained for estimating relative flow levels at 34 stations. This includes <router-link :to="{ name: 'explorerStation', params: { id: '480' } }">one station</router-link> that successfully trained using only nighttime annotations and images.
+            </p>
+          </div>
+
+          <div class="d-flex align-end mt-4">
             <div class="font-weight-light black--text text-h6">Data Release of Trained Model Outputs</div>
             <v-spacer></v-spacer>
             <div class="text-subtitle-2 font-weight-light font-italic">Aug 31, 2026</div>
@@ -118,18 +130,18 @@
               As mentioned in our latest <a href="https://content.govdelivery.com/accounts/USDOIGS/bulletins/41f77fe">newsletter</a>, model outputs of all stations <b>not marked as private</b> will be made publicly available on ScienceBase on Aug 28, 2026. If you do not want your station's data to be released, please mark the station as private or contact us at <a href="mailto:ecosheds@usgs.gov">ecosheds@usgs.gov</a> by August 14, 2026.
             </p>
           </div>
-          <div class="d-flex align-end mt-4">
-            <div class="font-weight-light black--text text-h6">June Model Batch</div>
-            <v-spacer></v-spacer>
-            <div class="text-subtitle-2 font-weight-light font-italic">June 17, 2026</div>
-          </div>
-          <v-divider class="mb-2"></v-divider>
-          <div class="body-1">
-            <p>
-              New models were trained at 21 stations for estimating relative streamflow. In addition, predictions from 23 existing models in the Shenendoah National Park region were extended to new imagery updated since model training.
-            </p>
-          </div>
           <div v-if="showMoreNews">
+            <div class="d-flex align-end mt-4">
+              <div class="font-weight-light black--text text-h6">June Model Batch</div>
+              <v-spacer></v-spacer>
+              <div class="text-subtitle-2 font-weight-light font-italic">June 17, 2026</div>
+            </div>
+            <v-divider class="mb-2"></v-divider>
+            <div class="body-1">
+              <p>
+                New models were trained at 21 stations for estimating relative streamflow. In addition, predictions from 23 existing models in the Shenendoah National Park region were extended to new imagery updated since model training.
+              </p>
+            </div>
             <div class="d-flex align-end mt-4">
               <div class="font-weight-light black--text text-h6">May Model Batch</div>
               <v-spacer></v-spacer>
