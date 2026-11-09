@@ -5,15 +5,13 @@
         <ul class="menu nav">
           <li class="first leaf menu-links menu-level-1"><a href="https://www.doi.gov/privacy">DOI Privacy Policy</a>
           </li>
-          <li class="leaf menu-links menu-level-1"><a href="https://www.usgs.gov/laws/policies_notices.html">Legal</a>
-          </li>
+          <li class="leaf menu-links menu-level-1"><a href="https://www.usgs.gov/policies-and-notices">Legal</a></li>
           <li class="leaf menu-links menu-level-1"><a
-              href="https://www2.usgs.gov/laws/accessibility.html">Accessibility</a></li>
-          <li class="leaf menu-links menu-level-1"><a href="https://www.usgs.gov/sitemap.html">Site Map</a></li>
+              href="https://www.usgs.gov/accessibility-and-us-geological-survey">Accessibility</a></li>
+          <li class="leaf menu-links menu-level-1"><a href="https://www.usgs.gov/sitemap">Site Map</a></li>
           <li class="last leaf menu-links menu-level-1"><a href="https://answers.usgs.gov/">Contact USGS</a></li>
         </ul>
       </div>
-
       <hr class="usgs">
 
       <div class="footer-doi">
@@ -22,11 +20,10 @@
               Interior</a></li>
           <li class="leaf menu-links menu-level-1"><a href="https://www.doioig.gov/">DOI Inspector General</a></li>
           <li class="leaf menu-links menu-level-1"><a href="https://www.whitehouse.gov/">White House</a></li>
-          <li class="leaf menu-links menu-level-1"><a href="https://www.whitehouse.gov/omb/management/egov/">E-gov</a>
-          </li>
           <li class="leaf menu-links menu-level-1"><a href="https://www.doi.gov/pmb/eeo/no-fear-act">No Fear Act</a>
           </li>
-          <li class="last leaf menu-links menu-level-1"><a href="https://www2.usgs.gov/foia">FOIA</a></li>
+          <li class="last leaf menu-links menu-level-1"><a
+              href="https://www.usgs.gov/about/organization/science-support/foia">FOIA</a></li>
         </ul>
       </div>
     </div>
