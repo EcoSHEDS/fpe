@@ -717,8 +717,14 @@ export default {
     },
     selectedImageFiles () {
       if (!this.files.selected) return []
+      // Sort by relative path so Confirm Station step shows first file of the first folder
       return this.files.selected
         .filter(file => file.type === 'image/jpeg')
+        .sort((a, b) => {
+          const pathA = a.webkitRelativePath || a.name
+          const pathB = b.webkitRelativePath || b.name
+          return pathA.localeCompare(pathB, undefined, { numeric: true })
+        })
     }
   },
   beforeDestroy () {
