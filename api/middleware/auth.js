@@ -1,19 +1,61 @@
 const createError = require('http-errors')
 const { getCurrentInvoke } = require('@codegenie/serverless-express')
+const { isLambda } = require('../utils')
 
-function attachUser (req, res, next) {
-  const currentInvoke = getCurrentInvoke()
-  const claims = currentInvoke?.event?.requestContext?.authorizer?.claims
-  if (!claims) {
-    return next(createError(401, 'Unauthorized'))
-  }
-  const groups = claims['cognito:groups'] ? claims['cognito:groups'].split(',') : []
+const isTrue = value => value === 'true'
+
+const getGroups = claims => {
+  if (!claims || !claims['cognito:groups']) return []
+  if (Array.isArray(claims['cognito:groups'])) return claims['cognito:groups']
+  return claims['cognito:groups'].split(',').map(d => d.trim()).filter(d => !!d)
+}
+
+const normalizeAuth = ({ claims, isLocal = false }) => {
+  const groups = getGroups(claims)
   const isAdmin = groups.includes('admins')
-  req.auth = {
+  return {
     id: claims.sub,
     isAdmin,
-    claims
+    claims,
+    isLocal
   }
+}
+
+const getAuthFromLambda = () => {
+  const currentInvoke = getCurrentInvoke()
+  const claims = currentInvoke &&
+    currentInvoke.event &&
+    currentInvoke.event.requestContext &&
+    currentInvoke.event.requestContext.authorizer &&
+    currentInvoke.event.requestContext.authorizer.claims
+  if (!claims || !claims.sub) return null
+  return normalizeAuth({ claims })
+}
+
+const getAuthFromLocalEnv = () => {
+  if (isLambda()) return null
+  if (!process.env.LOCAL_AUTH_USER_ID) return null
+
+  const groups = isTrue(process.env.LOCAL_AUTH_IS_ADMIN) ? 'admins' : ''
+  const claims = {
+    sub: process.env.LOCAL_AUTH_USER_ID,
+    'cognito:groups': groups
+  }
+
+  return normalizeAuth({ claims, isLocal: true })
+}
+
+const canBypassPermissions = () => {
+  return !isLambda() && isTrue(process.env.LOCAL_AUTH_BYPASS_PERMISSIONS)
+}
+
+function attachUser (req, res, next) {
+  const auth = getAuthFromLambda() || getAuthFromLocalEnv()
+  if (!auth) {
+    return next(createError(401, 'Unauthorized'))
+  }
+
+  req.auth = auth
   next()
 }
 
@@ -35,8 +77,8 @@ const requireStationOwnerOrAdmin = (req, res, next) => {
     return next(createError(401, 'Unauthorized'))
   }
 
-  // local override
-  if (req.auth.isLocal) {
+  // explicit local development override
+  if (canBypassPermissions()) {
     return next()
   }
 
@@ -59,8 +101,8 @@ const requireStationOwnerCollaboratorOrAdmin = (req, res, next) => {
     return next(createError(401, 'Unauthorized'))
   }
 
-  // local override
-  if (req.auth.isLocal) {
+  // explicit local development override
+  if (canBypassPermissions()) {
     return next()
   }
 
@@ -94,8 +136,8 @@ const requireStationPublicOwnerCollaboratorOrAdmin = (req, res, next) => {
     return next(createError(401, 'Unauthorized'))
   }
 
-  // local override
-  if (req.auth.isLocal) {
+  // explicit local development override
+  if (canBypassPermissions()) {
     return next()
   }
 
@@ -124,8 +166,8 @@ const requireUserOwnerOrAdmin = (req, res, next) => {
     return next(createError(401, 'Unauthorized'))
   }
 
-  // local override
-  if (req.auth.isLocal) {
+  // explicit local development override
+  if (canBypassPermissions()) {
     return next()
   }
 
@@ -148,8 +190,8 @@ const requireAnnotationOwnerOrAdmin = (req, res, next) => {
     return next(createError(401, 'Unauthorized'))
   }
 
-  // local override
-  if (req.auth.isLocal) {
+  // explicit local development override
+  if (canBypassPermissions()) {
     return next()
   }
 
@@ -162,6 +204,8 @@ const requireAnnotationOwnerOrAdmin = (req, res, next) => {
 }
 
 module.exports = {
+  getAuthFromLambda,
+  getAuthFromLocalEnv,
   attachUser,
   requireAdmin,
   requireStationOwnerOrAdmin,
