@@ -4,410 +4,112 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-USGS Flow Photo Explorer (FPE) is a cloud-native web application for managing and exploring flow photography monitoring stations. It consists of a Vue 2 frontend, Express.js API backend, PostgreSQL database, AWS Batch processors, and Lambda functions.
+USGS Flow Photo Explorer (FPE) is a web application for managing and exploring photos and time-series data from stream monitoring stations. It has a Vue 2 frontend, an Express API that runs on AWS Lambda, a PostgreSQL database, AWS Batch processors, and Lambda functions.
 
 ## Repository Structure
 
 ```
 fpe/
-├── app/              # Vue 2 frontend (Vuetify 2)
-├── api/              # Express.js REST API
-├── cli/              # Command-line interface
-├── db/               # Database migrations, models, seeds
-├── batch/            # AWS Batch processing (datasets, imagesets, PII detection)
-├── lambda/           # AWS Lambda functions (trigger, worker, models)
-├── cloudformation/   # AWS infrastructure templates
+├── app/              # Vue 2 + Vuetify 2 frontend (own package.json)
+├── api/              # Express REST API (own package.json)
+├── cli/              # `fpe` command-line tool (uses root package.json)
+├── db/               # Knex migrations, seeds, Objection models, enum types (uses root package.json)
+├── batch/processor/  # AWS Batch job for datasets and imagesets (own package.json)
+├── lambda/           # trigger and worker (Node.js), email and models (Python)
+├── cloudformation/   # Templates and deploy scripts (see cloudformation/README.md)
 ├── r/                # R scripts for data export
-└── data/             # Sample data files
+├── scripts/          # Shell scripts for AWS Batch jobs
+└── knexfile.js       # Database config for migrations, seeds and the CLI
 ```
 
-## Development Commands
+Each directory with its own `package.json` has its own `node_modules`. Run `npm install` in each one.
 
-### Frontend (app/)
+The root project uses the Node.js version in `.nvmrc`, knex 3 and objection 3. The batch processor runs in a `node:14-alpine` container with knex 0.21 and objection 2. Do not use newer Node.js syntax or newer knex and objection APIs in `batch/processor/`.
+
+## Commands
+
+There are no automated tests. The root `package.json` has no scripts.
 
 ```bash
+# API: must be started from api/ because start.js loads .env files from ../
+cd api && npm start            # nodemon, NODE_ENV=development, port from PORT in .env
+
+# App
 cd app
-npm install
-npm run serve          # Start dev server at http://localhost:8080
-npm run lint          # Lint Vue files
-npm run build         # Production build
-npm run stage         # Staging build
-npm run deploy:stage  # Build and deploy to staging S3
-npm run deploy        # Build and deploy to production S3
-```
-
-### API (api/)
-
-```bash
-cd api
-npm install
-npm start             # Start dev server with nodemon (NODE_ENV=development)
-```
-
-The API runs on port 3000 in development (configured via `PORT` env variable).
-
-### Database Migrations
-
-**IMPORTANT**: Always set `NODE_ENV` before running migrations/seeds.
-
-```bash
-export NODE_ENV=development  # or staging, production
-
-# Migrations
-knex migrate:latest          # Run all pending migrations
-knex migrate:rollback        # Rollback last batch
-knex migrate:up              # Run next migration
-knex migrate:down            # Rollback last migration
-knex migrate:make <name>     # Create new migration (use snake_case)
-
-# Seeds
-knex seed:run                # Run seeds for current environment
-```
-
-Database configuration is in [knexfile.js](knexfile.js) at the root.
-
-### CLI Tool
-
-The CLI provides direct database access for management tasks:
-
-```bash
-npm link                     # Make CLI globally available as 'fpe'
-export NODE_ENV=development
-
-fpe help
-fpe users list
-fpe stations list
-fpe stations create -u <user_id> -n "Station Name" -l <lat> -g <lng>
-fpe datasets create -s <station_id> -t datetime -v "flow_cfs"="FLOW_CFS" <file.csv>
-fpe imagesets create <images_folder> -s <station_id>
-```
-
-### Linting
-
-```bash
-# Root and API (uses standard style)
-npm run lint          # (if configured in root package.json)
-eslint .
-
-# App (uses vue/essential + @vue/standard)
-cd app
+npm run serve                  # Dev server
 npm run lint
-```
+npm run build                  # Production build
+npm run stage                  # Staging build
 
-### Batch Processor (Local Testing)
+# Lint api, cli and db from the repository root (standard style); lint app/ with its own command
+npx eslint api cli db knexfile.js
 
-```bash
+# Database: always set NODE_ENV first, then run knex from the repository root
+export NODE_ENV=development
+knex migrate:latest
+knex migrate:rollback
+knex migrate:make <name_in_snake_case>
+knex seed:run
+
+# CLI: run `npm link` one time, then set NODE_ENV
+fpe users list
+fpe stations create -u <user_id> -n "Station Name" -l <lat> -g <lng>
+fpe datasets create <file.csv> -s <station_id> -t <timestamp_column> -v "<column>=<variable_id>"
+fpe imagesets create <folder> -s <station_id>
+
+# Batch processor: local run
 cd batch/processor
-npm install
-
-# Process dataset
-node index.js dataset -i <dataset_id>
-
-# Process imageset
-node index.js imageset -i <imageset_id>
-
-# PII detection
-node index.js pii -i <imageset_id>
+node process.js dataset <id> [<id>...]    # or --all for all datasets with status CREATED
+node process.js imageset <id>             # both commands accept --dry-run
 ```
 
-## Architecture
+`npm run deploy` and `npm run deploy:stage` in `app/` build the app and then sync it to the production and staging S3 buckets. Do not run them unless the user asks.
 
-### Monorepo Structure
+## Database
 
-This is a **monorepo** with three separate Node.js projects:
-- **Root** (api/): Shared database models, migrations, CLI
-- **app/**: Vue frontend
-- **batch/processor/**: AWS Batch processing jobs
+- Edit Objection models only in `db/models/`. Then run `./copy-db.sh` from the repository root. The script copies the models to `api/db/models/` and `batch/processor/models/`. Both copies are tracked in git, so commit them together with the source.
+- All schema changes go through migrations in `db/migrations/`. Write both `up` and `down`.
+- Many queries use PostgreSQL functions (`f_station_summary`, `f_station_daily`, `f_station_images`, `f_station_values`, `f_station_random_image_pairs`, `image_has_pii`, and others). The function bodies are in the migrations. To change a function, add a new migration that replaces it. Search `db/migrations/` for the function name to find the latest definition.
+- The `status_type` enum is shared by datasets, imagesets, images, annotations and models. The values are `CREATED`, `UPLOADING`, `QUEUED`, `PROCESSING`, `DONE`, `FAILED` (`db/types/status.js`) and `IN_PROGRESS` (added by a later migration, not in that file). Imagesets also have a `pii_status` column of the same type.
+- Station visibility is the `private` column (default `false`). There is no `public` column.
+- Image PII columns: `pii_person`, `pii_vehicle`, `pii_animal` (detector scores), `pii_on` and `pii_off` (manual overrides), `pii_detections` (JSON).
+- The `pg` parser for the `date` type is overridden in the knexfiles so that dates stay as strings and are not converted to JavaScript `Date` objects.
+- Database credentials come from AWS Secrets Manager when `DB_SECRET_NAME` is set. If it is not set, the `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USER` and `DB_PASSWORD` variables are used.
 
-Each has its own `package.json` and `node_modules`.
+## API
 
-### Database Architecture (Objection.js ORM)
+- `api/lambda.js` is the Lambda entry point (`@codegenie/serverless-express`). `api/start.js` is the local server. Both use `api/app.js`.
+- Layout: `api/routes/{public,restricted,admin}/` define the routes and `api/controllers/` contain the handlers. `api/knexfile.js` and `api/db/` are separate from the root files because the API is packaged for Lambda by itself.
+- `/public` needs no authentication. `/restricted` uses `attachUser`. `/admin` uses `attachUser` and `requireAdmin`.
+- The API does not validate JWTs. API Gateway does that with a Cognito authorizer. `attachUser` in `api/middleware/auth.js` reads the claims from the Lambda event and sets `req.auth = { id, isAdmin, claims }`. The `admins` Cognito group sets `isAdmin`.
+- When the API runs locally with `npm start`, there is no Lambda event. `attachUser` then reads `LOCAL_AUTH_USER_ID` (a `users.id` value from the local database) and `LOCAL_AUTH_IS_ADMIN` from the environment. If `LOCAL_AUTH_USER_ID` is not set, all `/restricted` and `/admin` requests return 401. `LOCAL_AUTH_BYPASS_PERMISSIONS=true` skips the station, user and annotation ownership checks. These variables have no effect on Lambda.
+- Station access checks are also in `api/middleware/auth.js` (`requireStationOwnerOrAdmin`, `requireStationOwnerCollaboratorOrAdmin`, `requireStationPublicOwnerCollaboratorOrAdmin`). They read `res.locals.station` and `res.locals.permissions`, which the controllers must attach first.
+- `api/controllers/users.js` exports a different function that is also named `attachUser`. It loads the database user record. Check the import path to know which one a route uses.
 
-**Core Models** (db/models/):
+## App
 
-- **User** - User accounts (maps to AWS Cognito)
-  - Relations: stations, annotations, station_permissions
-- **Station** - Monitoring stations
-  - Relations: user (owner), datasets, imagesets, annotations, models, permissions
-  - Fields: public (boolean), latitude, longitude
-- **Dataset** - CSV time-series data
-  - Relations: station, series
-  - Status: CREATED → PROCESSING → DONE/FAILED
-- **Imageset** - Photo collections
-  - Relations: station, images
-  - Status: CREATED → QUEUED → PROCESSING → DONE/FAILED
-  - PII status: PENDING → QUEUED → PROCESSING → DONE/FAILED
-- **Image** - Individual photos with EXIF data
-  - Relations: imageset
-  - Stores: timestamp, dimensions, orientation, PII flags
-- **Annotation** - User annotations on images
-- **Series** - Time-series variables within datasets
-  - Relations: dataset, variable, values
-- **Value** - Individual time-series measurements
-- **Variable** - Standard variable types (flow, stage, etc.)
-- **StationPermission** - Collaborator access (many-to-many join)
-- **Model** - ML models for stations
+- Routes are split by area in `app/src/router/`: `index.js` (home, about, user guide, annotator), `explorer.js`, `manage.js`, `admin.js` and `auth.js`.
+- Views are in `app/src/views/<area>/`. Shared components are in `app/src/components/` (`charts/`, `explorer/`, `forms/`, `admin/`, `usgs/`).
+- The Vuex store holds only `user` (Cognito user) and `dbUser` (database record). `app/src/events.js` is an event bus.
+- `app/src/plugins/axios.js` configures the API client. `app/src/plugins/amplify.js` configures Cognito authentication.
+- Environment variables read by the code: `VUE_APP_API_URL`, `VUE_APP_DATA_URL`, `VUE_APP_COGNITO_REGION`, `VUE_APP_COGNITO_USER_POOL_ID`, `VUE_APP_COGNITO_CLIENT_ID`. `app/vue.config.js` sets `VUE_APP_VERSION` from `app/package.json`. Shared values are in `app/.env`. Values for one environment are in untracked `app/.env.<mode>.local` files.
 
-**Key Patterns**:
-- All models use UUID primary keys
-- Foreign keys use snake_case (e.g., `station_id`, `user_id`)
-- Status enums track processing workflows
-- Timestamps: `created_at`, `updated_at` (auto-managed)
-- PostgreSQL stored functions for complex queries (e.g., `f_station_summary()`, `f_station_daily()`)
+## Batch Processing and Lambda
 
-### API Routes (api/routes/)
+1. The app uploads files directly to S3. Then the API submits an AWS Batch job (`JOB_QUEUE`, `JOB_DEFINITION_PROCESSOR`).
+2. `batch/processor/processors/dataset.js` parses the CSV file and writes the series and values.
+3. `batch/processor/processors/imageset.js` reads the EXIF data, makes thumbnails with `sharp`, and then submits a PII detection job (`JOB_DEFINITION_PII`) and sets `pii_status` to `QUEUED`.
+4. The PII detector uses a different container image. Its code is not in this repository.
 
-Three route groups with different auth levels:
+Lambda functions:
 
-**Public** (`/public`):
-- No authentication required
-- Read-only access to public stations, datasets, images, series
+- `lambda/trigger/`: Cognito post-confirmation trigger. It publishes an SNS message for each new user registration.
+- `lambda/worker/`: administrative tasks that the API invokes (`LAMBDA_WORKER`). The event `method` selects the task: `listS3Objects`, `deleteS3Objects` or `createAdminUser`.
+- `lambda/email/`: Python. It reads photos from a mailbox and saves them to S3.
+- `lambda/models/`: Python. It processes SageMaker batch transform output.
 
-**Restricted** (`/restricted`):
-- Requires AWS Cognito JWT authentication
-- User can manage their own stations, datasets, imagesets, annotations
-- Access control: owner or collaborator with granted permissions
+## Configuration
 
-**Admin** (`/admin`):
-- Requires `admins` Cognito user group
-- Full access to all resources
-- User management, system-wide statistics
+The root, API and CLI use `dotenv-flow`. `.env` is tracked. `.env.<NODE_ENV>.local` files are not tracked and hold secrets. Do not print or commit their values. The batch processor uses plain `dotenv` and reads `batch/processor/.env`.
 
-**Authentication Flow**:
-1. Frontend uses AWS Amplify to authenticate with Cognito
-2. JWT token attached to API requests as `Authorization: Bearer <token>`
-3. API middleware validates token (via `attachUser` middleware)
-4. User claims extracted and database user record fetched
-5. Role-based access control checks ownership or admin status
-
-**Key Middleware** (api/middleware/):
-- `attachUser` - Validates JWT and attaches user to `req.user`
-- `requireAdmin` - Checks for admin group membership
-
-### Vue Application (app/src/)
-
-**Tech Stack**:
-- Vue 2.6 + Vue Router + Vuex
-- Vuetify 2 (Material Design)
-- AWS Amplify (authentication)
-- Axios with retry-axios (API client)
-- Highcharts (charts), Leaflet (maps)
-
-**Main Routes**:
-- `/` - Home page
-- `/explorer` - Browse public stations
-- `/manage` - User's station management
-- `/annotator` - Image annotation tool
-- `/admin` - Admin dashboard
-
-**State Management**:
-- Simple Vuex store: `user` (Cognito), `dbUser` (database record)
-- Event bus (events.js) for cross-component communication
-
-**Key Components** (app/src/components/):
-- `StationMap` - Leaflet map with station markers
-- `ImageGallery` - Image viewer with lightbox
-- `TimeseriesChart` - Highcharts visualization
-- `AnnotationEditor` - Annotation interface
-
-### AWS Batch Processing
-
-**Workflow**:
-1. User uploads files to S3 via pre-signed POST URLs
-2. User triggers processing via API
-3. API submits AWS Batch job
-4. Batch processor (Docker container):
-   - Fetches data from S3 and database
-   - Processes data (parse, validate, transform)
-   - Generates derived data (thumbnails, statistics)
-   - Updates database with results
-   - For imagesets: triggers PII detection batch job
-
-**Dataset Processing** (batch/processor/processors/dataset.js):
-- Parses CSV files with PapaParse
-- Validates data types and structure
-- Normalizes into Series/Value tables
-- Calculates statistics (min, max, mean, etc.)
-
-**Imageset Processing** (batch/processor/processors/imageset.js):
-- Downloads images from S3
-- Extracts EXIF data (timestamp, GPS, orientation)
-- Auto-rotates based on EXIF orientation
-- Generates 400px width thumbnails using Sharp
-- Uploads thumbnails to S3
-- Submits PII detection job
-
-**PII Detection**:
-- Uses AWS Rekognition DetectLabels API
-- Detects persons, vehicles, animals
-- Flags images containing PII
-- Updates `pii_status` and `pii_labels` fields
-
-### Lambda Functions
-
-**Trigger** (lambda/trigger/):
-- Cognito post-confirmation trigger
-- Sends SNS notification for new user registrations
-
-**Worker** (lambda/worker/):
-- Administrative tasks via direct invocation
-- `deleteS3Objects`, `listS3Objects`, `createAdminUser`
-
-**Models** (lambda/models/):
-- Python-based ML model inference
-- Processes SageMaker batch transform outputs
-
-### Configuration
-
-Uses `dotenv-flow` for environment-specific configuration:
-- `.env` - Shared defaults (tracked)
-- `.env.development.local` - Local development (not tracked)
-- `.env.production.local` - Production secrets (not tracked)
-
-**Required Variables**:
-```bash
-# API
-PORT=3000                    # Local dev only
-REGION=us-east-1            # AWS region
-BUCKET=<bucket-name>        # S3 storage bucket
-DB_SECRET_NAME=<secret>     # Secrets Manager secret name
-
-# Database (local dev, overrides DB_SECRET_NAME)
-DB_HOST=localhost
-DB_PORT=5432
-DB_DATABASE=fpe
-DB_USER=postgres
-DB_PASSWORD=<password>
-
-# App (Vue)
-VUE_APP_API_ENDPOINT=<api-url>
-VUE_APP_COGNITO_REGION=<region>
-VUE_APP_COGNITO_USER_POOL_ID=<pool-id>
-VUE_APP_COGNITO_USER_POOL_WEB_CLIENT_ID=<client-id>
-VUE_APP_COGNITO_IDENTITY_POOL_ID=<pool-id>
-VUE_APP_STORAGE_BUCKET=<bucket-name>
-```
-
-## Development Workflow
-
-### Local Development Setup
-
-1. Install Node.js (version specified in [.nvmrc](.nvmrc))
-   ```bash
-   nvm use
-   ```
-
-2. Install dependencies for all projects:
-   ```bash
-   npm install          # Root (API, CLI, database)
-   cd app && npm install
-   cd ../batch/processor && npm install
-   ```
-
-3. Configure environment variables:
-   ```bash
-   cp .env.development.local.example .env.development.local  # If exists
-   # Edit .env.development.local with local database credentials
-   ```
-
-4. Set up database:
-   ```bash
-   export NODE_ENV=development
-   knex migrate:latest
-   knex seed:run  # Optional: load sample data
-   ```
-
-5. Start API and app:
-   ```bash
-   # Terminal 1: API
-   cd api && npm start
-
-   # Terminal 2: App
-   cd app && npm run serve
-   ```
-
-6. Access app at http://localhost:8080
-
-### Making Database Changes
-
-1. Create migration:
-   ```bash
-   export NODE_ENV=development
-   knex migrate:make add_field_to_table
-   ```
-
-2. Edit migration file in `db/migrations/`
-   - Use `knex.schema.table()` for schema changes
-   - Use snake_case for column names
-   - Add both `up` and `down` methods
-
-3. Run migration:
-   ```bash
-   knex migrate:latest
-   ```
-
-4. Update Objection.js model in `db/models/` if needed
-
-### AWS S3 File Management
-
-```bash
-export BUCKET=<bucket-name>
-
-# List all files
-aws s3 ls s3://${BUCKET}/ --recursive
-
-# List datasets
-aws s3 ls s3://${BUCKET}/datasets/ --recursive
-
-# List imagesets
-aws s3 ls s3://${BUCKET}/imagesets/
-
-# Delete imageset files
-aws s3 rm s3://${BUCKET}/ --recursive --exclude "*" --include "imagesets/<uuid>/*"
-
-# Delete dataset files
-aws s3 rm s3://${BUCKET}/ --recursive --exclude "*" --include "datasets/<uuid>/*"
-
-# Sync local folder to S3 (for dev seeds)
-aws s3 sync storage s3://${BUCKET}/ --exclude "*" --include "imagesets/*" --include "datasets/*"
-```
-
-## Important Notes
-
-### Database Type Handling
-
-PostgreSQL `date` type parser is overridden to prevent automatic conversion to JavaScript Date objects (see [knexfile.js](knexfile.js:9-10)).
-
-### Production vs Development
-
-**Development**:
-- API runs as Express server (nodemon)
-- Direct database connection via env variables
-- Mock JWT validation middleware
-
-**Production**:
-- API runs as Lambda via aws-serverless-express
-- Database credentials from AWS Secrets Manager
-- API Gateway handles routing and JWT validation
-- App served from S3 + CloudFront
-
-### Common Issues
-
-**Migration fails with "relation already exists"**:
-- Check if migration was already run: `knex migrate:list`
-- Verify NODE_ENV matches target environment
-
-**API can't connect to database**:
-- Verify database is running
-- Check DB_* environment variables
-- Ensure NODE_ENV is set for correct config
-
-**Images not displaying**:
-- Check S3 bucket permissions (CORS configured)
-- Verify files exist: `aws s3 ls s3://${BUCKET}/imagesets/<uuid>/`
-- Check image processing status in database
-
-**Authentication errors**:
-- Verify Cognito user pool configuration
-- Check JWT token is being sent in Authorization header
-- Ensure user exists in database (created by Cognito trigger)
+Server variables read by the code: `PORT`, `REGION`, `BUCKET`, `DB_SECRET_NAME` (or the `DB_*` variables), `JOB_QUEUE`, `JOB_DEFINITION_PROCESSOR`, `JOB_DEFINITION_PII`, `LAMBDA_WORKER`, `USERPOOL_ID`, `NOTIFY_TOPIC`.

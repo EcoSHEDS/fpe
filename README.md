@@ -18,7 +18,7 @@ REGION
 BUCKET
 
 # database connection secret
-DB_SECRETS_NAME
+DB_SECRET_NAME
 ```
 
 ## Database
