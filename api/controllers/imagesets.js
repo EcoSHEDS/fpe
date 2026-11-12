@@ -44,13 +44,13 @@ const getImagesetLastImage = async (req, res, next) => {
   const lastImage = await res.locals.imageset
     .$relatedQuery('images')
     .orderBy('timestamp', 'desc')
-    .first();
+    .first()
 
   if (!lastImage) {
-    return res.status(404).json({ message: 'No images found in this imageset' });
+    return res.status(404).json({ message: 'No images found in this imageset' })
   }
 
-  return res.status(200).json(lastImage);
+  return res.status(200).json(lastImage)
 }
 
 const postImagesets = async (req, res, next) => {
@@ -132,7 +132,7 @@ const piiImageset = async (req, res, next) => {
         'detect-fpe-imageset',
         '--workers', '7',
         '--batch-size', '100',
-        imageset.id.toString()
+        res.locals.imageset.id.toString()
       ]
     }
   }).promise()
