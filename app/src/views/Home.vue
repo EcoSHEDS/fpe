@@ -81,6 +81,18 @@
           </div>
 
           <div class="d-flex align-end mt-4">
+            <div class="font-weight-light black--text text-h6">Terms and Conditions</div>
+            <v-spacer></v-spacer>
+            <div class="text-subtitle-2 font-weight-light font-italic">November 12, 2026</div>
+          </div>
+          <v-divider class="mb-2"></v-divider>
+          <div class="body-1">
+            <p>
+              The <router-link :to="{ name: 'terms' }">General Terms and Conditions</router-link> for the Flow Photo Explorer are now available. They describe the intended use of the platform, prohibited content, privacy, and how data are stored and shared.
+            </p>
+          </div>
+
+          <div class="d-flex align-end mt-4">
             <div class="font-weight-light black--text text-h6">October Model Batch</div>
             <v-spacer></v-spacer>
             <div class="text-subtitle-2 font-weight-light font-italic">October 2, 2026</div>
@@ -437,6 +449,11 @@
         <Alert type="error" title="Provisional Database" class="mb-0 mx-4">
           <div style="font-family:monospace">
             The data you have secured from the U.S. Geological Survey (USGS) database identified as the Flow Photo Explorer (FPE) have not received USGS approval and as such are provisional and subject to revision. The data are released on the condition that neither the USGS nor the U.S. Government shall be held liable for any damages resulting from its authorized or unauthorized use.
+          </div>
+        </Alert>
+        <Alert type="info" title="Terms and Conditions" class="mt-4 mb-0 mx-4">
+          <div>
+            Use of the Flow Photo Explorer is subject to the <router-link :to="{ name: 'terms' }">General Terms and Conditions</router-link>.
           </div>
         </Alert>
       </v-col>

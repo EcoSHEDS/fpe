@@ -7,6 +7,7 @@ import { getUser } from '@/lib/auth'
 import Home from '@/views/Home.vue'
 import About from '@/views/About.vue'
 import UserGuide from '@/views/UserGuide.vue'
+import Terms from '@/views/Terms.vue'
 import Annotator from '@/views/Annotator.vue'
 
 import AuthRoutes from '@/router/auth'
@@ -33,6 +34,11 @@ const routes = [
     path: '/user-guide',
     name: 'user-guide',
     component: UserGuide
+  },
+  {
+    path: '/terms',
+    name: 'terms',
+    component: Terms
   },
   {
     path: '/annotator',

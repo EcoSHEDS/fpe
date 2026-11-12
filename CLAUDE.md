@@ -88,7 +88,7 @@ node process.js imageset <id>             # both commands accept --dry-run
 
 ## App
 
-- Routes are split by area in `app/src/router/`: `index.js` (home, about, user guide, annotator), `explorer.js`, `manage.js`, `admin.js` and `auth.js`.
+- Routes are split by area in `app/src/router/`: `index.js` (home, about, user guide, terms, annotator), `explorer.js`, `manage.js`, `admin.js` and `auth.js`.
 - Views are in `app/src/views/<area>/`. Shared components are in `app/src/components/` (`charts/`, `explorer/`, `forms/`, `admin/`, `usgs/`).
 - The Vuex store holds only `user` (Cognito user) and `dbUser` (database record). `app/src/events.js` is an event bus.
 - `app/src/plugins/axios.js` configures the API client. `app/src/plugins/amplify.js` configures Cognito authentication.
