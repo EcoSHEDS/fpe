@@ -60,7 +60,19 @@ const routes = [
 ]
 
 const router = new VueRouter({
-  routes
+  routes,
+  scrollBehavior (to, from, savedPosition) {
+    // browser back/forward buttons: restore the previous scroll position
+    if (savedPosition) {
+      return savedPosition
+    }
+    // navigation within the same top-level page (e.g. tabs of a station): keep the scroll position
+    if (to.matched[0] && to.matched[0] === from.matched[0]) {
+      return null
+    }
+    // navigation to a different page: scroll to the top
+    return { x: 0, y: 0 }
+  }
 })
 
 let loaded = false
