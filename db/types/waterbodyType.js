@@ -7,5 +7,5 @@ module.exports = [
   'ST-CA',
   'ST-DCH',
   'ST-TS',
-  'WE',
+  'WE'
 ]

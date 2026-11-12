@@ -1,4 +1,4 @@
 module.exports = [
-    'ACTIVE',
-    'DISCONTINUED'
+  'ACTIVE',
+  'DISCONTINUED'
 ]

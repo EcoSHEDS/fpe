@@ -44,17 +44,14 @@ function onError (error) {
     : 'Port ' + port
 
   // handle specific listen errors with friendly messages
-  switch (error.code) {
-    case 'EACCES':
-      console.error(bind + ' requires elevated privileges')
-      process.exit(1)
-      break
-    case 'EADDRINUSE':
-      console.error(bind + ' is already in use')
-      process.exit(1)
-      break
-    default:
-      throw error
+  if (error.code === 'EACCES') {
+    console.error(bind + ' requires elevated privileges')
+    process.exit(1)
+  } else if (error.code === 'EADDRINUSE') {
+    console.error(bind + ' is already in use')
+    process.exit(1)
+  } else {
+    throw error
   }
 }
 

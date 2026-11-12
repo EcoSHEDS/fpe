@@ -221,7 +221,7 @@ const getStationModels = async (req, res, next) => {
   return res.status(200).json(rows)
 }
 
-async function getStationPermissions(req, res) {
+async function getStationPermissions (req, res) {
   const permissions = await StationPermission.query()
     .where({ station_id: res.locals.station.id })
     .withGraphFetched('user')
@@ -259,7 +259,7 @@ async function getStationPermissions(req, res) {
   res.json(enhancedPermissions)
 }
 
-addUserPermission = async (req, res) => {
+const addUserPermission = async (req, res) => {
   const { station } = res.locals
   const { userEmail } = req.body
 
@@ -318,7 +318,7 @@ addUserPermission = async (req, res) => {
   res.status(201).json({ message: 'User permission added successfully' })
 }
 
-removeUserPermission = async (req, res) => {
+const removeUserPermission = async (req, res) => {
   const { userId } = req.params
 
   const deletedRows = await StationPermission.query()

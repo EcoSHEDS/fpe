@@ -1,5 +1,5 @@
 
-exports.up = async function(knex) {
+exports.up = async function (knex) {
   await knex.raw(`
     create or replace function f_station_random_image_pairs(_station_id int, _n_pairs int, _min_hour int, _max_hour int, _min_date date, _max_date date)
       returns table (
@@ -26,9 +26,9 @@ exports.up = async function(knex) {
         limit _n_pairs
       $$ language sql;
   `)
-};
+}
 
-exports.down = async function(knex) {
+exports.down = async function (knex) {
   await knex.raw(`
     create or replace function f_station_random_image_pairs(_station_id int, _n_pairs int, _min_hour int, _max_hour int, _min_date date, _max_date date)
       returns table (
@@ -54,4 +54,4 @@ exports.down = async function(knex) {
         limit _n_pairs
       $$ language sql;
   `)
-};
+}

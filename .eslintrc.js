@@ -15,5 +15,7 @@ module.exports = {
     ecmaVersion: 2018
   },
   rules: {
+    // database columns and request fields use snake_case
+    camelcase: 'off'
   }
 }

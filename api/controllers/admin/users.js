@@ -312,7 +312,8 @@ async function getUser (req, res, next) {
   res.status(200).json({ ...dbUser, ...res.locals.adminUser })
 }
 
-async function putUser (req, res, next) {  console.log(req.body)
+async function putUser (req, res, next) {
+  console.log(req.body)
   let response
   if (req.body.action === 'enable') {
     response = await enableUser(res.locals.adminUser.id)

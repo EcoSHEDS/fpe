@@ -3,9 +3,6 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 const logger = require('morgan')
 const createError = require('http-errors')
-const jwt = require('jsonwebtoken')
-
-const { isLambda } = require('./utils')
 
 const app = express()
 

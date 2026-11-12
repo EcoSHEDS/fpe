@@ -1,8 +1,7 @@
 const createError = require('http-errors')
 
 const { stationsQuery } = require('./stations')
-const knex = require('../db/knex')
-const { User, Station, StationPermission } = require('../db/models')
+const { User } = require('../db/models')
 
 const attachUser = async (req, res, next) => {
   const row = await User.query()

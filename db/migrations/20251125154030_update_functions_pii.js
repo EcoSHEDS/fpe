@@ -1,6 +1,6 @@
 // use image_has_pii() to filter images instead of hard coding thresholds
 
-exports.up = async function(knex) {
+exports.up = async function (knex) {
   console.log('replace function f_station_daily_images')
   await knex.raw(`
     create or replace function f_station_daily_images(_station_id INT)
@@ -73,9 +73,9 @@ exports.up = async function(knex) {
       order by i.timestamp
     $$ language sql;
   `)
-};
+}
 
-exports.down = async function(knex) {
+exports.down = async function (knex) {
   console.log('revert function f_station_daily_images')
   await knex.raw(`
     create or replace function f_station_daily_images(_station_id INT)
@@ -158,4 +158,4 @@ exports.down = async function(knex) {
       order by i.timestamp
     $$ language sql;
   `)
-};
+}

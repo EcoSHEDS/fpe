@@ -11,7 +11,6 @@ const {
   getStationDaily,
   getStationDailyImages,
   getStationDailyValues,
-  getStationRandomImagePairs,
   getStationModels
 } = require('../../controllers/stations')
 const {
